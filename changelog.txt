@@ -1,0 +1,25 @@
+-build 05062012
+	[*]Bug "Edit file" fixed
+	[*]magic_quotes_gpc fix
+
+-build 04062012
+	[*]Bug "Parent Directory" fixed
+	[*]Menu only in post
+	[*]Completed recursive copy
+	[*]Fixed create dir and create file
+
+-build 30052012
+	[*]Mejoras menores en javascript
+	[*]Mas lineas agregadas a $Lang
+
+-build 28052012
+	[*]Compresion recursiva
+	[*]Ver peso de carpetas via ajax
+	[*]Algunos cambios menores
+
+-build 20022012
+	[+]Agregado editor de archivos (a pulir en el proximo release)
+	[+]Agregado info de archivos (a pulir en el proximo release)
+	[*]Eliminado eval de la rutina de compresión para poder usarla en safe mode
+
+

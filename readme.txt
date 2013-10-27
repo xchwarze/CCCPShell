@@ -1,8 +1,5 @@
-Funciones implementadas en la shell
-'''''''''''''''''''''''''''''''''''
-
   [+]Filemanager
-      [+]Copy/paste (almost recursive(???????????))
+      [+]Copy/paste (recursive)
       [+]In memory compress and download  (recursive)
       [+]Delete (recursive)
       [+]Create file/folder
@@ -15,19 +12,25 @@ Funciones implementadas en la shell
          [+]Access time
          [+]Modify time   
          [+]Hexdump preview/full
+         [+]Highlight 
          [+]File Content
       [+]Edit
          [+]Modified time
          [+]File Name
-         [+]File Content      
+         [+]File Content
+   [+]Procs
+      [+]Process viewer/info
+      [+]Process killer   
+   [+]SQL
+      [+]Database explorer (mysql, mssql, pgsql, oracle, sqlite, sqlite3, odbc and pdo) 
    [+]Info
       [+]Server info
       [+]PHP Info
       [+]Custom functions check
-      [+]PHP full info
    [+]External Connect 
       [+]Back Connect
       [+]Bind Shell
-   [+]Eval code
-      [+]Eval/execute code (exec, shell_exec, system, passthru, popen y proc_open)
+   [+]Execute
+      [+]Eval PHP code
+      [+]Execute (exec, shell_exec, system, passthru, popen and proc_open)
    [+]Self remove

@@ -1,3 +1,15 @@
+-build 27102013
+	[+] html login
+	[+] highlight file
+	[+] sql manager
+	[+] process viewer/killer
+	[+] execute
+	[+] anti crawlers
+	[+] table shorter
+	[*] improved performance of hexdump
+	[*] dirsize also show the number of files
+	[*] a lot of other improvements
+
 -build 05062012
 	[*]Bug "Edit file" fixed
 	[*]magic_quotes_gpc fix
@@ -18,8 +30,8 @@
 	[*]Algunos cambios menores
 
 -build 20022012
-	[+]Agregado editor de archivos (a pulir en el proximo release)
-	[+]Agregado info de archivos (a pulir en el proximo release)
+	[+]Agregado editor de archivos
+	[+]Agregado info de archivos
 	[*]Eliminado eval de la rutina de compresión para poder usarla en safe mode
 
 

@@ -1,7 +1,7 @@
 <?php
 /*
  * CCCP Shell by DSR!
- * Version: 1.0 Build: 27112013
+ * Version: 1.0 Build: 27102013
  */
 
 $tiempoCarga = microtime(true);
@@ -81,7 +81,7 @@ $lang['procs'] = 'Procs';
 $lang['info'] = 'Info';
 $lang['ec'] = 'External Connect';
 $lang['sql'] = 'SQL';
-$lang['eval'] = 'Eval code';
+$lang['exe'] = 'Execute';
 $lang['update'] = 'Update';
 $lang['sr'] = 'Self remove';
 $lang['out'] = 'Logout';
@@ -638,7 +638,7 @@ $sysMenu = '<a href="#" onclick="go(\'' . $config['Menu'] . '=file\');"><b>' . $
     '<a href="#" onclick="go(\'' . $config['Menu'] . '=phpenv\');"><b>' . $lang['info'] . '</b></a> | ' .    
     '<a href="#" onclick="go(\'' . $config['Menu'] . '=connect\');"><b>' . $lang['ec'] . '</b></a> | ' .    
     '<a href="#" onclick="go(\'' . $config['Menu'] . '=sql\');"><b>' . $lang['sql'] . '</b></a> | ' .    
-    '<a href="#" onclick="go(\'' . $config['Menu'] . '=eval\');"><b>' . $lang['eval'] . '</b></a> | ' .    
+    '<a href="#" onclick="go(\'' . $config['Menu'] . '=eval\');"><b>' . $lang['exe'] . '</b></a> | ' .    
     //'<a href="#" onclick="go(\'' . $config['Menu'] . '=update\');"><b>' . $lang['update'] . '</b></a> | ' .    
     '<a href="#" onclick="go(\'' . $config['Menu'] . '=srm\');"><b>' . $lang['sr'] . '</b></a> ' .
 	(($config['zPass']) ? ' | <a href="#" onclick="if (confirm(\'' . $lang['merror'] . '\')) window.close();return false;"><b>' . $lang['out'] . '</b></a>' : '');

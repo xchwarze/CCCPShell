@@ -5,17 +5,17 @@ CCCPShell is a PHP Shell written from scratch in my spare time.
 
 You will find in this shell
 -----------
-[*] Pure javascript (serialize, ajax, append, remove, empty, change sort table order and dialogs modals)
-[*] PHP zip with php code
-[*] Full DB explorer (mysql, mssql, pgsql, oracle, sqlite, sqlite3, odbc and pdo)
-[*] 21 icons for use in 94 file types
-[*] CSS3
-[*] Easy to translate to another language via tText function *WIP*
-[*] All the standard shell stuff
+* Pure javascript (serialize, ajax, append, remove, empty, change sort table order and dialogs modals)
+* PHP zip with php code
+* Full DB explorer (mysql, mssql, pgsql, oracle, sqlite, sqlite3, odbc and pdo)
+* 21 icons for use in 94 file types
+* CSS3
+* Easy to translate to another language via tText function *WIP*
+* All the standard shell stuff
 
 All tools
 -----------
-[*]Filemanager
+* Filemanager
 	[+]Copy/paste (recursive)
 	[+]In memory compress and download (recursive)
 	[+]Delete (recursive)
@@ -40,23 +40,23 @@ All tools
 		[+]Change filetime
 		[+]File Name
 		[+]Change content
-[*]Procs
+* Procs
 	[+]Process viewer/info
 	[+]Process killer   
-[*]SQL
+* SQL
 	[+]Database explorer
 	[+]Execute SQL code
-[*]Info
+* Info
 	[+]Server info
 	[+]PHP Info
 	[+]Custom functions check
-[*]External Connect 
+* External Connect 
 	[+]Back Connect
 	[+]Bind Shell
-[*]Execute
+* Execute
 	[+]Eval PHP code
 	[+]Execute (exec, shell_exec, system, passthru, popen and proc_open)
-[*]Self remove
+* Self remove
    
 Images
 -----------

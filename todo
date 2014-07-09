@@ -9,9 +9,6 @@ TODO
 [*]Back Connect
 	- Rebuilt all
 	
-[*]Execute
-	- Eval code works ok. Execute dont work anymore
-	
 [*]Process
 	- Kill process dont work
 	

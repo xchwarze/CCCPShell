@@ -12,6 +12,7 @@ You will find in this shell
 * CSS3
 * Easy to translate to another language via tText function *WIP*
 * All the standard shell stuff
+* Encrypted comunication (first stone in the world???) *WIP*
 
 All tools
 -----------

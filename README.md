@@ -5,14 +5,14 @@ CCCPShell is a PHP Shell written from scratch in my spare time.
 
 You will find in this shell
 -----------
-* Pure javascript (serialize, ajax, append, remove, empty, change sort table order and dialogs modals)
+* Pure javascript (sessionStorage, serialize, ajax, append, remove, empty, change sort table order and dialogs modals)
 * PHP zip with php code
 * Full DB explorer (mysql, mssql, pgsql, oracle, sqlite, sqlite3, odbc and pdo)
 * 21 icons for use in 94 file types
 * CSS3
 * Easy to translate to another language via tText function *WIP*
 * All the standard shell stuff
-* Encrypted comunication (first phpshell in the world???) *WIP*
+* Encrypted comunication (first phpshell in the world???)
 
 All tools
 -----------

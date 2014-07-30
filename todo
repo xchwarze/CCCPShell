@@ -7,4 +7,7 @@ TODO
 	- Add pagination
 	
 [*]Back Connect
-	- Rebuilt all
+	- Rebuilt all	
+	
+[*]Shell
+	- Upgrade RC4 to RC4Drop

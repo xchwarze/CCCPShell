@@ -1781,7 +1781,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 		if (file_exists($p['t'])){
 			$sBuff .= '<h2>' . tText('information', 'Information') . ' [' . mLink(tText('goback', 'Go Back'), 'ajaxLoad("me=file&dir=' . rawurlencode(getUpPath($p['t'])) . '")') . ']</h2>
 					 <table border=0 cellspacing=1 cellpadding=2>
-					 <tr><td><b>' . tText('path', 'Path') . '</b></td><td>' . $p['t'] . '</td></tr>
+					 <tr><td><b>' . tText('path', 'Path') . '</b></td><td>' . htmlentities($p['t']) . '</td></tr> //preventing XSS using filename
 					 <tr><td><b>' . tText('size', 'Size') . '</b></td><td>' . sizecount(filesize($p['t'])) . '</td></tr>
 					 <tr><td><b>' . tText('md5', 'MD5') . '</b></td><td>' . strtoupper(@md5_file($p['t'])) . '</td></tr>
 					 <tr><td><b>' . tText('sha1', 'SHA1') . '</b></td><td>' . strtoupper(@sha1_file($p['t'])) . '</td></tr>

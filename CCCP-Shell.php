@@ -2075,9 +2075,9 @@ if (isset($p['me']) && $p['me'] === 'file'){
 			//uso esa variable para saber si corresponde o no el link al archivo
 			
             foreach ($filedata as $file){
+            	$file = htmlentities($file); //preventing XSS, ej: <h1 onclick=alert(1)>foto.png
                 $sBuff .= '<tr data-path="' . $file . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 					<td width="2%"><input type="checkbox" value="' . $file . '" name="dl[]"></td><td>';
-
                 //mark shell name in yellow
                 if ($currentdir . $file === __file__) $sBuff .= '<div class="image php"></div><font class="my">' . $file . '</font>';
                 else $sBuff .= showIcon($file) . ' <a href="' . str_replace(SROOT, '', $file) . '" target="_blank">' . $file . '</a>';

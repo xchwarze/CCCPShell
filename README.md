@@ -61,7 +61,7 @@ All tools
 
 WARNING
 -----------
-This shell use atob an btob javascript functions. Read if you browser support it https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64.atob
+This shell use atob an btob javascript functions. Read if your browser support it https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64.atob
    
 Images
 -----------

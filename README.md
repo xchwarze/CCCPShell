@@ -58,6 +58,10 @@ All tools
 	[+]Eval PHP code
 	[+]Execute (exec, shell_exec, system, passthru, popen and proc_open)
 * Self remove
+
+WARNING
+-----------
+This shell use atob an btob javascript functions. Read if you browser support it https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64.atob
    
 Images
 -----------

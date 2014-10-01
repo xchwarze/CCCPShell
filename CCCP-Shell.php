@@ -412,16 +412,17 @@ class PHPZip {
     var $old_offset = 0;
 
     function Zipper($basedir, $filelist){
-		$curdir = dirname($basedir . $filelist[0]);
-		foreach ($filelist as $filename){	
-			$filename = $basedir . $filename;
-			if (file_exists($filename)){
-				if (is_dir($filename)) $sBuff = $this->GetFileList($filename, $curdir);
-				if (is_file($filename)){
-					$fd = fopen($filename, 'r');
-					$sBuff = @fread($fd, filesize($filename));
+		$cdir = dirname($basedir . $filelist[0]) . DS;
+		$cut = strlen($cdir);
+		foreach ($filelist as $f){	
+			$f = $basedir . $f;
+			if (file_exists($f)){
+				if (is_dir($f)) $sBuff = $this->GetFileList($f, $cut);
+				else if (is_file($f)){
+					$fd = fopen($f, 'r');
+					$sBuff = @fread($fd, filesize($f));
 					fclose($fd);
-					$this->addFile($sBuff, str_replace($curdir . DS, '', $filename));
+					$this->addFile($sBuff, substr($f, $cut));
 				}
 			}
         }
@@ -430,22 +431,21 @@ class PHPZip {
         return 1;
     }
 
-    function GetFileList($dir, $curdir){
+    function GetFileList($dir, $cut){
         if (file_exists($dir)){			
-			$dirPrefix = basename($dir) . DS;
-            $dh = opendir($dir);
-            while ($files = readdir($dh)){
-                if (($files !== '.') && ($files !== '..')){
-                    if (is_dir($dir . $files)) $this->GetFileList($dir . $files . DS, $curdir);
-                    else {
-						$fd = fopen($dir . $files, 'r');
-						$sBuff = @fread($fd, filesize($dir . $files));
+            $h = opendir($dir);
+            while ($f = readdir($h)){
+                if (($f !== '.') && ($f !== '..')){
+                    if (is_dir($dir . $f)) $this->GetFileList($dir . $f . DS, $cut);
+                    else if (is_file($dir . $f)){
+						$fd = fopen($dir . $f, 'r');
+						$sBuff = @fread($fd, filesize($dir . $f));
 						fclose($fd);
-						$this->addFile($sBuff, str_replace($curdir . DS, '', $dir . $files));
+						$this->addFile($sBuff, substr($dir . $f, $cut));
                     }
                 }
             }
-            closedir($dh);
+            closedir($h);
         }
         return 1;
     }

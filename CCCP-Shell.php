@@ -852,8 +852,8 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 		if (onDrag){
 			x = dragX - dragDeltaX;
 			y = dragY - dragDeltaY;
-			if (x < 0) x = dragX;
-			if (y < 0) y = dragY;
+			if (x < 0) x = 0;
+			if (y < 0) y = 0;
 			o = d.getElementById("box").style;
 			o.left = x + "px";
 			o.top = y + "px";

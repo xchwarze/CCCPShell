@@ -2121,7 +2121,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 		$sBuff .= '<table id="sort" class="explore sortable">
 			<thead><tr data-path="' . getUpPath($currentdir) . '" class="alt1">
 			<td class="alt1 sorttable_nosort">' . mLink('<div class="image lnk"></div>', 'godir(this, false)') . '</td>
-			<td class="touch" width="70%"><b>' . tText('name', 'Name') . '</b></td>
+			<td class="touch" width="60%"><b>' . tText('name', 'Name') . '</b></td>
 			<td class="touch"><b>' . tText('date', 'Date') . '</b></td>
 			<td class="touch"><b>' . tText('size', 'Size') . '</b></td>
 			' . (! $isWIN ? '<td class="touch"><b>' . tText('chmodchown', 'Chmod/Chown') . '</b></td>' : '') . '

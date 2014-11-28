@@ -2897,8 +2897,8 @@ if (isset($p['me']) && $p['me'] === 'process'){
 
 #Se fini
 if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest')
-	//sAjax($sBuff . mHide('etime', substr((microtime(true) - $loadTime), 0, 4)));
-	sAjax($sBuff . mHide('etime', substr((microtime(true) - $loadTime), 0, 4) . ' Mem Peak: ' . sizecount(memory_get_peak_usage(false)) . ' Men: ' . sizecount(memory_get_usage(false))) );
+	sAjax($sBuff . mHide('etime', substr((microtime(true) - $loadTime), 0, 4)));
+	//sAjax($sBuff . mHide('etime', substr((microtime(true) - $loadTime), 0, 4) . ' Mem Peak: ' . sizecount(memory_get_peak_usage(false)) . ' Men: ' . sizecount(memory_get_usage(false))) );
 ?>
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <html><head>

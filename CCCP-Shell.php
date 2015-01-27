@@ -1656,26 +1656,27 @@ if (isset($p['me']) && $p['me'] === 'file'){
 		return pathinfo($file, PATHINFO_EXTENSION);
     }
 	
-	function fileList($typ, $dir, $limit, $page, $onlyW = false, $find = false, $rec = false, $count = 0){
-		function checkFile($t, $w, $f){
-			$ret = true;
-			if ($w)
-				$ret = $ret && is_writable($t);
+	function checkFile($t, $w, $f){
+		$ret = true;
+		if ($w)
+			$ret = $ret && is_writable($t);
 			
-			/*if ($f){
-				if ($re)
-					$ret = $ret && (preg_match('@' . $sBuff . '@', $file) || preg_match('@' . $sBuff . '@', @file_get_contents($f)))
-				else 
-					$ret = $ret && (strstr($file, $sBuff) || strstr(@file_get_contents($f), $sBuff))
-			}
-			
-			if ($extFilter)
-				$ret = $ret && (in_array(getext($f), explode(',', $extFilter)));
-			*/
-			
-			return $ret;
+		/*if ($f){
+			if ($re)
+				$ret = $ret && (preg_match('@' . $sBuff . '@', $file) || preg_match('@' . $sBuff . '@', @file_get_contents($f)))
+			else 
+				$ret = $ret && (strstr($file, $sBuff) || strstr(@file_get_contents($f), $sBuff))
 		}
+			
+		if ($extFilter)
+			$ret = $ret && (in_array(getext($f), explode(',', $extFilter)));
+		*/
+			
+		return $ret;
+	}
 		
+	function fileList($typ, $dir, $limit, $page, $onlyW = false, $find = false, $rec = false, $count = 0){
+		global $dData;
 		$sFolder = $sFile = $show = true;
 		if ($limit){
 			$show = false;
@@ -1691,36 +1692,39 @@ if (isset($p['me']) && $p['me'] === 'file'){
 		else if ($typ === 'file')
 			$sFolder = false;
 			
-		try {
-			if ($res = opendir($dir)){
-				while ($file = readdir($res)){
-					if ($limit)	{
-						if ($count == $start) 
-							$show = true;
-							
-						if ($count == $limit) 
-							break;  
-					}
-
-					if ($file !== '.' && $file !== '..' && is_dir($dir . $file)){
-						$count++;
+		if ($res = opendir($dir)){
+			while ($file = readdir($res)){
+				if ($limit)	{
+					if ($count == $start) 
+						$show = true;
 						
-						if ($rec)
-							yield fileList($typ, $dir, $limit, $page, $find, $rec, $count);
-							
-						if ($show && $sFolder && checkFile($dir . $file, $onlyW, $find))
-							yield array('t'=>'d', 'n'=>$file);
-					} else if (is_file($dir . $file) && $sFile){
-						$count++;
-						if ($show && checkFile($dir . $file, $onlyW, $find))
-							yield array('t'=>'f', 'n'=>$file);
-					} //TODO syslinks 
+					if ($count == $limit) 
+						break;  
 				}
+
+				if ($file !== '.' && $file !== '..' && is_dir($dir . $file)){						
+					if ($rec)
+						//yield fileList($typ, $dir . $file, $limit, $page, $find, $rec, $count);
+						fileList($typ, $dir . $file, $limit, $page, $find, $rec, $count);
+					else if ($show && $sFolder && checkFile($dir . $file, $onlyW, $find))
+						//yield array('t'=>'d', 'n'=>$file);
+						$dData[$count] = array('t'=>'d', 'n'=>$file);
+						
+					$count++;
+				} else if (is_file($dir . $file) && $sFile){
+					if ($show && checkFile($dir . $file, $onlyW, $find))
+						//yield array('t'=>'f', 'n'=>$file);
+						$dData[$count] = array('t'=>'f', 'n'=>$file);
+						
+					$count++;
+				} //TODO syslinks 
 			}
-		} finally {
+			
 			closedir($res);
 			@clearstatcache();
-		}
+			return $dData;
+		} else
+			return array();
 	}
 
     if (@$p['md'] === 'vs'){

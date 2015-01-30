@@ -1083,7 +1083,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	function dbexec(c){
 		empty("dbRes");
 		append("dbRes", "<div class=\'loading\'></div>");
-		ajax(serialize(d.forms[0]) + \'&code=\' + c, function(r){
+		ajax(serialize(d.forms[0]) + \'&code=\' + euc(c), function(r){
 			empty("dbRes");
 			append("dbRes", r);
 			uiUpdateControls();

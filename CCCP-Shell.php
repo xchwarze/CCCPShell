@@ -656,7 +656,7 @@ function filesize64($file){
 function genPaginator($c, $t = -1, $fm = true) {
 	global $p;
 	
-	$l = 'dbexec("' . (isset($p['code']) ? $p['code'] : '') . '&pg=';
+	$l = 'dbexec(euc("' . (isset($p['code']) ? $p['code'] : '') . '") + "&pg=';
 	if ($fm)
 		$l = 'ajaxLoad("me=file&dir=" + euc(d.getElementById("base").value) + "&pg=';
 	
@@ -1083,7 +1083,7 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	function dbexec(c){
 		empty("dbRes");
 		append("dbRes", "<div class=\'loading\'></div>");
-		ajax(serialize(d.forms[0]) + \'&code=\' + euc(c), function(r){
+		ajax(serialize(d.forms[0]) + \'&code=\' + c, function(r){
 			empty("dbRes");
 			append("dbRes", r);
 			uiUpdateControls();
@@ -2369,28 +2369,32 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 
 		$sBuff = '';
 		$con = sql_connect($p['type'], $p['host'], $p['user'], $p['pass']);
-		foreach(explode(';', $p['code']) as $query){
+		foreach(explode('{;}', $p['code']) as $query){
 			if (trim($query) !== ''){
 				$query = str_replace(array('{start}', '{limit}', '{oraclelimit}'), array($start, $config['SQLLimit'], $oracleLimit), $query);
 				$sBuff .= '<hr /><p><b>' . tText('sq8', 'Executed') . ':</b> ' . hsc($query) . ';&nbsp;&nbsp;';
 				$res = sql_query($p['type'], $query, $con);
 				if ($res !== false && !is_bool($res)){
-					$pag = genPaginator($p['pg'], -1, false) . '<br>';
-					$sBuff .= "<b>[ ok ]</b></p><br>{$pag}<table id='sort' class='explore sortable' style='width:100%;'><tr>";
+					$tmp = "<table id='sort' class='explore sortable' style='width:100%;'><tr>";
 					
 					$t = sql_num_fields($p['type'], $res, $con);
 					for ($i = 0; $i < $t; $i++)
-						$sBuff .= '<th class="touch">' . @hsc(sql_field_name($p['type'], $res, $i)) . '</th>';
-					$sBuff .= '</tr>';
+						$tmp .= '<th class="touch">' . @hsc(sql_field_name($p['type'], $res, $i)) . '</th>';
+					$tmp .= '</tr>';
+					
+					$c = 0;
 					
 					while($rows = sql_fetch_data($p['type'], $res)){
-						$sBuff .= '<tr>';
+						$c++;
+						$tmp .= '<tr>';
 						foreach($rows as $r)
-							$sBuff .= '<td>' . @hsc($r) . '</td>';
-						$sBuff .= '</tr>';
+							$tmp .= '<td>' . @hsc($r) . '</td>';
+						$tmp .= '</tr>';
 					}
 					
-					$sBuff .= "</table><br>{$pag}";
+					$pag = genPaginator($p['pg'], ($c < $config['SQLLimit'] ? $p['pg'] : -1), false) . '';
+					$sBuff .= "<b>[ ok ]</b></p><br>{$pag}<br>{$tmp}</table><br>{$pag}<br>";
+					unset($c, $tmp);
 				} else
 					$sBuff .= '<b>[ ERROR ]</b></p><br>';
 			}
@@ -2405,8 +2409,8 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 				mHide('host', $p['host']) . mHide('port', $p['port']) . 
 				mHide('user', $p['user']) . mHide('pass', $p['pass']) . '
 				</form><textarea id="code" name="code" class="bigarea" style="height: 100px;"></textarea>
-				<p>' . mSubmit(tText('go', 'Go!'), 'dbexec(d.getElementById(&quot;code&quot;).value)') . '&nbsp;&nbsp;
-				' . tText('sq4', 'Separate multiple commands with a semicolon') . ' <span>[ ; ]</span></p><br>
+				<p>' . mSubmit(tText('go', 'Go!'), 'dbexec(euc(d.getElementById(&quot;code&quot;).value))') . '&nbsp;&nbsp;
+				' . tText('sq4', 'Separate multiple commands with') . ' <span>{;}</span></p><br>
 				<table class="border" style="padding:0;"><tbody>
 				<tr><td id="dbNav" class="colFit borderright" style="vertical-align:top;">';
 				
@@ -2440,7 +2444,7 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 										else if ($p['type']==='sqlite' || $p['type']==='sqlite3') $dumptbl = "SELECT * FROM {$tables} LIMIT {start}, {limit}";
 										else $dumptbl = "SELECT * FROM {$rows}.{$tables} LIMIT {start}, {limit}"; //mysql
 											
-										$sBuff .= '<tr><td><a href="#" onclick="dbexec(\'' . $dumptbl . '\');return false;">' . $tables . '</a></td></tr>';
+										$sBuff .= '<tr><td><a href="#" onclick="dbexec(euc(\'' . $dumptbl . '\'));return false;">' . $tables . '</a></td></tr>';
 									}
 								}
 							}

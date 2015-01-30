@@ -2395,8 +2395,10 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 					$pag = genPaginator($p['pg'], ($c < $config['SQLLimit'] ? $p['pg'] : -1), false) . '';
 					$sBuff .= "<b>[ ok ]</b></p><br>{$pag}<br>{$tmp}</table><br>{$pag}<br>";
 					unset($c, $tmp);
-				} else
-					$sBuff .= '<b>[ ERROR ]</b></p><br>';
+				} else if ($res === false)
+					$sBuff .= "<b>[ ERROR ] ({$res})</b></p><br>";
+				else
+					$sBuff .= "<b>[ ok ] ({$res})</b></p><br>";
 			}
 		}
 		
@@ -2410,7 +2412,7 @@ if (isset($p['me']) && $p['me'] === 'sql'){
 				mHide('user', $p['user']) . mHide('pass', $p['pass']) . '
 				</form><textarea id="code" name="code" class="bigarea" style="height: 100px;"></textarea>
 				<p>' . mSubmit(tText('go', 'Go!'), 'dbexec(euc(d.getElementById(&quot;code&quot;).value))') . '&nbsp;&nbsp;
-				' . tText('sq4', 'Separate multiple commands with') . ' <span>{;}</span></p><br>
+				' . tText('sq4', 'Separate multiple commands with') . ' <span>{;}</span> ' . tText('sq9', 'Variables for use in pagination') . ' <span>{start}, {limit}, {oraclelimit}</span></p><br>
 				<table class="border" style="padding:0;"><tbody>
 				<tr><td id="dbNav" class="colFit borderright" style="vertical-align:top;">';
 				

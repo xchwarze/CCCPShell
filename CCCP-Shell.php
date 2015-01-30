@@ -7,7 +7,7 @@
  */
 
 # System variables
-$config['charset'] = 'utf8';
+$config['charset'] = 'utf8'; //'utf-8', 'big5', 'gbk', 'iso-8859-2', 'euc-kr', 'euc-jp'
 $config['date'] = 'd/m/Y';
 $config['datetime'] = 'd/m/Y H:i:s';
 $config['hd_lines'] = 16;   //lines in hex preview file
@@ -341,6 +341,16 @@ function getcfg($n){
     if ($result == 0) return tText('no', 'no');
     else if ($result == 1) return tText('yes', 'yes');
     else return $result;
+}
+
+function read_file($file){
+	$content = false;
+	if($fh = @fopen($file, 'rb')){
+		$content = '';
+		while(!feof($fh))
+			$content .= fread($fh, 8192);
+	}
+	return $content;
 }
 
 function sizecount($s){
@@ -1588,7 +1598,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 			if ($array && is_array($array))
 				return ' / ' . mLink($array['name'], 'return false;', "title='User: {$array['name']} Passwd: {$array['passwd']} " .
 					"UID: {$array['uid']}	GID: {$array['gid']} Gecos: {$array['gecos']} Dir: {$array['dir']} " .
-					"Shell: {$array['shell']}", false);
+					"Shell: {$array['shell']}'", false);
 		}
 		return '';
     }
@@ -2073,7 +2083,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 		
 			$sBuff .= '<table id="sort" class="explore sortable">
 				<thead><tr data-path="' . getUpPath($currentdir) . '" class="alt1">
-				<td class="alt1 sorttable_nosort">' . mLink('<div class="image lnk"></div>', 'godir(this, false)') . '</td>
+				<td class="alt1 sorttable_nosort" width="5px">' . mLink('<div class="image lnk"></div>', 'godir(this, false)') . '</td>
 				<td class="touch" width="60%"><b>' . tText('name', 'Name') . '</b></td>
 				<td class="touch"><b>' . tText('date', 'Date') . '</b></td>
 				<td class="touch"><b>' . tText('size', 'Size') . '</b></td>
@@ -2091,8 +2101,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 						<td><div class="image dir"></div><a href="#" onclick="godir(this, true);return false;">' . $file['n'] . '</a></td>
 						<td><a href="#" onclick="showUI(\'mdate\', this);return false;" data-ft="' . date('Y-m-d H:i:s', $ft) . '">' . date($config['datetime'], $ft) . '</a></td>
 						<td><a href="#" onclick="viewSize(this);return false;">[?]</a></td>
-						' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this)";return false;>' . vPermsColor($currentdir . $file['n']) . '</a>&nbsp;' . getUser($currentdir . $file['n']) . 
-						'</td>' : '') . '
+						' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file['n']) . '</a>&nbsp;' . getUser($currentdir . $file['n']) . '</td>' : '') . '
 						<td>
 						<div onclick="showUI(\'del\', this);return false;" class="image del"></div>
 						<div onclick="showUI(\'ren\', this);return false;" class="image rename"></div>
@@ -2103,16 +2112,15 @@ if (isset($p['me']) && $p['me'] === 'file'){
 				} else {
 					$c++;
 					$sBuffFiles .= '<tr data-path="' . $file['n'] . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
-						<td width="2%"><input type="checkbox" value="' . $file['n'] . '" name="dl[]"></td><td>';
+						<td><input type="checkbox" value="' . $file['n'] . '" name="dl[]"></td><td>';
 
 					if ($currentdir . $file['n'] === __file__) $sBuffFiles .= '<div class="image php"></div><font class="my">' . $file['n'] . '</font>';
 					else if($isLinked) $sBuffFiles .= showIcon($file['n']) . ' <a href="' . $baseURL . $file['n'] . '" target="_blank">' . $file['n'] . '</a>';
-					else $sBuffFiles .= showIcon($file['n']) . ' ' . $file['n'] . '</a>';
+					else $sBuffFiles .= showIcon($file['n']) . ' ' . $file['n'];
 					   
 					$sBuffFiles .= '</td><td><a href="#" onclick="showUI(\'mdate\', this);return false;" data-ft="' . date('Y-m-d H:i:s', $ft) . '">' . date($config['datetime'], $ft) . '</a></td>
 						<td>' . sizecount(filesize64($currentdir . $file['n'])) . '</td>
-						' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file['n']) . '</a>&nbsp;' . getUser($currentdir . $file['n']) . 
-						'</td>' : '') . '
+						' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file['n']) . '</a>&nbsp;' . getUser($currentdir . $file['n']) . '</td>' : '') . '
 						<td>
 						<div onclick="showUI(\'del\', this);return false;" class="image del"></div>
 						<div onclick="showUI(\'ren\', this);return false;" class="image rename"></div>
@@ -2752,7 +2760,7 @@ if (isset($p['me']) && $p['me'] === 'info'){
 	if(!$isWIN){
 		if ($i_buff=trim(read_file("/proc/cpuinfo"))){
 			$sBuff .= "<p class='boxtitle touch' onclick=\"toggle('info_cpu');\" style='margin-bottom:8px;'>CPU Info</p>" .
-				"<div class='info' id='info_cpu' style='margin-bottom:8px;display:none;'>";
+				"<div id='info_cpu' style='margin-bottom:8px;display:none;'>";
 			$i_buffs = explode("\n\n", $i_buff);
 			foreach($i_buffs as $i_buffss){
 				$i_buffss = trim($i_buffss);
@@ -2775,7 +2783,7 @@ if (isset($p['me']) && $p['me'] === 'info'){
 		// mem info
 		if ($i_buff=trim(read_file("/proc/meminfo"))){
 			$sBuff .= "<p class='boxtitle touch' onclick=\"toggle('info_mem');\" style='margin-bottom:8px;'>Memory Info</p>" .
-				"<div class='info' id='info_mem' style='margin-bottom:8px;display:none;'><table class='dataView'>";
+				"<div id='info_mem' style='margin-bottom:8px;display:none;'><table class='dataView'>";
 			$i_buffs = explode("\n", $i_buff);
 			foreach($i_buffs as $i){
 				$i = trim($i);
@@ -2791,7 +2799,7 @@ if (isset($p['me']) && $p['me'] === 'info'){
 		// partition
 		if ($i_buff=trim(read_file("/proc/partitions"))){
 			$sBuff .= "<p class='boxtitle touch' onclick=\"toggle('info_part');\" style='margin-bottom:8px;'>Partitions Info</p>" .
-				"<div class='info' id='info_part' style='margin-bottom:8px;display:none;'>" .
+				"<div id='info_part' style='margin-bottom:8px;display:none;'>" .
 				"<table class='dataView'><tr>";
 			$i_buff = preg_replace("/\ +/", " ", $i_buff);
 			$i_buffs = explode("\n\n", $i_buff);

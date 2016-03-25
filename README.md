@@ -15,15 +15,12 @@ You will find in this shell
 * Easy to translate to another language via tText function *WIP*
 * All the standard shell stuff
 * Encrypted comunication (first phpshell in the world???)
-* Support PHP > 4.3 (lastest versions not tested in php 4)
 
 All tools
 -----------
 - Filemanager
   - Copy/paste (recursive)
   - In memory compress and download (recursive)
-  - Uncompress files
-  - Upload files to server
   - Delete (recursive)
   - Create file/folder
   - Fast view folder size/count objets

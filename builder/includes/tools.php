@@ -1,61 +1,10 @@
 <?php
 
-//html
-
-function mHide($n, $v){
-	return "<input id='$n' name='$n' type='hidden' value='$v' />";
-}
-
 function mLink($t, $o, $e = '', $m = true){
-	if ($m) $o .= ';return false;';
-	return "<a href='#' onclick='$o' $e>$t</a>";
+    if ($m) $o .= ';return false;';
+    return "<a href='#' onclick='$o' $e>$t</a>";
 }
 
-function mInput($n, $v, $tt = '', $nl = '', $c = '', $e = ''){
-	if ($tt !== '') $tt = "$tt<br>"; 
-	if ($nl !== '')
-		return "<p>$tt<input class='$c' name='$n' id='$n' value='$v' type='text' $e /></p>";
-	else
-		return "$tt<input class='$c' name='$n' id='$n' value='$v' type='text' $e />";
-}
-
-function mSubmit($v, $o, $nl = '', $e = ''){
-	if ($nl !== '')
-		return "<p><input class='button' type='button' value='$v' onclick='$o;return false;' $e ></p>";
-	else
-		return "<input class='button' type='button' value='$v' onclick='$o;return false;' $e >";
-}
-
-function mSelect($n, $v, $nk = false, $s = false, $o = false, $t = false, $nl = false, $e = false){
-	$tmp = '';
-	if ($o) $o = "onchange='$o'";
-	if ($t) $t = "$t<br>";
-	if ($nk){
-		foreach ($v as $value){
-			if ($s == $value)
-				$tmp .= "<option value='$value' selected='selected'>$value</option>";
-			else 
-				$tmp .= "<option value='$value'>$value</option>";
-		}
-	} else {
-		foreach ($v as $key=>$value){
-			if ($s == $value)
-				$tmp .= "<option value='$key' selected='selected'>$value</option>";
-			else 
-				$tmp .= "<option value='$key'>$value</option>";
-		}
-	}
-	$tmp = "$t<select class='theme' id='$n' name='$n' $o $e>$tmp</select>";
-	if ($nl) $tmp = "<p>$tmp</p>";
-	return $tmp;
-}
-
-function mCheck($n, $v, $o = '', $c = false){
-	return "<input id='$n' name='$n' value='$v' type='checkbox' onclick='$o' " . ($c ? 'checked' : '') . "/>";
-}
-
-
-//builder
 function packer_write_file($file, $content){
 	if($fh = @fopen($file, "wb")){
 		if(fwrite($fh, $content)!==false){
@@ -105,7 +54,11 @@ function packer_strips($str){
 		$newStr .= $token;
 	}
 
-	$newStr = preg_replace("/(\s{2,})/", " ", $newStr);
+
+	$newStr = preg_replace('!/\*.*?\*/!s', '', $newStr);
+	$newStr = preg_replace('/\n\s*\n/', "\n", $newStr);
+	//$newStr = preg_replace("/(\s{2,})/", " ", $newStr);
+
 	return $newStr;
 }
 

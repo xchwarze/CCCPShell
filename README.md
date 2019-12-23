@@ -3,7 +3,7 @@ CCCP Shell
 
 CCCPShell is a PHP Shell written from scratch in my spare time.
 
-![alt text](http://i68.tinypic.com/2wnv5dy.png "CCCPShell - Diagram")
+![alt text](https://raw.githubusercontent.com/xchwarze/CCCPShell/master/misc/diagram.png "CCCPShell - Diagram")
 
 You will find in this shell
 -----------
@@ -71,10 +71,8 @@ This shell use atob an btob javascript functions. Read if your browser support i
 Images
 -----------
 
-![alt text](http://i59.tinypic.com/fc2z2v.jpg "CCCPShell - File manager")
+![alt text](https://raw.githubusercontent.com/xchwarze/CCCPShell/master/misc/687474703a2f2f6935392e74696e797069632e636f6d2f6663327a32762e6a7067.jpg "CCCPShell - File manager")
 
-![alt text](http://i59.tinypic.com/2ikwmma.jpg "CCCPShell - New folder")
+![alt text](https://raw.githubusercontent.com/xchwarze/CCCPShell/master/misc/687474703a2f2f6936322e74696e797069632e636f6d2f327a35353363382e6a7067.jpg "CCCPShell - Mass copy")
 
-![alt text](http://i62.tinypic.com/2z553c8.jpg "CCCPShell - Mass copy")
-
-![alt text](http://i60.tinypic.com/rlz1ol.jpg "CCCPShell - Folder size")
+![alt text](https://raw.githubusercontent.com/xchwarze/CCCPShell/master/misc/687474703a2f2f6936302e74696e797069632e636f6d2f726c7a316f6c2e6a7067.jpg "CCCPShell - Folder size")
